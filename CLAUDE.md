@@ -170,3 +170,47 @@ order history are all in place; full check command passes, including a real conc
   — see section 6's new entry below.
 
 Next: Phase 4 — Admin Dashboard (Products, Inventory, Orders).
+
+Current phase: **Phase 4 — Admin Dashboard (Products, Inventory, Orders) — complete.** Admin section
+at `src/app/admin`, every layout/page gated by `requireAdmin()`. Products: list, create (with initial
+variants), edit, archive. Variants: add/edit/remove via their own server actions rather than through
+`updateProduct` — see the note below. Real image upload to Supabase Storage. Inventory: all variants
+in one table, a configurable low-stock highlight, and manual stock adjustment with a required reason.
+Orders: filterable list, detail view, status transitions enforced server-side (not just hidden in the
+UI) with an optional tracking number once shipped. An `AuditLog` table records every admin mutation.
+Full check command passes, including tests that `requireAdmin()` actually redirects non-admins (not
+just that it's *called*) and that invalid order-status transitions are rejected even when
+`updateOrderStatus` is called directly with a skip-ahead status. Decisions worth knowing about:
+
+- **Variant edits after product creation go through dedicated actions** (`addProductVariant`,
+  `updateProductVariant`, `removeProductVariant` in `src/server/actions/admin/products.ts`), not
+  through `updateProduct` with a resent variants array. Reconciling "here's the full variant list
+  now" against what's in the database (matching by SKU? by position?) was a real modeling question
+  with no clean answer, so it seemed better to sidestep it — each variant has a stable id once it
+  exists, so per-variant actions are simpler and less error-prone than array-diffing. `updateProduct`
+  still accepts the schema's `variants` field (for backward compatibility with `productUpdateSchema`)
+  but ignores it.
+- **Stock (`inventoryQuantity`) is only ever changed through Inventory's `adjustInventory`**, never
+  through the product/variant edit form — the edit form shows current stock as read-only with a link
+  over to Inventory. This keeps every stock change going through one path that requires a reason and
+  writes an audit log entry, rather than two paths where only one asks why.
+- **Real product images require a Supabase Storage bucket named `product-images`, set to public** —
+  this app can't create that bucket for itself (no admin API call for it from inside a server action
+  in a reasonable way), so it has to be created once by hand: Supabase dashboard → Storage → New
+  bucket → name `product-images` → toggle Public on. Until that bucket exists, image upload will fail
+  with a clear error from `src/server/storage.ts`; the rest of the admin dashboard doesn't depend on
+  it.
+- **The seeded admin account's Supabase Auth identity gets fixed by a one-off script**
+  (`prisma/fix-admin-auth.ts`), not by re-running the seed script — the seed script wipes all data
+  (see its own comments), which would destroy any real orders/accounts created since Phase 3 went
+  live. Run `npx tsx prisma/fix-admin-auth.ts [password]` from a machine with real Supabase network
+  access (not this sandbox — see section 6).
+- **Low-stock threshold is a URL param (`?threshold=`), not a stored setting** — "configurable"
+  didn't need a database column and a settings page; a query param editable from the Inventory page
+  is simpler and just as real a configuration point.
+- **No dedicated AuditLog *viewer* page** — the spec asked to log admin mutations, not to build a UI
+  for browsing them. The table exists and every admin action writes to it; a viewer is easy to add
+  later (Prisma Studio already works for ad hoc inspection in the meantime).
+
+Next: Phase 5 — Testing, Performance, & Deployment (or Arabic/bilingual localization, per the earlier
+open decision — see git history / conversation for which one comes first).

@@ -51,6 +51,7 @@ model User {
   updatedAt  DateTime @updatedAt
 
   addresses Address[]
+  auditLogs AuditLog[]
   cart      Cart?
   orders    Order[]
 
@@ -253,4 +254,33 @@ model OrderItem {
   quantity      Int
 
   @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Admin audit trail
+// ---------------------------------------------------------------------------
+
+// Simple append-only log of admin mutations — Phase 4. No update/delete
+// path is ever exposed for these rows from the app; every admin server
+// action that changes a Product/ProductVariant/Order writes one entry here
+// alongside its actual mutation, in the same transaction where practical.
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String
+  actor       User     @relation(fields: [actorUserId], references: [id])
+  // Dotted action name, e.g. "product.create", "inventory.adjust",
+  // "order.status_update".
+  action     String
+  targetType String
+  targetId   String
+  // Free-form details specific to the action (e.g. { delta, reason,
+  // previousQuantity, newQuantity } for inventory.adjust). Deliberately
+  // untyped at the schema level — see src/server/audit.ts for the shapes
+  // each action actually writes.
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
