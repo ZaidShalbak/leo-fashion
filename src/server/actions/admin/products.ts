@@ -1,0 +1,247 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import type { Prisma } from "@prisma/client";
+
+import { db } from "@/server/db";
+import { requireAdmin } from "@/server/auth";
+import { logAudit } from "@/server/audit";
+import {
+  productSchema,
+  productUpdateSchema,
+  productVariantSchema,
+  type ProductInput,
+  type ProductUpdateInput,
+} from "@/lib/validators/product";
+
+export type ActionResult = { success: true } | { success: false; error: string };
+
+/**
+ * Creates a product with its initial variants and collection memberships,
+ * then redirects to its edit page (where images get added — see
+ * src/server/actions/admin/images.ts). Variant *changes* after this point
+ * go through addProductVariant/updateProductVariant/removeProductVariant
+ * below, not through updateProduct, so there's exactly one code path that
+ * decides how to reconcile a variant list.
+ */
+export async function createProduct(input: ProductInput) {
+  const admin = await requireAdmin();
+
+  const parsed = productSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid product." } as const;
+  }
+  const { collectionIds, variants, ...productFields } = parsed.data;
+
+  let product: { id: string };
+  try {
+    product = await db.product.create({
+      data: {
+        ...productFields,
+        collections: { create: collectionIds.map((collectionId) => ({ collectionId })) },
+        variants: { create: variants },
+      },
+    });
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) } as const;
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "product.create",
+    targetType: "Product",
+    targetId: product.id,
+    metadata: { title: productFields.title },
+  });
+
+  revalidatePath("/admin/products");
+  redirect(`/admin/products/${product.id}/edit`);
+}
+
+/** Updates a product's own fields and collection memberships — not its variants. */
+export async function updateProduct(input: ProductUpdateInput): Promise<ActionResult> {
+  const admin = await requireAdmin();
+
+  const parsed = productUpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid product." };
+  }
+  const { id, collectionIds, variants: _variants, ...fields } = parsed.data;
+  void _variants; // intentionally ignored — see createProduct's comment
+
+  try {
+    await db.product.update({
+      where: { id },
+      data: {
+        ...fields,
+        ...(collectionIds !== undefined
+          ? {
+              collections: {
+                deleteMany: {},
+                create: collectionIds.map((collectionId) => ({ collectionId })),
+              },
+            }
+          : {}),
+      },
+    });
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "product.update",
+    targetType: "Product",
+    targetId: id,
+    metadata: fields,
+  });
+
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${id}/edit`);
+  return { success: true };
+}
+
+const setProductStatusSchema = z.object({
+  productId: z.string().cuid(),
+  status: z.enum(["draft", "active", "archived"]),
+});
+
+export async function setProductStatus(
+  input: z.infer<typeof setProductStatusSchema>
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const parsed = setProductStatusSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Invalid request." };
+
+  await db.product.update({
+    where: { id: parsed.data.productId },
+    data: { status: parsed.data.status },
+  });
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "product.status_update",
+    targetType: "Product",
+    targetId: parsed.data.productId,
+    metadata: { status: parsed.data.status },
+  });
+
+  revalidatePath("/admin/products");
+  return { success: true };
+}
+
+const addVariantSchema = productVariantSchema.extend({ productId: z.string().cuid() });
+
+export async function addProductVariant(
+  input: z.infer<typeof addVariantSchema>
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const parsed = addVariantSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid variant." };
+  }
+  const { productId, ...variantFields } = parsed.data;
+
+  let variant: { id: string };
+  try {
+    variant = await db.productVariant.create({ data: { productId, ...variantFields } });
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "variant.create",
+    targetType: "ProductVariant",
+    targetId: variant.id,
+    metadata: { productId, sku: variantFields.sku },
+  });
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  return { success: true };
+}
+
+const updateVariantSchema = productVariantSchema
+  .omit({ inventoryQuantity: true })
+  .extend({ variantId: z.string().cuid() });
+
+export async function updateProductVariant(
+  input: z.infer<typeof updateVariantSchema>
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const parsed = updateVariantSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid variant." };
+  }
+  const { variantId, ...fields } = parsed.data;
+
+  let productId: string;
+  try {
+    const updated = await db.productVariant.update({
+      where: { id: variantId },
+      data: fields,
+    });
+    productId = updated.productId;
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "variant.update",
+    targetType: "ProductVariant",
+    targetId: variantId,
+    metadata: fields,
+  });
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  return { success: true };
+}
+
+const removeVariantSchema = z.object({ variantId: z.string().cuid() });
+
+export async function removeProductVariant(
+  input: z.infer<typeof removeVariantSchema>
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const parsed = removeVariantSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Invalid request." };
+
+  let productId: string;
+  try {
+    const deleted = await db.productVariant.delete({ where: { id: parsed.data.variantId } });
+    productId = deleted.productId;
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "variant.delete",
+    targetType: "ProductVariant",
+    targetId: parsed.data.variantId,
+    metadata: {},
+  });
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  return { success: true };
+}
+
+/** Maps common Prisma errors to messages an admin can act on. */
+function friendlyDbError(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as Prisma.PrismaClientKnownRequestError).code
+  ) {
+    const code = (error as Prisma.PrismaClientKnownRequestError).code;
+    if (code === "P2002") return "That value is already in use (e.g. a duplicate SKU or slug).";
+    if (code === "P2003" || code === "P2014") {
+      return "Can't remove this — it's still referenced by an existing cart or order.";
+    }
+  }
+  throw error;
+}
