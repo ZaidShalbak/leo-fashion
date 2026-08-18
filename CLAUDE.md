@@ -87,15 +87,21 @@ fails, fix the failure rather than describing it as pre-existing.
 
 - **Database:** a local Postgres instance (not Supabase-hosted) is used for local dev, per
   `DATABASE_URL`/`DIRECT_URL` in `.env`. Swapping in real Supabase Postgres credentials later needs
-  no code changes.
+  no code changes beyond updating `.env`.
 - **Auth/Storage:** `.env` currently holds placeholder Supabase project values
   (`NEXT_PUBLIC_SUPABASE_URL` etc.) — sign-in/sign-up will not work end-to-end until real Supabase
   project credentials are added. The `User.supabaseId` field is how an app `User` row links to a real
   Supabase Auth identity; the seeded admin user uses a placeholder value until then (see
   `prisma/seed.ts`).
+- **Prisma 7 requires a driver adapter — there's no more standalone `new PrismaClient()`.**
+  Connection config is split: `prisma.config.ts` (`datasource.url`, from `DIRECT_URL`) is what
+  `prisma migrate`/`generate` use; `src/server/db.ts` and `prisma/seed.ts` each construct their own
+  `PrismaPg` adapter from `DATABASE_URL` for runtime queries. `directUrl`/`url` in `schema.prisma`'s
+  `datasource` block are no longer valid — Prisma will refuse to generate if they're present. If you
+  add a second place that instantiates `PrismaClient`, it needs the same adapter pattern.
 - **Prisma engines:** `prisma generate`/`migrate`/`db seed` download engine binaries from
-  `binaries.prisma.sh` on first use — a different host than the npm registry. If that host is
-  blocked by the network egress allowlist, add it the same way `registry.npmjs.org` was added.
+  `binaries.prisma.sh` on first use — a different host than the npm registry, so it can be blocked
+  independently by a network egress allowlist even when the registry itself works.
 - **Playwright:** this sandbox has Chromium pre-installed at `/opt/pw-browsers/chromium`, which may
   not match the browser build `@playwright/test` wants to download from `cdn.playwright.dev` (also
   usually blocked). `playwright.config.ts` points `executablePath` at the pre-installed binary
@@ -105,5 +111,6 @@ fails, fix the failure rather than describing it as pre-existing.
 
 _(Update as the project progresses.)_
 
-Current phase: **Phase 1 — Project Setup, Database Schema & Auth** (in progress — blocked on
-`binaries.prisma.sh` network access; see Section 6 and the handoff notes for status).
+Current phase: **Phase 1 — Project Setup, Database Schema & Auth — complete.** Scaffold, Prisma
+schema/migration/seed, Zod validators, and Supabase Auth helpers are all in place and the full check
+command passes. Next: Phase 2 — Storefront (Catalog, Product Pages, Filtering).

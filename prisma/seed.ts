@@ -10,9 +10,14 @@
 // added, sign up with the same email through Supabase Auth and update this
 // row's supabaseId to match the real auth.users.id it creates (or wire a
 // post-signup hook to do it automatically) — see CLAUDE.md.
+import "dotenv/config";
 import { PrismaClient, ProductStatus } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const db = new PrismaClient();
+// Prisma 7 requires a driver adapter — see src/server/db.ts for the same
+// pattern used at app runtime.
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const db = new PrismaClient({ adapter });
 
 const ADMIN_EMAIL = "admin@clothing-store.test";
 const ADMIN_PLACEHOLDER_SUPABASE_ID = "00000000-0000-0000-0000-000000000001";
