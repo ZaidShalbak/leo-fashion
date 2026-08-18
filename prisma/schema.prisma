@@ -103,11 +103,27 @@ model Product {
   updatedAt      DateTime      @updatedAt
 
   variants    ProductVariant[]
+  images      ProductImage[]
   collections ProductCollection[]
   cartItems   CartItem[]
   orderItems  OrderItem[]
 
   @@index([status])
+}
+
+// Added in Phase 2 — Phase 1's schema had no image field, and the product
+// detail page needs an ordered gallery. A dedicated table (rather than a
+// string array on Product) keeps room for alt text and per-image ordering.
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
 }
 
 // Explicit join table (not an implicit m:n) so it's easy to extend later
