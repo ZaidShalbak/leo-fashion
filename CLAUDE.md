@@ -200,6 +200,10 @@ just that it's *called*) and that invalid order-status transitions are rejected 
   bucket → name `product-images` → toggle Public on. Until that bucket exists, image upload will fail
   with a clear error from `src/server/storage.ts`; the rest of the admin dashboard doesn't depend on
   it.
+- **Server Actions default to a 1MB request body limit**, which a real product photo blows past well
+  before hitting `uploadProductImage`'s own 5MB check — `next.config.ts` raises this to 6MB via
+  `experimental.serverActions.bodySizeLimit`. If image uploads ever need to go bigger, raise both
+  numbers together, not just one.
 - **The seeded admin account's Supabase Auth identity gets fixed by a one-off script**
   (`prisma/fix-admin-auth.ts`), not by re-running the seed script — the seed script wipes all data
   (see its own comments), which would destroy any real orders/accounts created since Phase 3 went
