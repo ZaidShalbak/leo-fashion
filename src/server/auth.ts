@@ -2,6 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import type { User } from "@prisma/client";
 
 import { db } from "./db";
@@ -37,6 +38,20 @@ export async function createSupabaseServerClient() {
   );
 }
 
+/**
+ * Admin-privileged Supabase client using the service role key — bypasses
+ * RLS and can manage auth users directly (e.g. `admin.createUser`). Never
+ * expose this client or the service role key to the browser; it's only
+ * ever constructed here, server-side, inside src/server/actions.
+ */
+export function createSupabaseAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
+
 /** The Supabase Auth user for the current request, or null if signed out. */
 export async function getSupabaseUser() {
   const supabase = await createSupabaseServerClient();
@@ -61,11 +76,18 @@ export async function getCurrentUser(): Promise<User | null> {
 /**
  * Requires a signed-in user, redirecting to /login otherwise. Use in
  * Server Components/Actions that need "some logged-in user," not
- * specifically an admin.
+ * specifically an admin. Pass the current path as `callbackPath` so the
+ * login page can send the user back where they came from (e.g. checkout)
+ * after signing in.
  */
-export async function requireUser(): Promise<User> {
+export async function requireUser(callbackPath?: string): Promise<User> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    const query = callbackPath
+      ? `?next=${encodeURIComponent(callbackPath)}`
+      : "";
+    redirect(`/login${query}`);
+  }
   return user;
 }
 
