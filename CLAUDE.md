@@ -135,10 +135,38 @@ fails, fix the failure rather than describing it as pre-existing.
 
 _(Update as the project progresses.)_
 
-Current phase: **Phase 2 — Storefront (Catalog, Product Pages, Filtering) — complete.** Homepage,
-collection listing with size/color filtering + sort, product detail page with gallery and variant
-selection, and a working `addToCart` server action are all in place; full check command passes. Note:
-"filtering by size, color, and style" from the original phase spec only implements size and color —
-the schema has no "style" attribute to filter on, and adding one felt like a decision worth flagging
-rather than guessing at (see git history / handoff notes). Next: Phase 3 — Cart & Address-Based
-Checkout (No Payment).
+Current phase: **Phase 3 — Cart & Address-Based Checkout (No Payment) — complete.** Cart page with
+quantity/remove controls, email/password auth (sign up, sign in, sign out), checkout with saved or
+new shipping address, an inventory-safe `placeOrder` server action, order confirmation, and account
+order history are all in place; full check command passes, including a real concurrency test for
+`placeOrder`. Decisions made along the way, worth knowing about:
+
+- **Auth wasn't built in Phase 1 beyond the `auth.ts` helpers** — Phase 1's prompt only asked for
+  session/`requireAdmin()` plumbing, not UI. Since `Order.userId` is required (a Phase 1 decision —
+  see section 2), checkout can't work without real sign-up/sign-in, so `/login` and `/signup` pages
+  and `src/server/actions/auth.ts` were built now as a Phase 3 prerequisite.
+- **Sign-up auto-confirms the email** via the Supabase admin API (`admin.createUser({ email_confirm:
+  true })`, using the service role key in `createSupabaseAdminClient()`) instead of Supabase's default
+  confirmation-email flow — there's no transactional email set up, and requiring a click-through
+  wasn't worth the friction yet. Revisit if real email verification becomes a requirement.
+- **`placeOrder` ignores the price/quantity numbers in its own input** beyond using them to fail fast
+  on an empty cart at the validation layer. The actual order is built from the caller's *live* cart,
+  re-read from the database inside the transaction — a deliberately stronger reading of "never trust
+  client payload" than the schema alone implies. See the comment in `src/server/actions/order.ts`.
+- **Stock safety uses a conditional `updateMany` per line** (`WHERE inventoryQuantity >= quantity`)
+  rather than read-then-write, so two concurrent checkouts racing for the same low-stock variant can't
+  oversell — Postgres re-evaluates that `WHERE` against the latest committed row, so at most one
+  succeeds. Covered by a real concurrency test in `src/server/actions/order.test.ts` (two users, one
+  unit of stock, asserts exactly one order and zero negative inventory).
+- **A "new address" entered at checkout is also saved to the user's address book** (`Address` table),
+  since there's no separate account/address-management UI yet — without this, "select a saved
+  address" would never have anything to select on a second order. Revisit if/when a dedicated address
+  book page gets built.
+- **The seeded admin user (`admin@clothing-store.test`) still has a placeholder `supabaseId`** — it
+  was seeded before real Supabase Auth existed, so it can't actually sign in yet. Fixing this is
+  Phase 4 work (giving it a real Supabase Auth identity, e.g. via the same admin-create-user approach
+  sign-up uses), not done here since Phase 3 didn't need admin login.
+- **Real Supabase Postgres migration/seed had to run from the user's own machine, not this sandbox**
+  — see section 6's new entry below.
+
+Next: Phase 4 — Admin Dashboard (Products, Inventory, Orders).

@@ -30,8 +30,11 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+
 const { db } = await import("@/server/db");
-const { addToCart } = await import("./cart");
+const { addToCart, updateCartItem, removeCartItem, getCurrentCart } =
+  await import("./cart");
 
 let productId: string;
 let inStockVariantId: string;
@@ -124,5 +127,47 @@ describe("addToCart", () => {
       quantity: 1,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("updateCartItem / removeCartItem", () => {
+  it("updates quantity, capped at stock, for an item in the caller's own cart", async () => {
+    await addToCart({ productId, variantId: inStockVariantId, quantity: 1 });
+    const cart = await getCurrentCart();
+    const item = cart!.items.find((i) => i.variantId === inStockVariantId)!;
+
+    const result = await updateCartItem({ cartItemId: item.id, quantity: 2 });
+    expect(result.success).toBe(true);
+
+    const updated = await db.cartItem.findUnique({ where: { id: item.id } });
+    expect(updated?.quantity).toBe(2); // inStockVariant has 2 in stock
+
+    // Schema allows up to 20, but this variant only has 2 in stock — the
+    // action should cap at actual inventory, not just the schema's ceiling.
+    const overResult = await updateCartItem({ cartItemId: item.id, quantity: 20 });
+    expect(overResult.success).toBe(true);
+    const capped = await db.cartItem.findUnique({ where: { id: item.id } });
+    expect(capped?.quantity).toBe(2);
+  });
+
+  it("rejects updating a cart item that isn't the caller's", async () => {
+    // A cartItemId from a different (nonexistent) cart context.
+    const result = await updateCartItem({
+      cartItemId: "c000000000000000000000099",
+      quantity: 1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("removes an item from the caller's own cart", async () => {
+    await addToCart({ productId, variantId: inStockVariantId, quantity: 1 });
+    const cart = await getCurrentCart();
+    const item = cart!.items.find((i) => i.variantId === inStockVariantId)!;
+
+    const result = await removeCartItem({ cartItemId: item.id });
+    expect(result.success).toBe(true);
+
+    const remaining = await db.cartItem.findUnique({ where: { id: item.id } });
+    expect(remaining).toBeNull();
   });
 });
