@@ -118,6 +118,18 @@ fails, fix the failure rather than describing it as pre-existing.
   Phase 2's gallery/grid work surfaced. Seed data points at local placeholder SVGs under
   `public/products/`; swap for real Supabase Storage URLs (the `remotePatterns` config in
   `next.config.ts` is already set up for that) whenever real product photography exists.
+- **This sandbox cannot reach the real Supabase Postgres database at all.** Its network egress is
+  proxied and allowlists only specific hosts over HTTPS (npm registry, GitHub, a few others) — raw
+  Postgres wire protocol (ports 5432/6543) is blocked to *any* host, not just Supabase-specific ones
+  (confirmed: `/dev/tcp` to an unrelated host on port 5432 also fails), and arbitrary non-allowlisted
+  HTTPS hosts get a 403 from the egress proxy too. So `prisma migrate deploy`/`db seed` against the
+  real project has to be run from the user's own machine (their actual Terminal app — not
+  `device_bash`, which is intentionally network-isolated and can't do it either). Local dev/testing in
+  *this* sandbox keeps using local Postgres (`clothing_store`/`clothing_store_dev`) and placeholder
+  Supabase env values — `.env` here is deliberately left on local placeholders even though the real
+  project exists, so `npm run test`/`npm run dev` here keep working. The real Supabase credentials
+  were handed directly to the user (not committed anywhere — `.env` is gitignored) for them to run
+  against on their own machine.
 
 ## 7. Current phase
 
