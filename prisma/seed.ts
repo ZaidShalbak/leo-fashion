@@ -261,6 +261,24 @@ async function main() {
               priceOverrideCents: variant.priceOverrideCents,
             })),
           },
+          // Placeholder gallery images — two generic, collection-tinted
+          // SVGs under /public/products. Swap for real Supabase Storage
+          // URLs once real product photography exists; nothing else about
+          // ProductImage needs to change.
+          images: {
+            create: [
+              {
+                url: `/products/${collectionSeed.handle}-1.svg`,
+                altText: `${productSeed.title} — front`,
+                position: 0,
+              },
+              {
+                url: `/products/${collectionSeed.handle}-2.svg`,
+                altText: `${productSeed.title} — detail`,
+                position: 1,
+              },
+            ],
+          },
         },
       });
       productCount += 1;

@@ -106,11 +106,27 @@ fails, fix the failure rather than describing it as pre-existing.
   not match the browser build `@playwright/test` wants to download from `cdn.playwright.dev` (also
   usually blocked). `playwright.config.ts` points `executablePath` at the pre-installed binary
   instead of downloading — don't run `playwright install` here.
+- **`notFound()` returns HTTP 200, not 404, on routes with a `loading.tsx`.** In this Next.js
+  version, `loading.tsx` wraps the route in a Suspense boundary, so the response has already started
+  streaming as a 200 by the time an async page component's `notFound()` call resolves — the status
+  can't change after that. Next.js still renders the custom `not-found.tsx` UI and injects
+  `<meta name="robots" content="noindex">`, so it's a correct "soft 404" for SEO purposes, just not a
+  literal 404 status. `/collections/[handle]` and `/products/[slug]` both hit this. A real 404 status
+  would mean checking existence in `proxy` (this version's renamed middleware) before the response
+  streams — out of scope for Phase 2; worth a look in Phase 5 if strict 404 status codes matter.
+- **`ProductImage` model added in Phase 2** — Phase 1's schema had no image field at all, which
+  Phase 2's gallery/grid work surfaced. Seed data points at local placeholder SVGs under
+  `public/products/`; swap for real Supabase Storage URLs (the `remotePatterns` config in
+  `next.config.ts` is already set up for that) whenever real product photography exists.
 
 ## 7. Current phase
 
 _(Update as the project progresses.)_
 
-Current phase: **Phase 1 — Project Setup, Database Schema & Auth — complete.** Scaffold, Prisma
-schema/migration/seed, Zod validators, and Supabase Auth helpers are all in place and the full check
-command passes. Next: Phase 2 — Storefront (Catalog, Product Pages, Filtering).
+Current phase: **Phase 2 — Storefront (Catalog, Product Pages, Filtering) — complete.** Homepage,
+collection listing with size/color filtering + sort, product detail page with gallery and variant
+selection, and a working `addToCart` server action are all in place; full check command passes. Note:
+"filtering by size, color, and style" from the original phase spec only implements size and color —
+the schema has no "style" attribute to filter on, and adding one felt like a decision worth flagging
+rather than guessing at (see git history / handoff notes). Next: Phase 3 — Cart & Address-Based
+Checkout (No Payment).
