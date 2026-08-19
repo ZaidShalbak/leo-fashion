@@ -43,6 +43,15 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
                   alt={brand.name}
                   fill
                   sizes="200px"
+                  // Brand logos can be any URL an admin pastes into the
+                  // brand form (src/lib/validators/brand.ts just requires
+                  // a well-formed URL) — unlike product photos, which only
+                  // ever come from our own Supabase Storage bucket, these
+                  // aren't from a domain we control or can allowlist ahead
+                  // of time in next.config.ts. `unoptimized` skips Next's
+                  // image-optimization pipeline (and its host allowlist)
+                  // for this one image; fine for small logo assets.
+                  unoptimized
                   className="object-contain opacity-80 grayscale transition group-hover:opacity-100 group-hover:grayscale-0"
                 />
               </div>

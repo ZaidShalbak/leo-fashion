@@ -37,6 +37,10 @@ export default async function BrandsPage() {
                     alt={brand.name}
                     fill
                     sizes="200px"
+                    // See BrandsSection.tsx — brand logos are admin-entered
+                    // arbitrary URLs, not a domain we can allowlist ahead
+                    // of time, so this skips Next's image optimizer.
+                    unoptimized
                     className="object-contain opacity-80 grayscale transition group-hover:opacity-100 group-hover:grayscale-0"
                   />
                 </div>
