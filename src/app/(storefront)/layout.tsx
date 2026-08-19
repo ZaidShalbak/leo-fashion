@@ -79,6 +79,14 @@ export default async function StorefrontLayout({
                 >
                   Orders
                 </Link>
+                {user.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    className="text-muted-foreground hover:text-foreground transition"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <SignOutButton />
               </>
             ) : (
@@ -98,7 +106,11 @@ export default async function StorefrontLayout({
             >
               Cart{cartItemCount > 0 ? ` (${cartItemCount})` : ""}
             </Link>
-            <MobileNav collections={collections} isSignedIn={Boolean(user)} />
+            <MobileNav
+              collections={collections}
+              isSignedIn={Boolean(user)}
+              isAdmin={user?.role === "admin"}
+            />
           </div>
         </div>
       </header>

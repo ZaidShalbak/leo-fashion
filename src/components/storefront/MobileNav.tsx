@@ -17,9 +17,11 @@ type Collection = { id: string; handle: string; title: string };
 export function MobileNav({
   collections,
   isSignedIn,
+  isAdmin = false,
 }: {
   collections: Collection[];
   isSignedIn: boolean;
+  isAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -72,6 +74,15 @@ export function MobileNav({
               >
                 Orders
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="text-muted-foreground hover:text-foreground py-2 transition"
+                >
+                  Admin
+                </Link>
+              )}
               <div className="py-2">
                 <SignOutButton />
               </div>
