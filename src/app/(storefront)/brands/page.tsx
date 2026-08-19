@@ -38,9 +38,9 @@ export default async function BrandsPage() {
                     fill
                     sizes="200px"
                     className="object-contain grayscale transition group-hover:grayscale-0"
-                    // See BrandsSection.tsx — brand logos are admin-entered
-                    // arbitrary URLs, not a domain we can allowlist ahead
-                    // of time, so this skips Next's image optimizer.
+                    // See BrandsSection.tsx — brand logos are arbitrary
+                    // admin-entered URLs, so they can't be covered by a
+                    // static remotePatterns allowlist.
                     unoptimized
                   />
                 </div>
