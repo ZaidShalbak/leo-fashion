@@ -93,6 +93,23 @@ model Collection {
   products ProductCollection[]
 }
 
+// Added when the store became a multi-brand marketplace (not just the
+// single in-house Leo Fashion line the original plan assumed). Product.brandId
+// is deliberately nullable — see the migration note in CLAUDE.md — existing
+// products get backfilled by a one-off script rather than a hard schema
+// requirement that would break on a database that already has rows.
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
 model Product {
   id             String        @id @default(cuid())
   title          String
@@ -100,6 +117,8 @@ model Product {
   description    String?
   basePriceCents Int
   status         ProductStatus @default(draft)
+  brandId        String?
+  brand          Brand?        @relation(fields: [brandId], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -110,6 +129,7 @@ model Product {
   orderItems  OrderItem[]
 
   @@index([status])
+  @@index([brandId])
 }
 
 // Added in Phase 2 — Phase 1's schema had no image field, and the product

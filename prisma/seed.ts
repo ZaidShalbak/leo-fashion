@@ -36,8 +36,46 @@ type SeedProduct = {
   description: string;
   basePriceCents: number;
   skuPrefix: string;
+  brandSlug: string;
   variants: SeedVariant[];
 };
+
+// The store is a multi-brand marketplace (not just the single in-house Leo
+// Fashion line the original plan assumed — see CLAUDE.md). logoUrl points
+// at generated placeholder SVGs under public/brands/; swap for real brand
+// assets whenever they exist, same as ProductImage's placeholders.
+const BRANDS: { name: string; slug: string; logoUrl: string; description: string }[] = [
+  {
+    name: "Leo Fashion",
+    slug: "leo-fashion",
+    logoUrl: "/brands/leo-fashion.svg",
+    description: "Our in-house line of everyday staples.",
+  },
+  {
+    name: "Northline Apparel",
+    slug: "northline-apparel",
+    logoUrl: "/brands/northline-apparel.svg",
+    description: "Cozy fleece and knitwear from a Pacific Northwest studio.",
+  },
+  {
+    name: "Rivermark Denim",
+    slug: "rivermark-denim",
+    logoUrl: "/brands/rivermark-denim.svg",
+    description: "Rigid and washed denim, made to break in.",
+  },
+  {
+    name: "Solstice Outerwear",
+    slug: "solstice-outerwear",
+    logoUrl: "/brands/solstice-outerwear.svg",
+    description: "Technical shells and coats for every season.",
+  },
+  {
+    name: "Harbor & Co.",
+    slug: "harbor-co",
+    logoUrl: "/brands/harbor-co.svg",
+    description: "Relaxed, easy-wearing pieces for the weekend.",
+  },
+];
 
 const SIZES = ["XS", "S", "M", "L", "XL"];
 
@@ -73,6 +111,7 @@ const COLLECTIONS: {
         description: "A soft, midweight cotton tee in a relaxed fit.",
         basePriceCents: 2800,
         skuPrefix: "TEE-CRW",
+        brandSlug: "leo-fashion",
         variants: sizeRun(["Black", "White", "Heather Grey"]),
       },
       {
@@ -81,6 +120,7 @@ const COLLECTIONS: {
         description: "A pullover fleece hoodie with a kangaroo pocket.",
         basePriceCents: 5800,
         skuPrefix: "HOOD-EVR",
+        brandSlug: "northline-apparel",
         variants: sizeRun(["Black", "Navy", "Sand"]),
       },
       {
@@ -89,6 +129,7 @@ const COLLECTIONS: {
         description: "Mid-rise straight leg jeans in rigid denim.",
         basePriceCents: 7200,
         skuPrefix: "DNM-STR",
+        brandSlug: "rivermark-denim",
         variants: sizeRun(["Indigo", "Black"]),
       },
       {
@@ -97,6 +138,7 @@ const COLLECTIONS: {
         description: "A stretchy ribbed-knit tank for layering.",
         basePriceCents: 2200,
         skuPrefix: "TNK-RIB",
+        brandSlug: "leo-fashion",
         variants: sizeRun(["Black", "White", "Olive"]),
       },
       {
@@ -105,6 +147,7 @@ const COLLECTIONS: {
         description: "Brushed-back fleece joggers with a drawstring waist.",
         basePriceCents: 4800,
         skuPrefix: "SWT-RLX",
+        brandSlug: "northline-apparel",
         variants: sizeRun(["Grey", "Black"]),
       },
     ],
@@ -120,6 +163,7 @@ const COLLECTIONS: {
         description: "A lightweight, water-resistant shell that packs into its own pocket.",
         basePriceCents: 9800,
         skuPrefix: "JKT-RAIN",
+        brandSlug: "solstice-outerwear",
         variants: sizeRun(["Black", "Forest Green"]),
       },
       {
@@ -128,6 +172,7 @@ const COLLECTIONS: {
         description: "A tailored knee-length coat in a wool-blend twill.",
         basePriceCents: 18800,
         skuPrefix: "CT-WOOL",
+        brandSlug: "solstice-outerwear",
         variants: sizeRun(["Camel", "Charcoal"], 6),
       },
       {
@@ -136,6 +181,7 @@ const COLLECTIONS: {
         description: "An insulated vest for layering in cooler weather.",
         basePriceCents: 6800,
         skuPrefix: "VST-QLT",
+        brandSlug: "solstice-outerwear",
         variants: sizeRun(["Black", "Olive"]),
       },
       {
@@ -144,6 +190,7 @@ const COLLECTIONS: {
         description: "A classic boxy trucker jacket in rigid denim.",
         basePriceCents: 8200,
         skuPrefix: "JKT-TRK",
+        brandSlug: "rivermark-denim",
         variants: sizeRun(["Indigo", "Black"]),
       },
       {
@@ -152,6 +199,7 @@ const COLLECTIONS: {
         description: "A full-zip windbreaker with a mesh lining.",
         basePriceCents: 6200,
         skuPrefix: "JKT-WIND",
+        brandSlug: "solstice-outerwear",
         variants: sizeRun(["Black", "Red", "Navy"]),
       },
     ],
@@ -167,6 +215,7 @@ const COLLECTIONS: {
         description: "A relaxed button-up in crisp cotton poplin.",
         basePriceCents: 5400,
         skuPrefix: "SHT-POP",
+        brandSlug: "harbor-co",
         variants: sizeRun(["White", "Light Blue", "Sage"]),
       },
       {
@@ -175,6 +224,7 @@ const COLLECTIONS: {
         description: "Breathable drawstring shorts in a linen-cotton blend.",
         basePriceCents: 3800,
         skuPrefix: "SHRT-LIN",
+        brandSlug: "harbor-co",
         variants: sizeRun(["Khaki", "Navy", "White"]),
       },
       {
@@ -183,6 +233,7 @@ const COLLECTIONS: {
         description: "A boxy, brushed-cotton flannel shirt.",
         basePriceCents: 4800,
         skuPrefix: "SHT-FLN",
+        brandSlug: "northline-apparel",
         variants: sizeRun(["Red Plaid", "Green Plaid"]),
       },
       {
@@ -191,6 +242,7 @@ const COLLECTIONS: {
         description: "A toweling-terry polo with a ribbed collar.",
         basePriceCents: 4200,
         skuPrefix: "PLO-TRY",
+        brandSlug: "leo-fashion",
         variants: sizeRun(["Cream", "Black"]),
       },
       {
@@ -199,6 +251,7 @@ const COLLECTIONS: {
         description: "A heavyweight cotton canvas shirt jacket.",
         basePriceCents: 6800,
         skuPrefix: "SHT-CNV",
+        brandSlug: "harbor-co",
         variants: sizeRun(["Stone", "Black"]),
       },
     ],
@@ -209,6 +262,7 @@ async function main() {
   console.log("Seeding database...");
 
   // Wipe existing data (dev-only script) in FK-safe order.
+  await db.auditLog.deleteMany();
   await db.orderItem.deleteMany();
   await db.order.deleteMany();
   await db.cartItem.deleteMany();
@@ -217,6 +271,7 @@ async function main() {
   await db.productVariant.deleteMany();
   await db.product.deleteMany();
   await db.collection.deleteMany();
+  await db.brand.deleteMany();
   await db.address.deleteMany();
   await db.user.deleteMany();
 
@@ -230,6 +285,13 @@ async function main() {
   });
   console.log(`Created admin user: ${admin.email} (role=${admin.role})`);
 
+  const brandBySlug = new Map<string, string>();
+  for (const brandSeed of BRANDS) {
+    const brand = await db.brand.create({ data: brandSeed });
+    brandBySlug.set(brand.slug, brand.id);
+  }
+  console.log(`Created ${BRANDS.length} brands.`);
+
   let productCount = 0;
 
   for (const collectionSeed of COLLECTIONS) {
@@ -242,6 +304,11 @@ async function main() {
     });
 
     for (const productSeed of collectionSeed.products) {
+      const brandId = brandBySlug.get(productSeed.brandSlug);
+      if (!brandId) {
+        throw new Error(`Unknown brandSlug "${productSeed.brandSlug}" on ${productSeed.title}`);
+      }
+
       const product = await db.product.create({
         data: {
           title: productSeed.title,
@@ -249,6 +316,7 @@ async function main() {
           description: productSeed.description,
           basePriceCents: productSeed.basePriceCents,
           status: ProductStatus.active,
+          brandId,
           collections: {
             create: { collectionId: collection.id },
           },

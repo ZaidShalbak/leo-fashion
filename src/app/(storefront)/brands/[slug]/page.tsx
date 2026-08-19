@@ -7,37 +7,30 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { FilterBar } from "@/components/storefront/FilterBar";
 
 type Props = {
-  params: Promise<{ handle: string }>;
+  params: Promise<{ slug: string }>;
   searchParams: Promise<{ size?: string; color?: string; sort?: string }>;
 };
 
 export async function generateMetadata({
   params,
 }: Pick<Props, "params">): Promise<Metadata> {
-  const { handle } = await params;
-  const collection = await db.collection.findUnique({ where: { handle } });
-  return { title: collection?.title ?? "Collection" };
+  const { slug } = await params;
+  const brand = await db.brand.findUnique({ where: { slug } });
+  return { title: brand?.name ?? "Brand" };
 }
 
-export default async function CollectionPage({
-  params,
-  searchParams,
-}: Props) {
-  const { handle } = await params;
+export default async function BrandPage({ params, searchParams }: Props) {
+  const { slug } = await params;
   const { size, color, sort } = await searchParams;
 
-  const collection = await db.collection.findUnique({ where: { handle } });
-  if (!collection) notFound();
+  const brand = await db.brand.findUnique({ where: { slug } });
+  if (!brand) notFound();
 
-  // All variant size/color values across the *unfiltered* collection, so
-  // the filter controls don't shrink as filters are applied.
+  // All variant size/color values across the *unfiltered* brand catalog, so
+  // the filter controls don't shrink as filters are applied — same pattern
+  // as the collection page.
   const allVariants = await db.productVariant.findMany({
-    where: {
-      product: {
-        status: "active",
-        collections: { some: { collectionId: collection.id } },
-      },
-    },
+    where: { product: { status: "active", brandId: brand.id } },
     select: { size: true, color: true },
   });
   const sizes = [...new Set(allVariants.map((v) => v.size))].sort();
@@ -53,7 +46,7 @@ export default async function CollectionPage({
   const products = await db.product.findMany({
     where: {
       status: "active",
-      collections: { some: { collectionId: collection.id } },
+      brandId: brand.id,
       ...(size || color
         ? {
             variants: {
@@ -72,13 +65,9 @@ export default async function CollectionPage({
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {collection.title}
-        </h1>
-        {collection.description && (
-          <p className="text-muted-foreground max-w-xl">
-            {collection.description}
-          </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{brand.name}</h1>
+        {brand.description && (
+          <p className="text-muted-foreground max-w-xl">{brand.description}</p>
         )}
       </div>
 

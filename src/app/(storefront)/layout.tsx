@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { SignOutButton } from "@/components/storefront/SignOutButton";
+import { MobileNav } from "@/components/storefront/MobileNav";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -40,12 +41,15 @@ export default async function StorefrontLayout({
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-border border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4">
+      <header className="border-border relative border-b">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <Link href="/" className="text-lg font-semibold tracking-tight">
             Leo Fashion
           </Link>
-          <nav className="flex items-center gap-5 text-sm">
+
+          {/* Full inline nav — desktop/tablet only; MobileNav below covers
+              small screens with a hamburger + slide-down panel instead. */}
+          <nav className="hidden items-center gap-5 text-sm sm:flex">
             {collections.map((collection) => (
               <Link
                 key={collection.id}
@@ -55,6 +59,12 @@ export default async function StorefrontLayout({
                 {collection.title}
               </Link>
             ))}
+            <Link
+              href="/brands"
+              className="text-muted-foreground hover:text-foreground transition"
+            >
+              Brands
+            </Link>
             <Link
               href="/cart"
               className="text-muted-foreground hover:text-foreground transition"
@@ -80,6 +90,16 @@ export default async function StorefrontLayout({
               </Link>
             )}
           </nav>
+
+          <div className="flex items-center gap-3 sm:hidden">
+            <Link
+              href="/cart"
+              className="text-muted-foreground hover:text-foreground text-sm transition"
+            >
+              Cart{cartItemCount > 0 ? ` (${cartItemCount})` : ""}
+            </Link>
+            <MobileNav collections={collections} isSignedIn={Boolean(user)} />
+          </div>
         </div>
       </header>
       <main className="flex-1">{children}</main>

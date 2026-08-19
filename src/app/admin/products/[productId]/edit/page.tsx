@@ -15,7 +15,7 @@ type Props = {
 export default async function EditProductPage({ params }: Props) {
   const { productId } = await params;
 
-  const [product, collections] = await Promise.all([
+  const [product, collections, brands] = await Promise.all([
     db.product.findUnique({
       where: { id: productId },
       include: {
@@ -25,6 +25,7 @@ export default async function EditProductPage({ params }: Props) {
       },
     }),
     db.collection.findMany({ orderBy: { title: "asc" } }),
+    db.brand.findMany({ orderBy: { name: "asc" } }),
   ]);
 
   if (!product) notFound();
@@ -44,9 +45,11 @@ export default async function EditProductPage({ params }: Props) {
           description: product.description,
           basePriceCents: product.basePriceCents,
           status: product.status,
+          brandId: product.brandId,
           collectionIds: product.collections.map((c) => c.collectionId),
         }}
         collections={collections}
+        brands={brands}
       />
 
       <div className="space-y-3">

@@ -216,5 +216,60 @@ just that it's *called*) and that invalid order-status transitions are rejected 
   for browsing them. The table exists and every admin action writes to it; a viewer is easy to add
   later (Prisma Studio already works for ad hoc inspection in the meantime).
 
+Current phase: **Homepage merchandising + multi-brand marketplace + mobile responsiveness —
+complete.** Requested outside the Phase 1–5 roadmap: a homepage hero carousel, a category section, a
+brand section, and a full mobile-responsiveness pass. Answering two open design questions up front
+changed the scope: Leo Fashion is a **multi-brand marketplace** (not a single in-house label), and the
+hero carousel is **collection-driven** (one slide per collection, using that collection's oldest active
+product's primary image). Full check command passes. Decisions worth knowing about:
+
+- **A real `Brand` model was added**, related to `Product` via a nullable `brandId` (`ON DELETE SET
+  NULL`) — nullable at the database level so the migration is safe against existing rows, but
+  **required** at the Zod layer (`productSchema.brandId`) for every product created from here on.
+  Existing pre-Brand products get assigned a brand by a one-off, non-destructive script —
+  `prisma/backfill-brands.ts` — matched by product title against the same brand list `seed.ts` uses,
+  falling back to the house brand ("Leo Fashion") for anything unrecognized. Run it the same way as
+  `fix-admin-auth.ts`: `npx tsx prisma/backfill-brands.ts` from a machine with real Supabase network
+  access (not this sandbox — see section 6). It's idempotent (brands are upserted by slug).
+- **Minimal admin brand management was built as a side effect, not a separate ask** — `brandId`
+  becoming required on `productSchema` meant `NewProductForm`/`EditProductForm` needed a brand to
+  submit, which meant admins needed a way to create one. `/admin/brands` (list + create only, no
+  edit/delete yet) and `createBrand` in `src/server/actions/admin/brands.ts` exist for that reason.
+  Extend this the same way products/variants were extended in Phase 4 if brand editing is ever needed.
+- **The storefront gained `/brands` (grid) and `/brands/[slug]` (filtered product listing, same
+  filter/sort pattern as `/collections/[handle]`)**, plus brand name/link on `ProductCard` and the
+  product detail page. `ProductCardData`/`ProductDetailData` (`src/types/product.ts`) now both include
+  `brand`, so any new query building one of those shapes must add `brand: true` to its `include` or it
+  won't typecheck.
+- **The hero carousel and the "shop by category" tiles share one representative image per
+  collection** — the oldest active product in that collection, ordered by `createdAt`, image at
+  `position: 0`. There's no "featured image" field on `Collection`; this was simpler than adding one
+  and works fine as long as every collection has at least one active product. If a collection is ever
+  emptied out, its hero slide/category tile is skipped (filtered out), not shown broken.
+- **`HeroCarousel` (`src/components/storefront/HeroCarousel.tsx`) is a small hand-rolled client
+  component** (transform-based slide track, auto-advance every 6s, pauses on hover/focus, arrow + dot
+  controls) rather than a carousel library — with ~3 slides (one per collection) a dependency wasn't
+  worth it. If the slide count grows a lot, revisit.
+- **Mobile nav is a separate `MobileNav` client component**, not a responsive rework of the existing
+  `nav` — the desktop header's inline link list is hidden below `sm` and swapped for a hamburger
+  button + slide-down panel (`src/components/storefront/MobileNav.tsx`); the Cart link stays visible
+  at all screen sizes since it's the single most-used link. Admin (`src/app/admin`) was **not** put
+  through a mobile pass — it's an internal dashboard tool, out of scope for "mobile responsiveness" as
+  the user meant it (the storefront).
+- **Placeholder brand-logo SVGs live at `public/brands/*.svg`**, generated the same way the
+  placeholder product-photo SVGs under `public/products/` were — swap for real logos whenever they
+  exist, same as product photography. One of these (`harbor-co.svg`, for "Harbor & Co.") originally had
+  a literal unescaped `&` in its `<text>` content, which is invalid XML and made the image fail to
+  render (blank/broken image icon) — fixed by using `&amp;`. Worth remembering if more placeholder SVGs
+  ever get hand-written with brand/product names containing `&`, quotes, or angle brackets.
+- **Fixed a real pre-existing bug in `prisma/seed.ts` while re-seeding to test brands**:
+  `db.user.deleteMany()` was failing with a `P2003` foreign key violation on `AuditLog.actorUserId`
+  (no `onDelete` was specified on that relation, so it defaults to `Restrict`) once Phase 4 admin
+  testing had left real `AuditLog` rows referencing the seeded admin user. Fixed by adding
+  `await db.auditLog.deleteMany();` as the very first statement in the wipe sequence. This bug existed
+  since Phase 4's `AuditLog` model was added but went unnoticed because the seed script hadn't been
+  re-run since — worth remembering next time a new model with a required FK to `User` gets added: the
+  wipe sequence needs a line for it too.
+
 Next: Phase 5 — Testing, Performance, & Deployment (or Arabic/bilingual localization, per the earlier
 open decision — see git history / conversation for which one comes first).

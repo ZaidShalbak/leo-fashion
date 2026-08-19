@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 import { db } from "@/server/db";
@@ -15,6 +16,7 @@ async function getProduct(slug: string) {
     include: {
       images: { orderBy: { position: "asc" } },
       variants: { orderBy: { size: "asc" } },
+      brand: true,
     },
   });
 }
@@ -40,6 +42,14 @@ export default async function ProductPage({ params }: Props) {
 
         <div className="space-y-6">
           <div>
+            {product.brand && (
+              <Link
+                href={`/brands/${product.brand.slug}`}
+                className="text-muted-foreground hover:text-foreground text-sm tracking-wide uppercase transition"
+              >
+                {product.brand.name}
+              </Link>
+            )}
             <h1 className="text-2xl font-semibold tracking-tight">
               {product.title}
             </h1>
