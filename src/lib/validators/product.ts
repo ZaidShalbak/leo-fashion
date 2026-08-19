@@ -31,6 +31,10 @@ export const productSchema = z.object({
   description: z.string().trim().max(5000).optional(),
   basePriceCents: z.number().int().nonnegative("Price cannot be negative"),
   status: productStatusSchema.default("draft"),
+  // Nullable at the schema/DB level (existing products predate the
+  // multi-brand marketplace pivot — see CLAUDE.md), but every *new*
+  // product created through the admin form is required to pick one.
+  brandId: z.string().cuid("Select a brand"),
   collectionIds: z.array(z.string().cuid()).default([]),
   variants: z
     .array(productVariantSchema)

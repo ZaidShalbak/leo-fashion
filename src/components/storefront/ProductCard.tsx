@@ -36,6 +36,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         )}
       </div>
       <div className="mt-3 space-y-1">
+        {product.brand && (
+          <span className="text-muted-foreground text-xs tracking-wide uppercase">
+            {product.brand.name}
+          </span>
+        )}
         <h3 className="text-sm font-medium">{product.title}</h3>
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <PriceDisplay cents={product.basePriceCents} />

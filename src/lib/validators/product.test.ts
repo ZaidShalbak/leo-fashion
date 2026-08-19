@@ -6,6 +6,7 @@ const baseProduct = {
   title: "Classic Crew Tee",
   slug: "classic-crew-tee",
   basePriceCents: 2800,
+  brandId: "c000000000000000000000001",
   variants: [
     { sku: "TEE-CRW-M-BLK", size: "M", color: "Black", inventoryQuantity: 10 },
   ],
@@ -34,6 +35,13 @@ describe("productSchema", () => {
 
   it("requires at least one variant", () => {
     const result = productSchema.safeParse({ ...baseProduct, variants: [] });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires a brand", () => {
+    const { brandId: _brandId, ...withoutBrand } = baseProduct;
+    void _brandId;
+    const result = productSchema.safeParse(withoutBrand);
     expect(result.success).toBe(false);
   });
 });

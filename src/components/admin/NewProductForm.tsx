@@ -16,6 +16,7 @@ import { createProduct } from "@/server/actions/admin/products";
 import type { ProductStatus } from "@/lib/validators/product";
 
 type Collection = { id: string; title: string };
+type Brand = { id: string; name: string };
 
 type VariantRow = {
   key: string;
@@ -37,8 +38,15 @@ function emptyVariant(): VariantRow {
   };
 }
 
-export function NewProductForm({ collections }: { collections: Collection[] }) {
+export function NewProductForm({
+  collections,
+  brands,
+}: {
+  collections: Collection[];
+  brands: Brand[];
+}) {
   const [status, setStatus] = useState<ProductStatus>("draft");
+  const [brandId, setBrandId] = useState<string>(brands[0]?.id ?? "");
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set());
   const [variants, setVariants] = useState<VariantRow[]>([emptyVariant()]);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +90,7 @@ export function NewProductForm({ collections }: { collections: Collection[] }) {
         description: (formData.get("description") as string) || undefined,
         basePriceCents,
         status,
+        brandId,
         collectionIds: [...selectedCollections],
         variants: parsedVariants,
       });
@@ -127,6 +136,28 @@ export function NewProductForm({ collections }: { collections: Collection[] }) {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>Brand</Label>
+        {brands.length > 0 ? (
+          <Select value={brandId} onValueChange={setBrandId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a brand" />
+            </SelectTrigger>
+            <SelectContent>
+              {brands.map((brand) => (
+                <SelectItem key={brand.id} value={brand.id}>
+                  {brand.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No brands yet — add one on the Brands page first.
+          </p>
+        )}
       </div>
 
       {collections.length > 0 && (

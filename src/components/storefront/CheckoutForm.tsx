@@ -127,7 +127,7 @@ export function CheckoutForm({
             <Label htmlFor="line2">Address line 2 (optional)</Label>
             <Input id="line2" name="line2" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="city">City</Label>
               <Input id="city" name="city" required />
@@ -137,7 +137,7 @@ export function CheckoutForm({
               <Input id="state" name="state" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="postalCode">Postal code</Label>
               <Input id="postalCode" name="postalCode" required />
