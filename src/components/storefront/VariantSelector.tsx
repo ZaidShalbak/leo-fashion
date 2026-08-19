@@ -70,6 +70,45 @@ export function VariantSelector({
     return variants.find((v) => v.size === size && v.color === color);
   }
 
+  // Whether *any* variant of this size (in any color) has stock — used to
+  // decide if the size button itself is selectable at all. This is
+  // deliberately not "does size+selectedColor have stock": a product
+  // doesn't have to sell every size in every color (e.g. M only comes in
+  // Black, L only in Navy), and treating that as "M is unavailable" just
+  // because Navy happens to be selected would make half a real catalog
+  // look permanently out of stock.
+  function sizeHasAnyStock(size: string) {
+    return variants.some((v) => v.size === size && v.inventoryQuantity > 0);
+  }
+  function colorHasAnyStock(color: string) {
+    return variants.some((v) => v.color === color && v.inventoryQuantity > 0);
+  }
+
+  function handleSelectSize(size: string) {
+    setSelectedSize(size);
+    const current = variantFor(size, selectedColor);
+    if (!current || current.inventoryQuantity <= 0) {
+      // The current color doesn't exist for this size — jump to whichever
+      // color *does* have stock in this size instead of landing on a dead
+      // combination the shopper would have to guess their way out of.
+      const fallbackColor = colors.find(
+        (c) => (variantFor(size, c)?.inventoryQuantity ?? 0) > 0
+      );
+      if (fallbackColor) setSelectedColor(fallbackColor);
+    }
+  }
+
+  function handleSelectColor(color: string) {
+    setSelectedColor(color);
+    const current = variantFor(selectedSize, color);
+    if (!current || current.inventoryQuantity <= 0) {
+      const fallbackSize = sizes.find(
+        (s) => (variantFor(s, color)?.inventoryQuantity ?? 0) > 0
+      );
+      if (fallbackSize) setSelectedSize(fallbackSize);
+    }
+  }
+
   function handleAddToCart() {
     if (!matched) return;
     setFeedback(null);
@@ -95,15 +134,14 @@ export function VariantSelector({
         <p className="mb-2 text-sm font-medium">Size</p>
         <div className="flex flex-wrap gap-2">
           {sizes.map((size) => {
-            const variant = variantFor(size, selectedColor);
-            const disabled = !variant || variant.inventoryQuantity <= 0;
+            const disabled = !sizeHasAnyStock(size);
             return (
               <button
                 key={size}
                 type="button"
                 disabled={disabled}
                 aria-pressed={size === selectedSize}
-                onClick={() => setSelectedSize(size)}
+                onClick={() => handleSelectSize(size)}
                 className={cn(
                   "border-input min-w-10 rounded-md border px-3 py-1.5 text-sm transition",
                   size === selectedSize && "border-primary bg-primary/5",
@@ -122,15 +160,14 @@ export function VariantSelector({
         <p className="mb-2 text-sm font-medium">Color</p>
         <div className="flex flex-wrap gap-2">
           {colors.map((color) => {
-            const variant = variantFor(selectedSize, color);
-            const disabled = !variant || variant.inventoryQuantity <= 0;
+            const disabled = !colorHasAnyStock(color);
             return (
               <button
                 key={color}
                 type="button"
                 disabled={disabled}
                 aria-pressed={color === selectedColor}
-                onClick={() => setSelectedColor(color)}
+                onClick={() => handleSelectColor(color)}
                 className={cn(
                   "border-input rounded-md border px-3 py-1.5 text-sm transition",
                   color === selectedColor && "border-primary bg-primary/5",

@@ -382,3 +382,34 @@ count) and a single user-icon dropdown. Full check command passes. Decisions wor
   documented above — resolved as a normal merge conflict (both sides had already converged on
   functionally the same fix, just slightly different comment wording) when this branch merged back
   into `main`, not a new bug.
+
+Current phase: **Fixed the size/color picker for partial variant matrices — complete.** Real-catalog
+bug, found via a live admin adding "American Eagle T-shirt" with two variants — M/Black (10 in stock)
+and L/Navy (10 in stock), no M/Navy or L/Black — and seeing M and Black both render disabled on the
+product page even though both had stock. Root cause and fix:
+
+- **`VariantSelector.tsx` used to disable a size button whenever `size + selectedColor` had no
+  matching variant**, and disable a color button whenever `selectedSize + color` had no match. That's
+  correct for a full size×color grid, but a real product doesn't have to sell every size in every
+  color — this product only ever had two variants total, on the diagonal, not four. With Navy
+  selected, M got disabled (there's no M/Navy) even though M/Black exists and has stock; the shopper
+  had no way to reach it.
+- **Fixed by decoupling "is this size/color selectable at all" from "does it match what's currently
+  selected."** A size button is now disabled only if *no* variant of that size, in *any* color, has
+  stock (`sizeHasAnyStock`); same idea for color (`colorHasAnyStock`). Clicking a size or color that
+  doesn't match the other current selection now auto-corrects the other dimension to whichever value
+  actually pairs with it and has stock (`handleSelectSize`/`handleSelectColor`), instead of leaving
+  the shopper stuck on a combination that doesn't exist.
+- **No schema or server-action change** — this was entirely a client-side selection-logic bug, not a
+  data or inventory-decrement issue. `matched`/`isOutOfStock`/`priceCents` (what actually gets added
+  to cart) were already correctly derived from `selectedSize + selectedColor`; only which buttons were
+  clickable, and what selecting one did to the other, needed fixing.
+- **Verified with a temporary local product** (two variants, same diagonal pattern as the real bug
+  report) via Playwright screenshots: initial state showed L/Navy selected with M and Black both
+  enabled (not struck through); clicking M auto-switched color to Black; clicking Navy from there
+  auto-switched size back to L. Test product and its throwaway brand were deleted after verifying —
+  this fix needs no seed/backfill script since it only touches component logic.
+- **No admin-side change needed** for this bug specifically — an admin can keep entering a partial
+  matrix (e.g. one variant per size, different colors) exactly as they already were; the storefront
+  now handles it correctly rather than requiring every size×color combination to exist just to make
+  the picker usable.
