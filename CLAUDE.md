@@ -307,3 +307,48 @@ catalog rows short of Prisma Studio. Full check command passes. Decisions worth 
   directly rather than a one-off script, since (unlike the Phase-4-era backfill scripts) there's no
   bulk transformation of existing rows involved, just new rows an admin enters by hand or a script the
   admin runs against their own real product photos/copy.
+- **A one-off script, `prisma/add-real-brands.ts`, was added and run against the real database** to
+  create the store's actual brands (Jack & Jones, Wrangler, American Eagle, Lee), sourcing logos from
+  Wikimedia Commons via its `Special:FilePath` hotlink convention — freely licensed, no scraping. The
+  5 seed-era placeholder brands and all 15 placeholder products were then deleted directly through the
+  admin UI built here (not scripted), confirming the delete flows work end-to-end against production
+  data, not just against local dev/test data.
+
+Current phase: **Category (Collection) management — complete.** Follow-up to brand management: same
+gap, different model. `/admin/collections` (list, create, edit, delete) and
+`src/server/actions/admin/collections.ts` (`createCollection`/`updateCollection`/`deleteCollection`)
+were built from scratch — unlike brands, there was no create action or admin page for `Collection` at
+all before this, only a `db.collection.findMany()` picklist inside the product form. Full check
+command passes. Decisions worth knowing about:
+
+- **The Zod schemas already existed** (`collectionSchema`/`collectionUpdateSchema` in
+  `src/lib/validators/product.ts`) but had never been wired to a server action — same situation as
+  `brandUpdateSchema` was before the brand-management work. `createCollection`/`updateCollection`
+  just needed to call them.
+- **Collection deletion is unconditionally safe, mirroring brand deletion**:
+  `ProductCollection.collectionId` is `ON DELETE CASCADE`, so deleting a category only removes the
+  join-table rows — the products themselves are never touched, they just stop being grouped under
+  that category (and drop out of the homepage hero/category-tile rotation if it was their only one,
+  same graceful-skip behavior as an emptied-out collection always had).
+  `DeleteCollectionButton` shows the affected product count in its confirm prompt for the same reason
+  `DeleteBrandButton` does, with no server-side block.
+- **The admin UI is labeled "Categories," not "Collections"** — matches how the storefront already
+  talks about this concept ("Shop by category" on the homepage) even though the underlying model,
+  routes (`/collections/[handle]`), and action names stay `Collection`/`collection*` for consistency
+  with the schema. Same pattern as `Brand`'s admin/storefront wording never diverging, just inverted:
+  here the *model* name and the *user-facing* name differ on purpose.
+- **Found and fixed a real duplicate-JSX-prop bug while starting this work** (`npm run lint` failed
+  immediately on `git checkout main` before any collection code was written): both
+  `BrandsSection.tsx` and `brands/page.tsx` had two separate `unoptimized` props (each with its own
+  explanatory comment) on the same `<Image>` — an artifact of the `fix/brand-logo-unoptimized-image`
+  branch's fix and a later re-application of that same fix landing on `main` through two different
+  merge paths (see git history around PRs #6/#7) without either merge flagging it as a conflict, since
+  JSX doesn't reject duplicate props at the git level, only at lint/compile time. Fixed by keeping one
+  copy of the prop and comment in each file. Worth remembering: a duplicate-prop bug like this can
+  merge cleanly and only surface later, so it's worth running `npm run lint` right after any merge
+  that touches the same lines from two directions, not just after your own edits.
+- **Adding real categories is, like brands, a data-entry task** — the three seed-era placeholder
+  categories (Everyday Essentials, Outerwear, Weekend) don't reflect the real catalog (currently
+  Jack & Jones / Wrangler / American Eagle / Lee — denim- and casualwear-leaning), so the actual
+  category list is a business decision for the store owner, entered through `/admin/collections`
+  once decided rather than guessed here.
