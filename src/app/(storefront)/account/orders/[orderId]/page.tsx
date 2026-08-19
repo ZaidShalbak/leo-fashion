@@ -24,10 +24,10 @@ export default async function AccountOrderDetailPage({ params }: Props) {
   if (!order || order.userId !== user.id) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
       <Link
         href="/account/orders"
-        className="text-muted-foreground text-sm underline"
+        className="text-muted-foreground hover:text-foreground text-xs tracking-widest uppercase transition"
       >
         ← All orders
       </Link>

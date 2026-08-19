@@ -50,22 +50,30 @@ export default async function HomePage() {
     .filter((slide): slide is HeroSlide => slide !== null);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:space-y-16 sm:py-10">
-      {heroSlides.length > 0 && <HeroCarousel slides={heroSlides} />}
+    <div className="space-y-16 pb-16 sm:space-y-24 sm:pb-24">
+      {heroSlides.length > 0 && (
+        <div className="mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
+          <HeroCarousel slides={heroSlides} />
+        </div>
+      )}
 
-      <section className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+      <section className="mx-auto max-w-2xl space-y-3 px-4 text-center">
+        <p className="text-brand-accent text-xs tracking-[0.25em] uppercase">
           Leo Fashion
+        </p>
+        <h1 className="font-serif text-2xl italic sm:text-3xl">
+          Wardrobe staples, outerwear, and easy weekend pieces
         </h1>
-        <p className="text-muted-foreground max-w-xl">
-          Wardrobe staples, outerwear, and easy weekend pieces — order
-          online, pay on delivery or by invoice.
+        <p className="text-muted-foreground text-sm">
+          Order online, pay on delivery or by invoice — no card required.
         </p>
       </section>
 
       {collectionsWithLead.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-medium">Shop by category</h2>
+        <section className="mx-auto max-w-6xl space-y-6 px-4">
+          <div className="flex items-end justify-between border-b border-border pb-4">
+            <h2 className="font-serif text-xl italic sm:text-2xl">Shop by category</h2>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {collectionsWithLead.map((collection) => {
               const leadImage = collection.products[0]?.product.images[0];
@@ -82,12 +90,16 @@ export default async function HomePage() {
         </section>
       )}
 
-      <BrandsSection brands={brands} />
+      <div className="mx-auto max-w-6xl px-4">
+        <BrandsSection brands={brands} />
+      </div>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-medium">New arrivals</h2>
+      <section className="mx-auto max-w-6xl space-y-6 px-4">
+        <div className="flex items-end justify-between border-b border-border pb-4">
+          <h2 className="font-serif text-xl italic sm:text-2xl">New arrivals</h2>
+        </div>
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

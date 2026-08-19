@@ -57,7 +57,7 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
     <div className="flex gap-4 py-4" data-slot="cart-line-item">
       <Link
         href={`/products/${item.product.slug}`}
-        className="bg-muted relative size-24 shrink-0 overflow-hidden rounded-md"
+        className="bg-muted relative size-24 shrink-0 overflow-hidden rounded-sm"
       >
         {image && (
           <Image
@@ -89,7 +89,7 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
         </div>
 
         <div className="mt-2 flex items-center gap-3">
-          <div className="border-input flex items-center rounded-md border">
+          <div className="border-input flex items-center rounded-sm border">
             <button
               type="button"
               disabled={isPending || item.quantity <= 1}

@@ -47,13 +47,13 @@ export function MobileNav({
       </button>
 
       {open && (
-        <nav className="border-border bg-background absolute inset-x-0 top-full z-20 flex flex-col gap-1 border-b px-4 py-3 text-sm shadow-sm">
+        <nav className="border-border bg-background absolute inset-x-0 top-full z-20 flex flex-col gap-1 border-b px-4 py-4 text-xs tracking-widest uppercase shadow-lg">
           {collections.map((collection) => (
             <Link
               key={collection.id}
               href={`/collections/${collection.handle}`}
               onClick={() => setOpen(false)}
-              className="text-muted-foreground hover:text-foreground py-2 transition"
+              className="text-muted-foreground hover:text-foreground py-2.5 transition"
             >
               {collection.title}
             </Link>
@@ -61,7 +61,7 @@ export function MobileNav({
           <Link
             href="/brands"
             onClick={() => setOpen(false)}
-            className="text-muted-foreground hover:text-foreground py-2 transition"
+            className="text-muted-foreground hover:text-foreground py-2.5 transition"
           >
             Brands
           </Link>
@@ -70,7 +70,7 @@ export function MobileNav({
               <Link
                 href="/account/orders"
                 onClick={() => setOpen(false)}
-                className="text-muted-foreground hover:text-foreground py-2 transition"
+                className="text-muted-foreground hover:text-foreground py-2.5 transition"
               >
                 Orders
               </Link>
@@ -78,12 +78,12 @@ export function MobileNav({
                 <Link
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  className="text-muted-foreground hover:text-foreground py-2 transition"
+                  className="text-brand-accent hover:text-foreground py-2.5 transition"
                 >
                   Admin
                 </Link>
               )}
-              <div className="py-2">
+              <div className="py-2.5">
                 <SignOutButton />
               </div>
             </>
@@ -91,7 +91,7 @@ export function MobileNav({
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="text-muted-foreground hover:text-foreground py-2 transition"
+              className="text-muted-foreground hover:text-foreground py-2.5 transition"
             >
               Sign in
             </Link>

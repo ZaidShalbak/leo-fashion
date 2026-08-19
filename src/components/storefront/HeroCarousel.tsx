@@ -54,7 +54,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
   return (
     <section
-      className="group/carousel border-border relative overflow-hidden rounded-lg border"
+      className="group/carousel relative overflow-hidden rounded-sm"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
@@ -62,14 +62,14 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       aria-roledescription="carousel"
     >
       <div
-        className="flex transition-transform duration-500 ease-out"
+        className="flex transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
         {slides.map((slide) => (
           <Link
             key={slide.id}
             href={slide.href}
-            className="relative aspect-[16/9] w-full shrink-0 sm:aspect-[21/9]"
+            className="relative aspect-[4/5] w-full shrink-0 sm:aspect-[21/9]"
           >
             <Image
               src={slide.imageUrl}
@@ -79,16 +79,25 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               sizes="100vw"
               className="object-cover"
             />
-            <div className="from-foreground/70 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 space-y-1 p-5 sm:p-8">
-              <h2 className="text-background text-xl font-semibold tracking-tight sm:text-3xl">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10" />
+            <div className="absolute inset-x-0 bottom-0 space-y-3 p-6 sm:p-12">
+              <p className="text-brand-accent text-xs tracking-[0.25em] uppercase">
+                Featured collection
+              </p>
+              <h2 className="max-w-lg font-serif text-3xl text-white italic sm:text-5xl">
                 {slide.title}
               </h2>
               {slide.description && (
-                <p className="text-background/90 max-w-md text-sm sm:text-base">
+                <p className="max-w-md text-sm text-white/80 sm:text-base">
                   {slide.description}
                 </p>
               )}
+              <span className="text-brand-accent inline-flex items-center gap-2 pt-2 text-xs tracking-[0.2em] uppercase">
+                Shop now
+                <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
+                  →
+                </span>
+              </span>
             </div>
           </Link>
         ))}
@@ -100,7 +109,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             type="button"
             onClick={prev}
             aria-label="Previous slide"
-            className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 left-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
+            className="flex size-9 items-center justify-center rounded-full border border-white/30 text-white opacity-0 backdrop-blur-sm transition-opacity hover:border-white/60 group-hover/carousel:opacity-100 focus-visible:opacity-100 absolute top-1/2 left-3 -translate-y-1/2 sm:left-5"
           >
             ‹
           </button>
@@ -108,12 +117,12 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             type="button"
             onClick={next}
             aria-label="Next slide"
-            className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
+            className="flex size-9 items-center justify-center rounded-full border border-white/30 text-white opacity-0 backdrop-blur-sm transition-opacity hover:border-white/60 group-hover/carousel:opacity-100 focus-visible:opacity-100 absolute top-1/2 right-3 -translate-y-1/2 sm:right-5"
           >
             ›
           </button>
 
-          <div className="absolute inset-x-0 bottom-2 flex justify-center gap-2 sm:bottom-3">
+          <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2 sm:bottom-6">
             {slides.map((slide, i) => (
               <button
                 key={slide.id}
@@ -121,8 +130,8 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 onClick={() => goTo(i)}
                 aria-label={`Go to slide ${i + 1}`}
                 aria-current={i === index}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === index ? "bg-background w-6" : "bg-background/60 w-1.5"
+                className={`h-[3px] rounded-full transition-all ${
+                  i === index ? "w-8 bg-white" : "w-3 bg-white/40"
                 }`}
               />
             ))}

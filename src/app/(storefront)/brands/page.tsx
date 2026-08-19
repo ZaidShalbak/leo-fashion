@@ -13,10 +13,10 @@ export default async function BrandsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Brands</h1>
-        <p className="text-muted-foreground max-w-xl">
+    <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:py-14">
+      <div className="space-y-2 text-center">
+        <h1 className="font-serif text-3xl italic sm:text-4xl">Brands</h1>
+        <p className="text-muted-foreground mx-auto max-w-xl">
           The vendors and partner labels we carry alongside our own
           in-house line.
         </p>
@@ -28,7 +28,7 @@ export default async function BrandsPage() {
             <Link
               key={brand.id}
               href={`/brands/${brand.slug}`}
-              className="border-border bg-card group flex flex-col items-center gap-3 rounded-lg border p-6 text-center transition hover:shadow-sm"
+              className="border-border bg-card group flex flex-col items-center gap-3 rounded-sm border p-6 text-center transition hover:border-brand-accent/50"
             >
               {brand.logoUrl ? (
                 <div className="relative h-12 w-full">
@@ -37,15 +37,15 @@ export default async function BrandsPage() {
                     alt={brand.name}
                     fill
                     sizes="200px"
-                    className="object-contain grayscale transition group-hover:grayscale-0"
+                    className="object-contain opacity-80 grayscale transition group-hover:opacity-100 group-hover:grayscale-0"
                   />
                 </div>
               ) : (
                 <span className="text-sm font-semibold">{brand.name}</span>
               )}
               <div>
-                <h2 className="text-sm font-medium">{brand.name}</h2>
-                <p className="text-muted-foreground mt-0.5 text-xs">
+                <h2 className="text-sm">{brand.name}</h2>
+                <p className="text-muted-foreground mt-0.5 text-xs tracking-wide uppercase">
                   {brand._count.products} item{brand._count.products === 1 ? "" : "s"}
                 </p>
               </div>

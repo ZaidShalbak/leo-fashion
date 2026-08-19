@@ -18,15 +18,15 @@ export default async function AccountOrdersPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-xl font-semibold tracking-tight">Your orders</h1>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
+      <h1 className="font-serif text-2xl italic sm:text-3xl">Your orders</h1>
 
       {orders.length === 0 ? (
         <div className="mt-8 text-center">
           <p className="text-muted-foreground">
             You haven&apos;t placed any orders yet.
           </p>
-          <Link href="/" className="mt-4 inline-block text-sm underline">
+          <Link href="/" className="text-brand-accent mt-4 inline-block text-sm underline">
             Start shopping
           </Link>
         </div>
@@ -36,10 +36,10 @@ export default async function AccountOrdersPage() {
             <li key={order.id}>
               <Link
                 href={`/account/orders/${order.id}`}
-                className="flex items-center justify-between gap-4 py-4 hover:opacity-80"
+                className="flex items-center justify-between gap-4 py-4 transition hover:opacity-70"
               >
                 <div>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm">
                     Order #{order.id.slice(-8).toUpperCase()}
                   </p>
                   <p className="text-muted-foreground text-sm">
@@ -53,7 +53,7 @@ export default async function AccountOrdersPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium">
+                  <span className="font-serif text-sm italic">
                     {formatPriceCents(order.subtotalCents)}
                   </span>
                   <OrderStatusBadge status={order.status} />

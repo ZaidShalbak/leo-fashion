@@ -14,21 +14,23 @@ export default async function LoginPage({ searchParams }: Props) {
   const redirectTo = next && next.startsWith("/") ? next : "/";
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-16">
-      <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
-      <p className="text-muted-foreground mt-1 text-sm">
-        Welcome back to Leo Fashion.
-      </p>
+    <div className="mx-auto max-w-sm px-4 py-16 sm:py-24">
+      <div className="text-center">
+        <h1 className="font-serif text-2xl italic">Sign in</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Welcome back to Leo Fashion.
+        </p>
+      </div>
 
       <div className="mt-8">
         <LoginForm redirectTo={redirectTo} />
       </div>
 
-      <p className="text-muted-foreground mt-6 text-sm">
+      <p className="text-muted-foreground mt-6 text-center text-sm">
         Don&apos;t have an account?{" "}
         <Link
           href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}
-          className="text-foreground underline"
+          className="text-brand-accent hover:text-foreground underline"
         >
           Create one
         </Link>

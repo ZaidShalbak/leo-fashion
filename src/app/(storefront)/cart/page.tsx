@@ -16,11 +16,11 @@ export default async function CartPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-24 text-center">
-        <h1 className="text-xl font-semibold">Your cart is empty</h1>
+        <h1 className="font-serif text-2xl italic">Your cart is empty</h1>
         <p className="text-muted-foreground mt-2">
           Browse the catalog and add something you like.
         </p>
-        <Button asChild className="mt-6">
+        <Button asChild className="mt-6 text-xs tracking-[0.2em] uppercase">
           <Link href="/">Continue shopping</Link>
         </Button>
       </div>
@@ -38,8 +38,8 @@ export default async function CartPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-xl font-semibold tracking-tight">Your cart</h1>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
+      <h1 className="font-serif text-2xl italic sm:text-3xl">Your cart</h1>
 
       <div className="divide-border mt-6 divide-y">
         {items.map((item) => (
@@ -48,15 +48,15 @@ export default async function CartPage() {
       </div>
 
       <div className="border-border mt-6 space-y-4 border-t pt-6">
-        <div className="flex items-center justify-between text-base font-medium">
+        <div className="flex items-center justify-between text-base">
           <span>Subtotal</span>
-          <span>{formatPriceCents(subtotalCents)}</span>
+          <span className="font-serif italic">{formatPriceCents(subtotalCents)}</span>
         </div>
         <p className="text-muted-foreground text-sm">
           Shipping and totals are calculated at checkout. No payment
           required — orders are placed on account and fulfilled directly.
         </p>
-        <Button asChild size="lg" className="w-full sm:w-auto">
+        <Button asChild size="lg" className="w-full text-xs tracking-[0.2em] uppercase sm:w-auto sm:px-10">
           <Link href="/checkout">Proceed to checkout</Link>
         </Button>
       </div>

@@ -22,7 +22,7 @@ export function CollectionCard({
   return (
     <Link
       href={`/collections/${collection.handle}`}
-      className="group border-border bg-card relative flex aspect-[3/2] flex-col justify-end overflow-hidden rounded-lg border p-6"
+      className="group border-border bg-card relative flex aspect-[3/2] flex-col justify-end overflow-hidden rounded-sm border p-6"
     >
       {imageUrl ? (
         <>
@@ -31,19 +31,28 @@ export function CollectionCard({
             alt={imageAlt ?? collection.title}
             fill
             sizes="(min-width: 640px) 33vw, 100vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover opacity-90 grayscale-[15%] transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="from-foreground/80 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
+          {/* Fixed black gradient (not theme-driven) — this is purely for
+              text legibility over a photo, so it should stay dark
+              regardless of the site's light/dark palette. */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
         </>
       ) : (
         <div className="from-foreground/60 absolute inset-0 bg-gradient-to-t to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       )}
       <div className="relative">
-        <h3 className={imageUrl ? "text-background text-lg font-semibold" : "text-lg font-semibold"}>
+        <h3
+          className={
+            imageUrl
+              ? "font-serif text-lg text-white italic"
+              : "font-serif text-lg italic"
+          }
+        >
           {collection.title}
         </h3>
         {collection.description && (
-          <p className={imageUrl ? "text-background/90 mt-1 text-sm" : "text-muted-foreground mt-1 text-sm"}>
+          <p className={imageUrl ? "mt-1 text-sm text-white/80" : "text-muted-foreground mt-1 text-sm"}>
             {collection.description}
           </p>
         )}

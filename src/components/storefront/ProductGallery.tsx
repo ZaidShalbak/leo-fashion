@@ -17,13 +17,13 @@ export function ProductGallery({
 
   if (!active) {
     return (
-      <div className="bg-muted aspect-[4/5] w-full rounded-lg" aria-hidden />
+      <div className="bg-muted aspect-[4/5] w-full rounded-sm" aria-hidden />
     );
   }
 
   return (
     <div data-slot="product-gallery">
-      <div className="bg-muted relative aspect-[4/5] w-full overflow-hidden rounded-lg">
+      <div className="bg-muted relative aspect-[4/5] w-full overflow-hidden rounded-sm">
         <Image
           src={active.url}
           alt={active.altText ?? productTitle}
@@ -43,9 +43,9 @@ export function ProductGallery({
               aria-label={`Show image ${index + 1} of ${images.length}`}
               aria-current={index === activeIndex}
               className={cn(
-                "bg-muted relative h-16 w-16 overflow-hidden rounded-md ring-offset-2 transition",
+                "bg-muted ring-offset-background relative h-16 w-16 overflow-hidden rounded-sm ring-offset-2 transition",
                 index === activeIndex
-                  ? "ring-ring ring-2"
+                  ? "ring-brand-accent ring-2"
                   : "opacity-70 hover:opacity-100"
               )}
             >

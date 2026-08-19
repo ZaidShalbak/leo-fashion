@@ -55,7 +55,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
         </p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" className="w-full text-xs tracking-[0.2em] uppercase" disabled={isPending}>
         {isPending ? "Creating account…" : "Create account"}
       </Button>
     </form>

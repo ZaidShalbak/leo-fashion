@@ -19,29 +19,29 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       className="group block"
       data-slot="product-card"
     >
-      <div className="bg-muted relative aspect-[4/5] overflow-hidden rounded-lg">
+      <div className="bg-muted relative aspect-[4/5] overflow-hidden rounded-sm">
         {primaryImage ? (
           <Image
             src={primaryImage.url}
             alt={primaryImage.altText ?? product.title}
             fill
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : null}
         {isOutOfStock && (
-          <span className="bg-background/90 text-foreground absolute top-2 left-2 rounded-md px-2 py-1 text-xs font-medium">
+          <span className="bg-background/90 text-foreground absolute top-2 left-2 rounded-sm px-2 py-1 text-[10px] tracking-widest uppercase">
             Out of stock
           </span>
         )}
       </div>
       <div className="mt-3 space-y-1">
         {product.brand && (
-          <span className="text-muted-foreground text-xs tracking-wide uppercase">
+          <span className="text-brand-accent text-[10px] tracking-[0.15em] uppercase">
             {product.brand.name}
           </span>
         )}
-        <h3 className="text-sm font-medium">{product.title}</h3>
+        <h3 className="text-sm">{product.title}</h3>
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <PriceDisplay cents={product.basePriceCents} />
           {colorCount > 1 && <span>{colorCount} colors</span>}

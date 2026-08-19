@@ -19,12 +19,12 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
   if (brands.length === 0) return null;
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Shop by brand</h2>
+    <section className="space-y-6">
+      <div className="border-border flex items-end justify-between border-b pb-4">
+        <h2 className="font-serif text-xl italic sm:text-2xl">Shop by brand</h2>
         <Link
           href="/brands"
-          className="text-muted-foreground hover:text-foreground text-sm transition"
+          className="text-brand-accent hover:text-foreground text-xs tracking-[0.2em] uppercase transition"
         >
           View all
         </Link>
@@ -34,7 +34,7 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
           <Link
             key={brand.id}
             href={`/brands/${brand.slug}`}
-            className="border-border bg-card group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-lg border p-4 transition hover:shadow-sm"
+            className="border-border bg-card group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-sm border p-4 transition hover:border-brand-accent/50"
           >
             {brand.logoUrl ? (
               <div className="relative h-10 w-full">
@@ -43,7 +43,7 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
                   alt={brand.name}
                   fill
                   sizes="200px"
-                  className="object-contain grayscale transition group-hover:grayscale-0"
+                  className="object-contain opacity-80 grayscale transition group-hover:opacity-100 group-hover:grayscale-0"
                 />
               </div>
             ) : (

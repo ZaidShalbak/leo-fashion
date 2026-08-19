@@ -271,5 +271,46 @@ product's primary image). Full check command passes. Decisions worth knowing abo
   re-run since — worth remembering next time a new model with a required FK to `User` gets added: the
   wipe sequence needs a line for it too.
 
+Current phase: **Storefront visual redesign ("dark, moody, luxe") — complete.** Requested outside the
+Phase 1–5 roadmap, as a "visual refresh" (same page structure/flows, new look) rather than a structural
+rebuild. Scoped to the storefront only — `/admin` was deliberately left on the original light theme,
+same reasoning as skipping it in the mobile-responsiveness pass. Decisions worth knowing about:
+
+- **The dark theme is scoped via a `dark` class on the `(storefront)` route group's own root
+  element** (`src/app/(storefront)/layout.tsx`), not globally — `src/app/globals.css`'s `:root` (light)
+  tokens are untouched and still drive `/admin`; the `.dark` block's CSS variables were repointed from
+  shadcn's default neutral-gray dark theme to a custom warm near-black/ivory/brass palette. Any shared
+  `src/components/ui/*` primitive automatically renders correctly in both places because they're all
+  built from the semantic tokens (`bg-background`, `text-foreground`, `border-input`, etc.) rather than
+  hardcoded colors — no primitive needed editing for the redesign to apply.
+- **A new `brand-accent` token** (`--brand-accent`/`--brand-accent-foreground`, mapped to
+  `text-brand-accent`/`border-brand-accent`/etc. via `@theme inline`) is the signature warm brass/gold
+  highlight color — used sparingly (hover links, small eyebrow labels, selected-state borders), not as
+  a primary button color. It has a light-theme fallback value in `:root` too so it never silently
+  resolves to nothing if a future component reuses it outside the storefront, even though nothing in
+  `/admin` currently does.
+- **Headings use `font-serif italic`** (Tailwind's default system serif stack — `ui-serif, Georgia,
+  Cambria, "Times New Roman", Times, serif` — no font download, since Google Fonts isn't reachable from
+  this sandbox; see section 6) **paired with `font-sans` (Geist) body text and uppercase
+  `tracking-widest`/`tracking-[0.2em]` labels/eyebrows/buttons** — the classic serif-display-plus-wide-
+  tracking-caps combination common to premium/editorial fashion sites.
+- **Fixed a real bug surfaced by the redesign**: `CollectionCard`'s photo-legibility gradient/text used
+  `from-foreground`/`text-background` — correct only by coincidence under the old light theme (where
+  `background` was white and `foreground` was near-black). Once `foreground`/`background` became
+  ivory/near-black under the new dark theme, that gradient would have inverted (a light wash over the
+  photo, invisible dark-on-dark text). Fixed to use a literal black gradient + white text
+  (`from-black/85 ... text-white`), matching `HeroCarousel`'s approach — this treatment is about photo
+  legibility, not the site's theme, so it should never be theme-relative. Worth checking for the same
+  pattern before reusing `text-background`/`from-foreground` over a photo anywhere else.
+- **Fixed a second bug surfaced by the redesign**: the storefront root `div` used `min-h-full`, which
+  doesn't reliably resolve through `body`'s own `min-h-full` (a `min-height` ancestor doesn't establish
+  a definite height for percentage-height children per the CSS spec) — on short pages (e.g. `/brands`
+  with only 5 tiles) this left a plain-white gap below the footer on tall viewports, invisible before
+  only because the old background was already white. Changed to `min-h-screen`, which resolves against
+  the viewport directly.
+- **`OrderStatusBadge` is shared with `/admin`** (`src/app/admin/orders/*`) — left completely
+  untouched, since it's built from the same semantic `Badge` variants and already renders correctly in
+  both the light admin theme and the new dark storefront theme without any component-level change.
+
 Next: Phase 5 — Testing, Performance, & Deployment (or Arabic/bilingual localization, per the earlier
 open decision — see git history / conversation for which one comes first).

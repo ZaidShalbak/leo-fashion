@@ -36,21 +36,21 @@ export default async function ProductPage({ params }: Props) {
   if (!product || product.status !== "active") notFound();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="grid gap-10 lg:grid-cols-2">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+      <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         <ProductGallery images={product.images} productTitle={product.title} />
 
-        <div className="space-y-6">
-          <div>
+        <div className="space-y-8 lg:pt-4">
+          <div className="space-y-2">
             {product.brand && (
               <Link
                 href={`/brands/${product.brand.slug}`}
-                className="text-muted-foreground hover:text-foreground text-sm tracking-wide uppercase transition"
+                className="text-brand-accent hover:text-foreground text-xs tracking-[0.2em] uppercase transition"
               >
                 {product.brand.name}
               </Link>
             )}
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="font-serif text-3xl italic">
               {product.title}
             </h1>
           </div>

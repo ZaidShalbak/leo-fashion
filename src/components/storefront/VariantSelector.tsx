@@ -88,11 +88,11 @@ export function VariantSelector({
   }
 
   return (
-    <div className="space-y-5" data-slot="variant-selector">
-      <p className="text-xl font-medium">{formatPriceCents(priceCents)}</p>
+    <div className="space-y-6" data-slot="variant-selector">
+      <p className="font-serif text-2xl italic">{formatPriceCents(priceCents)}</p>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Size</p>
+        <p className="text-muted-foreground mb-2 text-xs tracking-widest uppercase">Size</p>
         <div className="flex flex-wrap gap-2">
           {sizes.map((size) => {
             const variant = variantFor(size, selectedColor);
@@ -105,8 +105,8 @@ export function VariantSelector({
                 aria-pressed={size === selectedSize}
                 onClick={() => setSelectedSize(size)}
                 className={cn(
-                  "border-input min-w-10 rounded-md border px-3 py-1.5 text-sm transition",
-                  size === selectedSize && "border-primary bg-primary/5",
+                  "border-input min-w-10 rounded-sm border px-3 py-1.5 text-sm transition",
+                  size === selectedSize && "border-brand-accent text-brand-accent",
                   disabled &&
                     "text-muted-foreground cursor-not-allowed line-through opacity-50"
                 )}
@@ -119,7 +119,7 @@ export function VariantSelector({
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Color</p>
+        <p className="text-muted-foreground mb-2 text-xs tracking-widest uppercase">Color</p>
         <div className="flex flex-wrap gap-2">
           {colors.map((color) => {
             const variant = variantFor(selectedSize, color);
@@ -132,8 +132,8 @@ export function VariantSelector({
                 aria-pressed={color === selectedColor}
                 onClick={() => setSelectedColor(color)}
                 className={cn(
-                  "border-input rounded-md border px-3 py-1.5 text-sm transition",
-                  color === selectedColor && "border-primary bg-primary/5",
+                  "border-input rounded-sm border px-3 py-1.5 text-sm transition",
+                  color === selectedColor && "border-brand-accent text-brand-accent",
                   disabled &&
                     "text-muted-foreground cursor-not-allowed line-through opacity-50"
                 )}
@@ -150,7 +150,7 @@ export function VariantSelector({
         size="lg"
         disabled={isOutOfStock || isPending}
         onClick={handleAddToCart}
-        className="w-full sm:w-auto"
+        className="w-full text-xs tracking-[0.2em] uppercase sm:w-auto sm:px-10"
       >
         {isOutOfStock
           ? "Out of stock"

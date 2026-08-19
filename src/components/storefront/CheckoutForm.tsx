@@ -69,11 +69,11 @@ export function CheckoutForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {addresses.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium">Shipping address</p>
+          <p className="text-xs tracking-widest uppercase">Shipping address</p>
           {addresses.map((addr) => (
             <label
               key={addr.id}
-              className="border-input has-[:checked]:border-primary flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm"
+              className="border-input has-[:checked]:border-brand-accent flex cursor-pointer items-start gap-3 rounded-sm border p-3 text-sm"
             >
               <input
                 type="radio"
@@ -97,7 +97,7 @@ export function CheckoutForm({
               </span>
             </label>
           ))}
-          <label className="border-input has-[:checked]:border-primary flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm">
+          <label className="border-input has-[:checked]:border-brand-accent flex cursor-pointer items-center gap-3 rounded-sm border p-3 text-sm">
             <input
               type="radio"
               name="addressChoice"
@@ -113,7 +113,7 @@ export function CheckoutForm({
       {selected === "new" && (
         <div className="space-y-4">
           {addresses.length === 0 && (
-            <p className="text-sm font-medium">Shipping address</p>
+            <p className="text-xs tracking-widest uppercase">Shipping address</p>
           )}
           <div className="space-y-1.5">
             <Label htmlFor="fullName">Full name</Label>
@@ -160,7 +160,7 @@ export function CheckoutForm({
         </p>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+      <Button type="submit" size="lg" className="w-full text-xs tracking-[0.2em] uppercase" disabled={isPending}>
         {isPending ? "Placing order…" : "Place order"}
       </Button>
     </form>

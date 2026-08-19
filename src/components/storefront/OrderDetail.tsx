@@ -25,7 +25,7 @@ export function OrderDetail({ order }: { order: OrderWithItems }) {
       </div>
 
       <div>
-        <p className="mb-3 text-sm font-medium">Items</p>
+        <p className="mb-3 text-xs tracking-widest uppercase">Items</p>
         <ul className="divide-border divide-y">
           {order.items.map((item) => (
             <li key={item.id} className="flex justify-between gap-4 py-3 text-sm">
@@ -41,14 +41,14 @@ export function OrderDetail({ order }: { order: OrderWithItems }) {
             </li>
           ))}
         </ul>
-        <div className="border-border mt-2 flex justify-between border-t pt-3 text-sm font-medium">
+        <div className="border-border mt-2 flex justify-between border-t pt-3 text-sm">
           <span>Subtotal</span>
-          <span>{formatPriceCents(order.subtotalCents)}</span>
+          <span className="font-serif italic">{formatPriceCents(order.subtotalCents)}</span>
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Shipping address</p>
+        <p className="mb-2 text-xs tracking-widest uppercase">Shipping address</p>
         <p className="text-muted-foreground text-sm">
           {order.shippingName}
           <br />
@@ -66,7 +66,7 @@ export function OrderDetail({ order }: { order: OrderWithItems }) {
 
       {order.trackingNumber && (
         <div>
-          <p className="mb-1 text-sm font-medium">Tracking</p>
+          <p className="mb-1 text-xs tracking-widest uppercase">Tracking</p>
           <p className="text-muted-foreground text-sm">{order.trackingNumber}</p>
         </div>
       )}

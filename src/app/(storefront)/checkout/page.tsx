@@ -38,8 +38,8 @@ export default async function CheckoutPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-xl font-semibold tracking-tight">Checkout</h1>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
+      <h1 className="font-serif text-2xl italic sm:text-3xl">Checkout</h1>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_320px]">
         <CheckoutForm
@@ -50,8 +50,8 @@ export default async function CheckoutPage() {
           }))}
         />
 
-        <div className="border-border h-fit space-y-4 rounded-lg border p-4">
-          <p className="text-sm font-medium">Order summary</p>
+        <div className="border-border bg-card h-fit space-y-4 rounded-sm border p-5">
+          <p className="text-xs tracking-widest uppercase">Order summary</p>
           <ul className="space-y-2">
             {items.map((item) => {
               const priceCents = effectivePriceCents(
@@ -74,9 +74,9 @@ export default async function CheckoutPage() {
               );
             })}
           </ul>
-          <div className="border-border flex justify-between border-t pt-3 text-sm font-medium">
+          <div className="border-border flex justify-between border-t pt-3 text-sm">
             <span>Subtotal</span>
-            <span>{formatPriceCents(subtotalCents)}</span>
+            <span className="font-serif italic">{formatPriceCents(subtotalCents)}</span>
           </div>
           <p className="text-muted-foreground text-xs">
             No payment is collected here — this places the order for
@@ -84,7 +84,7 @@ export default async function CheckoutPage() {
           </p>
           <Link
             href="/cart"
-            className="text-muted-foreground block text-xs underline"
+            className="text-muted-foreground hover:text-foreground block text-xs underline"
           >
             Edit cart
           </Link>

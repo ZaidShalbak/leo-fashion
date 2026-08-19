@@ -70,13 +70,13 @@ export default async function CollectionPage({
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
+    <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:py-14">
+      <div className="space-y-2 text-center">
+        <h1 className="font-serif text-3xl italic sm:text-4xl">
           {collection.title}
         </h1>
         {collection.description && (
-          <p className="text-muted-foreground max-w-xl">
+          <p className="text-muted-foreground mx-auto max-w-xl">
             {collection.description}
           </p>
         )}
@@ -85,7 +85,7 @@ export default async function CollectionPage({
       <FilterBar sizes={sizes} colors={colors} />
 
       {products.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
