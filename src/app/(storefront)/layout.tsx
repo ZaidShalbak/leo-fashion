@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
-import { SignOutButton } from "@/components/storefront/SignOutButton";
+import { CartIconLink } from "@/components/storefront/CartIconLink";
+import { UserMenu } from "@/components/storefront/UserMenu";
 import { MobileNav } from "@/components/storefront/MobileNav";
 
 async function getCartItemCount(): Promise<number> {
@@ -65,30 +66,9 @@ export default async function StorefrontLayout({
             >
               Brands
             </Link>
-            <Link
-              href="/cart"
-              className="text-muted-foreground hover:text-foreground transition"
-            >
-              Cart{cartItemCount > 0 ? ` (${cartItemCount})` : ""}
-            </Link>
+            <CartIconLink itemCount={cartItemCount} />
             {user ? (
-              <>
-                <Link
-                  href="/account/orders"
-                  className="text-muted-foreground hover:text-foreground transition"
-                >
-                  Orders
-                </Link>
-                {user.role === "admin" && (
-                  <Link
-                    href="/admin"
-                    className="text-muted-foreground hover:text-foreground transition"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <SignOutButton />
-              </>
+              <UserMenu isAdmin={user.role === "admin"} />
             ) : (
               <Link
                 href="/login"
@@ -99,13 +79,8 @@ export default async function StorefrontLayout({
             )}
           </nav>
 
-          <div className="flex items-center gap-3 sm:hidden">
-            <Link
-              href="/cart"
-              className="text-muted-foreground hover:text-foreground text-sm transition"
-            >
-              Cart{cartItemCount > 0 ? ` (${cartItemCount})` : ""}
-            </Link>
+          <div className="flex items-center gap-1 sm:hidden">
+            <CartIconLink itemCount={cartItemCount} />
             <MobileNav
               collections={collections}
               isSignedIn={Boolean(user)}

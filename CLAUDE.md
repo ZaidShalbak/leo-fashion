@@ -352,3 +352,33 @@ command passes. Decisions worth knowing about:
   Jack & Jones / Wrangler / American Eagle / Lee — denim- and casualwear-leaning), so the actual
   category list is a business decision for the store owner, entered through `/admin/collections`
   once decided rather than guessed here.
+
+Current phase: **Storefront header icons — complete.** The "Cart (N)" text link and the separate
+"Orders" / "Admin" / "Sign out" text links in the desktop nav are replaced with a bag icon (badge for
+count) and a single user-icon dropdown. Full check command passes. Decisions worth knowing about:
+
+- **`lucide-react` was already a dependency** (used by `src/components/ui/dialog.tsx` and
+  `select.tsx`) but nothing storefront-facing used it yet — `CartIconLink.tsx` (`ShoppingBagIcon` +
+  count badge, capped display at "9+") and `UserMenu.tsx` (`UserIcon` trigger, dropdown with
+  `PackageIcon` Orders / `ShieldIcon` Admin / `LogOutIcon` Sign out) both follow the codebase's
+  existing `*Icon`-suffix import convention.
+- **`UserMenu` consolidates what used to be three separate nav links into one dropdown** — closes on
+  outside click or Escape (plain `useRef` + a `mousedown`/`keydown` document listener, no dependency
+  added; same class of interaction `MobileNav`'s hamburger already had, just with the close-on-outside
+  behavior added on top since a dropdown that only closes via its own toggle button feels broken).
+- **`MobileNav`'s hamburger panel was deliberately left as plain text links** (Orders/Admin/Sign out
+  still spelled out inside it) — it's already a single consolidated menu behind one icon (the
+  hamburger), so nesting another icon-triggered dropdown inside it would add a layer of indirection
+  without removing any nav clutter. The always-visible mobile top bar did get the same cart-icon
+  treatment as desktop, via the same shared `CartIconLink` component, since that one *is* directly
+  parallel to its desktop counterpart.
+- **Verified visually** (Playwright, local dev, guest cart) that the bag icon renders and the count
+  badge appears correctly after an add-to-cart. The signed-in `UserMenu` dropdown itself couldn't be
+  exercised the same way — this sandbox's local dev environment runs on placeholder Supabase Auth
+  credentials (see CLAUDE.md section 6), so sign-in doesn't work end-to-end here regardless of this
+  change. Worth a manual click-through on a real signed-in session after this ships.
+- **This branch forked from `main` before `feat/collection-management` merged**, so it independently
+  hit and re-fixed the same duplicate-`unoptimized`-prop bug in `BrandsSection.tsx`/`brands/page.tsx`
+  documented above — resolved as a normal merge conflict (both sides had already converged on
+  functionally the same fix, just slightly different comment wording) when this branch merged back
+  into `main`, not a new bug.
