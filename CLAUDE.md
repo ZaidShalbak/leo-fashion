@@ -273,3 +273,37 @@ product's primary image). Full check command passes. Decisions worth knowing abo
 
 Next: Phase 5 — Testing, Performance, & Deployment (or Arabic/bilingual localization, per the earlier
 open decision — see git history / conversation for which one comes first).
+
+Current phase: **Brand management + catalog cleanup tooling — complete.** Requested outside the
+Phase 1–5 roadmap, following up on the multi-brand marketplace work: brand editing was missing
+(`/admin/brands` only supported list + create), and there was no way to remove dummy/placeholder
+catalog rows short of Prisma Studio. Full check command passes. Decisions worth knowing about:
+
+- **`updateBrand`/`deleteBrand` added to `src/server/actions/admin/brands.ts`**, using the
+  `brandUpdateSchema` that already existed in `src/lib/validators/brand.ts` but had no caller yet.
+  `/admin/brands/[brandId]/edit` (`EditBrandForm`) mirrors the product edit page's shape. Brand names
+  are now links to their edit page from `/admin/brands`.
+- **Brand deletion is unconditionally safe and doesn't warn-block**: `Product.brandId` is `ON DELETE
+  SET NULL` (confirmed in the `add_brand` migration SQL), so deleting a brand just un-brands its
+  products rather than touching them. `DeleteBrandButton` still shows the affected product count in
+  its confirm prompt so an admin isn't surprised, but there's no server-side guard preventing deletion
+  of a brand that still has products — that's intentional.
+- **Product deletion (`deleteProduct` in `src/server/actions/admin/products.ts`) is a genuine hard
+  delete**, added alongside archive (archive already existed via `setProductStatus`; delete didn't).
+  `ProductVariant`/`ProductImage`/`ProductCollection` all cascade automatically. `OrderItem` is `ON
+  DELETE SET NULL`, so past orders keep their `titleSnapshot`/price/etc. and are unaffected.
+  `CartItem` has no cascade — `ON DELETE RESTRICT` — so deleting a product currently sitting in
+  *any* cart (including an abandoned guest cart) fails; `friendlyDbError`'s existing P2003/P2014
+  handling already covers this with a clear message, no new code needed there. If that guard is ever
+  in the way for real cleanup, the fix is deleting the blocking `CartItem` rows first in the same
+  action — not relaxing the FK, since that guard is what stops a customer's cart from silently losing
+  a line item.
+- **Both delete buttons use `window.confirm`, not a dialog component.** `src/components/ui/dialog.tsx`
+  exists (shadcn) but nothing in the app used it yet; a native confirm was simpler and consistent with
+  the app's existing "no confirm dialogs anywhere yet" baseline. Revisit if a second destructive action
+  needs a richer confirmation UI (e.g. "type the name to confirm").
+- **Real product/brand data entry (replacing the seeded placeholders) is a data-entry task, not a
+  code task** — it goes through the now-complete admin UI (`/admin/brands`, `/admin/products/new`)
+  directly rather than a one-off script, since (unlike the Phase-4-era backfill scripts) there's no
+  bulk transformation of existing rows involved, just new rows an admin enters by hand or a script the
+  admin runs against their own real product photos/copy.

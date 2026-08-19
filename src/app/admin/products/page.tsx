@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 import { ProductStatusToggle } from "@/components/admin/ProductStatusToggle";
+import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 
 export const metadata: Metadata = { title: "Products — Admin" };
 
@@ -47,6 +48,7 @@ export default async function AdminProductsPage() {
             <TableHead>Variants</TableHead>
             <TableHead>Total stock</TableHead>
             <TableHead />
+            <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -70,6 +72,9 @@ export default async function AdminProductsPage() {
                 <TableCell>{totalStock}</TableCell>
                 <TableCell>
                   <ProductStatusToggle productId={product.id} status={product.status} />
+                </TableCell>
+                <TableCell>
+                  <DeleteProductButton productId={product.id} productTitle={product.title} />
                 </TableCell>
               </TableRow>
             );

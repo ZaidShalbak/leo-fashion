@@ -132,6 +132,46 @@ export async function setProductStatus(
   return { success: true };
 }
 
+/**
+ * Hard-deletes a product. Variants, images, and collection memberships
+ * cascade automatically (ON DELETE CASCADE — see schema). OrderItem keeps
+ * its historical snapshot via ON DELETE SET NULL, so past orders are
+ * unaffected. CartItem has no cascade/set-null (ON DELETE RESTRICT — a
+ * deliberate "don't silently vanish something someone has in their cart"
+ * guard), so deleting a product that's currently in any cart fails with a
+ * friendly error instead of the delete just going through; that's the
+ * expected outcome, not a bug — ask the admin to wait for the cart to
+ * clear (or archive the product instead) rather than deleting under it.
+ */
+const deleteProductSchema = z.object({ productId: z.string().cuid() });
+
+export async function deleteProduct(
+  input: z.infer<typeof deleteProductSchema>
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const parsed = deleteProductSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Invalid request." };
+
+  let title: string;
+  try {
+    const deleted = await db.product.delete({ where: { id: parsed.data.productId } });
+    title = deleted.title;
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "product.delete",
+    targetType: "Product",
+    targetId: parsed.data.productId,
+    metadata: { title },
+  });
+
+  revalidatePath("/admin/products");
+  return { success: true };
+}
+
 const addVariantSchema = productVariantSchema.extend({ productId: z.string().cuid() });
 
 export async function addProductVariant(

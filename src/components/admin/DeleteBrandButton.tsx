@@ -1,0 +1,61 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+
+import { Button } from "@/components/ui/button";
+import { deleteBrand } from "@/server/actions/admin/brands";
+
+export function DeleteBrandButton({
+  brandId,
+  brandName,
+  productCount,
+}: {
+  brandId: string;
+  brandName: string;
+  productCount: number;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleDelete() {
+    const warning =
+      productCount > 0
+        ? `Delete "${brandName}"? ${productCount} product${
+            productCount === 1 ? "" : "s"
+          } will lose this brand (they won't be deleted).`
+        : `Delete "${brandName}"? This can't be undone.`;
+    if (!window.confirm(warning)) return;
+
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteBrand({ id: brandId });
+      if (result.success) {
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
+    });
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {error && (
+        <span role="alert" className="text-destructive text-xs">
+          {error}
+        </span>
+      )}
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={isPending}
+        onClick={handleDelete}
+        className="text-destructive hover:text-destructive"
+      >
+        {isPending ? "Deleting…" : "Delete"}
+      </Button>
+    </div>
+  );
+}
