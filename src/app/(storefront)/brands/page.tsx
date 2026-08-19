@@ -38,6 +38,10 @@ export default async function BrandsPage() {
                     fill
                     sizes="200px"
                     className="object-contain grayscale transition group-hover:grayscale-0"
+                    // See BrandsSection.tsx — brand logos are arbitrary
+                    // admin-entered URLs, so they can't be covered by a
+                    // static remotePatterns allowlist.
+                    unoptimized
                   />
                 </div>
               ) : (
