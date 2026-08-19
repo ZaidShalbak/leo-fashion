@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 
 import { db } from "@/server/db";
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { NewBrandForm } from "@/components/admin/NewBrandForm";
+import { DeleteBrandButton } from "@/components/admin/DeleteBrandButton";
 
 export const metadata: Metadata = { title: "Brands — Admin" };
 
@@ -34,14 +36,26 @@ export default async function AdminBrandsPage() {
             <TableHead>Name</TableHead>
             <TableHead>Slug</TableHead>
             <TableHead>Products</TableHead>
+            <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
           {brands.map((brand) => (
             <TableRow key={brand.id}>
-              <TableCell>{brand.name}</TableCell>
+              <TableCell>
+                <Link href={`/admin/brands/${brand.id}/edit`} className="hover:underline">
+                  {brand.name}
+                </Link>
+              </TableCell>
               <TableCell className="text-muted-foreground">{brand.slug}</TableCell>
               <TableCell>{brand._count.products}</TableCell>
+              <TableCell>
+                <DeleteBrandButton
+                  brandId={brand.id}
+                  brandName={brand.name}
+                  productCount={brand._count.products}
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

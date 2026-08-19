@@ -53,6 +53,12 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
                   // for this one image; fine for small logo assets.
                   unoptimized
                   className="object-contain grayscale transition group-hover:grayscale-0"
+                  // Brand logos are arbitrary admin-entered URLs (unlike
+                  // product photos, which all come from one controlled
+                  // Supabase Storage domain already in next.config.ts's
+                  // remotePatterns), so no static allowlist entry can cover
+                  // every possible host. Bypass the optimizer for these.
+                  unoptimized
                 />
               </div>
             ) : (

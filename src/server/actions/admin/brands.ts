@@ -6,7 +6,12 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { requireAdmin } from "@/server/auth";
 import { logAudit } from "@/server/audit";
-import { brandSchema, type BrandInput } from "@/lib/validators/brand";
+import {
+  brandSchema,
+  brandUpdateSchema,
+  type BrandInput,
+  type BrandUpdateInput,
+} from "@/lib/validators/brand";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -41,6 +46,68 @@ export async function createBrand(input: BrandInput): Promise<ActionResult> {
   return { success: true };
 }
 
+export async function updateBrand(input: BrandUpdateInput): Promise<ActionResult> {
+  const admin = await requireAdmin();
+
+  const parsed = brandUpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid brand." };
+  }
+  const { id, logoUrl, ...fields } = parsed.data;
+
+  try {
+    await db.brand.update({
+      where: { id },
+      data: { ...fields, ...(logoUrl !== undefined ? { logoUrl: logoUrl || null } : {}) },
+    });
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "brand.update",
+    targetType: "Brand",
+    targetId: id,
+    metadata: fields,
+  });
+
+  revalidatePath("/admin/brands");
+  revalidatePath(`/admin/brands/${id}/edit`);
+  return { success: true };
+}
+
+/**
+ * Brand deletion is safe by design: Product.brandId is ON DELETE SET NULL
+ * (see prisma/schema.prisma), so any products carrying this brand simply
+ * become brand-less rather than being blocked or cascaded away. That's the
+ * right behavior for cleaning up a mistakenly-created or dummy brand
+ * without taking its products down too.
+ */
+export async function deleteBrand(input: { id: string }): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (typeof input.id !== "string" || !input.id) {
+    return { success: false, error: "Invalid request." };
+  }
+
+  try {
+    await db.brand.delete({ where: { id: input.id } });
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "brand.delete",
+    targetType: "Brand",
+    targetId: input.id,
+    metadata: {},
+  });
+
+  revalidatePath("/admin/brands");
+  return { success: true };
+}
+
 function friendlyDbError(error: unknown): string {
   if (
     typeof error === "object" &&
@@ -50,6 +117,7 @@ function friendlyDbError(error: unknown): string {
   ) {
     const code = (error as Prisma.PrismaClientKnownRequestError).code;
     if (code === "P2002") return "A brand with that slug already exists.";
+    if (code === "P2025") return "That brand no longer exists.";
   }
   throw error;
 }
