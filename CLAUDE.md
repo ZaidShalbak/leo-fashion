@@ -307,3 +307,28 @@ catalog rows short of Prisma Studio. Full check command passes. Decisions worth 
   directly rather than a one-off script, since (unlike the Phase-4-era backfill scripts) there's no
   bulk transformation of existing rows involved, just new rows an admin enters by hand or a script the
   admin runs against their own real product photos/copy.
+
+Current phase: **Storefront header icons — complete.** The "Cart (N)" text link and the separate
+"Orders" / "Admin" / "Sign out" text links in the desktop nav are replaced with a bag icon (badge for
+count) and a single user-icon dropdown. Full check command passes. Decisions worth knowing about:
+
+- **`lucide-react` was already a dependency** (used by `src/components/ui/dialog.tsx` and
+  `select.tsx`) but nothing storefront-facing used it yet — `CartIconLink.tsx` (`ShoppingBagIcon` +
+  count badge, capped display at "9+") and `UserMenu.tsx` (`UserIcon` trigger, dropdown with
+  `PackageIcon` Orders / `ShieldIcon` Admin / `LogOutIcon` Sign out) both follow the codebase's
+  existing `*Icon`-suffix import convention.
+- **`UserMenu` consolidates what used to be three separate nav links into one dropdown** — closes on
+  outside click or Escape (plain `useRef` + a `mousedown`/`keydown` document listener, no dependency
+  added; same class of interaction `MobileNav`'s hamburger already had, just with the close-on-outside
+  behavior added on top since a dropdown that only closes via its own toggle button feels broken).
+- **`MobileNav`'s hamburger panel was deliberately left as plain text links** (Orders/Admin/Sign out
+  still spelled out inside it) — it's already a single consolidated menu behind one icon (the
+  hamburger), so nesting another icon-triggered dropdown inside it would add a layer of indirection
+  without removing any nav clutter. The always-visible mobile top bar did get the same cart-icon
+  treatment as desktop, via the same shared `CartIconLink` component, since that one *is* directly
+  parallel to its desktop counterpart.
+- **Verified visually** (Playwright, local dev, guest cart) that the bag icon renders and the count
+  badge appears correctly after an add-to-cart. The signed-in `UserMenu` dropdown itself couldn't be
+  exercised the same way — this sandbox's local dev environment runs on placeholder Supabase Auth
+  credentials (see CLAUDE.md section 6), so sign-in doesn't work end-to-end here regardless of this
+  change. Worth a manual click-through on a real signed-in session after this ships.
