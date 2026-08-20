@@ -1,11 +1,21 @@
 import { db } from "@/server/db";
+import { isHeroBannerLive } from "@/lib/heroBanners";
 import { CollectionCard } from "@/components/storefront/CollectionCard";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
 import { BrandsSection } from "@/components/storefront/BrandsSection";
 
 export default async function HomePage() {
-  const [collectionsWithLead, products, brands] = await Promise.all([
+  const [heroBanners, collectionsWithLead, products, brands] = await Promise.all([
+    // Admin-managed banners (see /admin/hero-banners) take priority over
+    // the collection-derived fallback below. Fetching every *active* row
+    // (not narrowing the scheduling window in SQL) and filtering with the
+    // same isHeroBannerLive predicate the admin list uses to compute
+    // status badges keeps "is this live right now" defined in exactly one
+    // place — there are only ever a handful of banners, so filtering in
+    // memory instead of a gnarlier date-range WHERE clause isn't a real
+    // cost.
+    db.heroBanner.findMany({ where: { isActive: true }, orderBy: { position: "asc" } }),
     // One representative (oldest-added) active product per collection, with
     // its primary image, so the hero carousel and category tiles can show a
     // real photo instead of a plain color block — see HeroCarousel/
@@ -34,7 +44,22 @@ export default async function HomePage() {
     db.brand.findMany({ orderBy: { name: "asc" } }),
   ]);
 
-  const heroSlides: HeroSlide[] = collectionsWithLead
+  const liveBannerSlides: HeroSlide[] = heroBanners
+    .filter((banner) => isHeroBannerLive(banner, new Date()))
+    .map((banner) => ({
+      id: banner.id,
+      title: banner.headline,
+      description: banner.subtext,
+      imageUrl: banner.imageUrl,
+      imageAlt: banner.imageAltText ?? banner.headline,
+      href: banner.ctaUrl,
+      ctaLabel: banner.ctaLabel,
+    }));
+
+  // Falls back to one slide per collection (today's default before any
+  // admin sets up a banner) only when there's nothing live to show —
+  // see /admin/hero-banners.
+  const collectionSlides: HeroSlide[] = collectionsWithLead
     .map((collection) => {
       const leadImage = collection.products[0]?.product.images[0];
       if (!leadImage) return null;
@@ -48,6 +73,8 @@ export default async function HomePage() {
       };
     })
     .filter((slide): slide is HeroSlide => slide !== null);
+
+  const heroSlides = liveBannerSlides.length > 0 ? liveBannerSlides : collectionSlides;
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:space-y-16 sm:py-10">

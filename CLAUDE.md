@@ -531,3 +531,106 @@ command passes. Decisions worth knowing about:
   Postgres only, same as every schema change in this project (see section 6). The equivalent
   `prisma migrate deploy` still needs to run against the real Supabase database from the user's own
   machine before this feature is live in production.
+
+Current phase: **Customizable homepage hero carousel — complete.** The carousel used to be entirely
+auto-generated (one slide per Collection, using its oldest active product's photo) with nothing an
+admin could actually control. Replaced with an admin-managed `HeroBanner` model, a full
+create/edit/delete/reorder admin UI at `/admin/hero-banners` with drag-and-drop ordering and a live
+visual preview, and a graceful fallback to the old collection-derived behavior. Full check command
+passes, including new unit tests for the scheduling logic and an integration test for reordering.
+Decisions worth knowing about:
+
+- **`HeroBanner` is its own model, not fields bolted onto `Collection`** — a banner doesn't have to
+  correspond to a collection at all (a sale, an announcement, a brand spotlight), and a collection can
+  now have zero, one, or several banners promoting it instead of being forced into a 1:1 relationship.
+  Fields: `imageUrl`/`imageAltText` (a dedicated photo, never reused from `ProductImage` — hero photos
+  want a different wide crop than product photos), `headline`/`subtext`, an optional `ctaLabel` +
+  required `ctaUrl` (the whole slide is always a link to `ctaUrl`; `ctaLabel` just adds a visible
+  button chip on top — see the next bullet), `position` for manual ordering, `isActive`, and an
+  optional `startsAt`/`endsAt` scheduling window.
+- **`HeroCarousel`'s `HeroSlide` type gained an optional `ctaLabel`**, rendered as a small button chip
+  in the gradient overlay when present — without this, the field an admin fills in would've been
+  collected but never actually shown anywhere, which felt like a trap. `HeroBannerPreview`
+  (`src/components/admin`) is styled identically to this real slide markup on purpose, so what an
+  admin sees while filling out the form is what the homepage will actually show, not an approximation
+  — same aspect ratio, gradient, text layout, and CTA chip, reused via the same class names.
+- **Scheduling reuses the discount-code date-input pattern**: a plain `<input type="date">` produces a
+  "YYYY-MM-DD" string, converted to start-of-day/end-of-day UTC (`src/lib/heroBanners.ts`'s
+  `startOfDayUtc`/`endOfDayUtc`, deliberately separate copies from `src/lib/discount.ts`'s — small
+  enough to duplicate rather than couple two unrelated features through a shared file). "Is this
+  banner live right now" is one pure, unit-tested predicate (`isHeroBannerLive`) used in three places
+  that need to agree: the admin list's status badges, the homepage's actual filtering, and (indirectly
+  through the same function) anywhere else that might show banners later.
+- **The homepage falls back to the old collection-derived slides only when there are zero live
+  banners** — fetches every `isActive` banner, filters with `isHeroBannerLive` in memory rather than
+  trying to express the scheduling window as a SQL `WHERE` clause (there are only ever a handful of
+  banners, so this isn't a real cost), and only reaches for `collectionsWithLead`'s slides if that
+  filtered list comes up empty. This means an admin can delete every banner (or let them all expire)
+  without ever leaving the homepage looking broken.
+- **Banner creation is one step, not two** — unlike product images (added on a product's *existing*
+  edit page), `createHeroBanner` takes the image file and every other field together in one `FormData`
+  submission, since a banner with no photo isn't really a banner yet. `NewHeroBannerForm` shows an
+  instant client-side preview of the picked file via `URL.createObjectURL`, revoked on unmount/reset to
+  avoid leaking blob URLs. Editing keeps the image optional (a new file replaces the old one; leaving
+  it empty keeps the current photo) — forcing a re-upload on every headline tweak would be a bad
+  workflow.
+- **Both the create and edit forms are one component wired two ways** conceptually (though
+  implemented as two separate files, `NewHeroBannerForm`/`EditHeroBannerForm`, matching this
+  codebase's existing brand/collection/discount-code pattern of separate new/edit forms rather than
+  one form with a mode flag) — both render `HeroBannerPreview` from the same controlled state
+  (`headline`/`subtext`/`ctaLabel`/an image URL, whether that's a blob preview or the persisted
+  Supabase URL), so the live-preview behavior is identical in both places.
+- **Drag-and-drop reordering is hand-rolled with native HTML5 drag events, not a library** — with only
+  ever a handful of banners, this isn't a case that needs `@dnd-kit`/`react-beautiful-dnd`; same
+  reasoning `HeroCarousel` itself already used to skip a carousel library. `HeroBannerReorderList`
+  reorders its local list live as you drag over another card (immediate visual feedback), then
+  persists the final order via `reorderHeroBanners` on drop — which does a full `position` rewrite
+  for every id in the new order (a small `$transaction` of `updateMany` calls), not a partial "move
+  this one item" patch, so the server never has to reconstruct drag intent from a diff.
+- **Images share the existing `product-images` Supabase Storage bucket**, under a `hero-banners/`
+  path prefix rather than a second bucket — creating a new public bucket is a manual one-time
+  Supabase-dashboard step (see section 6's note on the original bucket), and there's no real benefit
+  to a second one for the same public-read behavior. `src/server/storage.ts` was refactored slightly
+  (shared internal `uploadToBucket`/`deleteFromBucket` helpers) so the product-image and hero-banner
+  upload/delete functions aren't near-duplicates of each other.
+- **Tests follow this codebase's actual established pattern, not the letter of section 5's rule**:
+  plain CRUD (create/update/delete) for brands, collections, and discount codes has never had
+  dedicated integration tests in this project — only pure lib logic and anything with real
+  transactional/ordering logic does. So `heroBanners.test.ts` (pure `isHeroBannerLive`/date-helper
+  unit tests, mirroring `discount.test.ts`) was written, plus one integration test for
+  `reorderHeroBanners` specifically (the one action here that isn't just "validate then pass through
+  to Prisma" — it turns a dragged-into order into a set of position writes). create/update/delete
+  were left untested, consistent with how brand/collection/discount-code CRUD already were.
+- **Verified with Playwright against local dev**: seeded a live banner directly in the database and
+  confirmed it replaces the collection-derived carousel on the homepage, headline/subtext/CTA chip all
+  render correctly, then deactivated it and added a future-scheduled one instead and confirmed the
+  homepage correctly falls back to showing collections with no trace of either non-live banner. The
+  admin `/admin/hero-banners` UI itself (the drag-and-drop list, the live preview while typing) could
+  only be confirmed to redirect cleanly to `/login` rather than crash — same placeholder-Supabase-Auth
+  limitation noted in every other admin-UI verification in this file. Worth a real click-through (drag
+  a banner, watch the preview update as you type) on a signed-in admin session once this ships.
+- **This migration is local-dev-only so far, like every other one** — the equivalent
+  `prisma migrate deploy` needs to run against the real Supabase database from the user's own machine
+  before this feature works in production (see section 6).
+
+**Follow-up fixes (post-real-click-through feedback):** two UX issues surfaced once the feature was
+actually clicked through on a real admin session — exactly the gap the note above flagged.
+
+- **A newly created banner didn't show up in the reorder list without a manual page refresh.**
+  `createHeroBanner` already called `revalidatePath`, but that only invalidates the Next.js cache — it
+  doesn't make an already-mounted client component re-render with new data. `NewHeroBannerForm` now
+  calls `router.refresh()` on success. That alone still wasn't enough, though: `HeroBannerReorderList`
+  keeps its own working copy of `banners` in `useState` for drag-and-drop, and a plain prop change
+  doesn't reset an already-initialized `useState`. Fixed by giving `<HeroBannerReorderList>` a
+  `key={banners.map(b => b.id).join(",")}` in `AdminHeroBannersPage` — when the *set* of banner ids
+  changes (add/delete elsewhere), React remounts the list with the fresh prop; reordering alone doesn't
+  touch this key, so an in-progress or just-saved drag isn't disturbed by it.
+- **Drag-and-drop reordering auto-saved on every drop**, which meant a stray or misclicked drag could
+  silently commit a homepage-visible change with no way back. `HeroBannerReorderList` now keeps a
+  `savedItems` copy alongside the working `items` copy; dropping only reorders `items` locally, and a
+  "Save order" / "Discard" control pair appears only once `items` actually diverges from `savedItems`
+  (compared by id sequence). This matches how every other admin form in this codebase already works —
+  edit freely, then explicitly save — rather than being uniquely eager to persist.
+- Full check (`npm run lint`, `npm run typecheck`, `npm run test` — 79/79, `npx next build`) passes.
+  Verifying the actual drag/save/discard interaction still hits the same placeholder-Supabase-Auth wall
+  as everything else admin-side in this sandbox — worth confirming on a real signed-in session.
