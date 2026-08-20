@@ -52,6 +52,12 @@ export default async function AdminLayout({
               >
                 Orders
               </Link>
+              <Link
+                href="/admin/discount-codes"
+                className="text-muted-foreground hover:text-foreground transition"
+              >
+                Discount codes
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-4 text-sm">
