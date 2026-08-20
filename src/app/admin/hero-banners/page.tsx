@@ -32,6 +32,15 @@ export default async function AdminHeroBannersPage() {
       </div>
 
       <HeroBannerReorderList
+        // Keyed off the id list so that when a banner is added or removed
+        // elsewhere on this page (see NewHeroBannerForm's router.refresh()),
+        // React remounts the list with the fresh prop instead of keeping the
+        // old internal state around — a plain prop change wouldn't
+        // otherwise be picked up, since the list owns its own working copy
+        // for drag-and-drop. Reordering itself doesn't change this key (see
+        // HeroBannerReorderList), so an in-progress or just-saved drag isn't
+        // disturbed by it.
+        key={banners.map((b) => b.id).join(",")}
         banners={banners.map((b) => ({
           id: b.id,
           imageUrl: b.imageUrl,

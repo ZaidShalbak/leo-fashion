@@ -612,3 +612,25 @@ Decisions worth knowing about:
 - **This migration is local-dev-only so far, like every other one** — the equivalent
   `prisma migrate deploy` needs to run against the real Supabase database from the user's own machine
   before this feature works in production (see section 6).
+
+**Follow-up fixes (post-real-click-through feedback):** two UX issues surfaced once the feature was
+actually clicked through on a real admin session — exactly the gap the note above flagged.
+
+- **A newly created banner didn't show up in the reorder list without a manual page refresh.**
+  `createHeroBanner` already called `revalidatePath`, but that only invalidates the Next.js cache — it
+  doesn't make an already-mounted client component re-render with new data. `NewHeroBannerForm` now
+  calls `router.refresh()` on success. That alone still wasn't enough, though: `HeroBannerReorderList`
+  keeps its own working copy of `banners` in `useState` for drag-and-drop, and a plain prop change
+  doesn't reset an already-initialized `useState`. Fixed by giving `<HeroBannerReorderList>` a
+  `key={banners.map(b => b.id).join(",")}` in `AdminHeroBannersPage` — when the *set* of banner ids
+  changes (add/delete elsewhere), React remounts the list with the fresh prop; reordering alone doesn't
+  touch this key, so an in-progress or just-saved drag isn't disturbed by it.
+- **Drag-and-drop reordering auto-saved on every drop**, which meant a stray or misclicked drag could
+  silently commit a homepage-visible change with no way back. `HeroBannerReorderList` now keeps a
+  `savedItems` copy alongside the working `items` copy; dropping only reorders `items` locally, and a
+  "Save order" / "Discard" control pair appears only once `items` actually diverges from `savedItems`
+  (compared by id sequence). This matches how every other admin form in this codebase already works —
+  edit freely, then explicitly save — rather than being uniquely eager to persist.
+- Full check (`npm run lint`, `npm run typecheck`, `npm run test` — 79/79, `npx next build`) passes.
+  Verifying the actual drag/save/discard interaction still hits the same placeholder-Supabase-Auth wall
+  as everything else admin-side in this sandbox — worth confirming on a real signed-in session.

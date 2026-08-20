@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { createHeroBanner } from "@/server/actions/admin/heroBanners";
 import { HeroBannerPreview } from "./HeroBannerPreview";
 
 export function NewHeroBannerForm() {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -46,6 +48,12 @@ export function NewHeroBannerForm() {
         setSubtext("");
         setCtaLabel("");
         setIsActive(true);
+        // The reorder list above is keyed off the banner id list (see
+        // AdminHeroBannersPage), so this refresh both re-fetches the row
+        // we just created *and* forces that list to remount and pick it
+        // up — without the key, a plain refresh() alone wouldn't do
+        // anything since the list component isn't being re-mounted.
+        router.refresh();
       } else {
         setError(result.error);
       }

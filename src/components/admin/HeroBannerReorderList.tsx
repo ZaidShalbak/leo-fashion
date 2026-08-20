@@ -15,29 +15,33 @@ type HeroBannerRow = {
   status: "live" | "scheduled" | "expired" | "inactive";
 };
 
+function sameOrder(a: HeroBannerRow[], b: HeroBannerRow[]): boolean {
+  return a.length === b.length && a.every((item, index) => item.id === b[index]?.id);
+}
+
 /**
  * Drag-and-drop reordering via plain HTML5 drag events rather than a
  * library — with a handful of banners (this list is never going to be
  * long), hand-rolling it is simpler than adding a dependency for it, same
  * call HeroCarousel itself made about not pulling in a carousel library.
- * Reorders the local list live as you drag over another card (so it feels
- * immediate), then persists the final order via reorderHeroBanners once
- * you drop — a `router.refresh()`-free approach since the local state
- * already reflects the new order and a refresh would just re-fetch the
- * same thing.
+ *
+ * Dragging only reorders the local working copy (`items`) — nothing is
+ * persisted until "Save order" is clicked. Auto-saving on every drop was
+ * the original behavior, but a stray/misclicked drag would silently commit
+ * a homepage-visible change with no way back, so reordering now works like
+ * every other admin form here: edit freely, then explicitly save (or
+ * discard). `savedItems` tracks the last-persisted order so the Save/
+ * Discard controls only show up once the working copy actually diverges
+ * from it.
  */
 export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] }) {
   const [items, setItems] = useState(banners);
+  const [savedItems, setSavedItems] = useState(banners);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const draggedIndex = useRef<number | null>(null);
 
-  function persistOrder(next: HeroBannerRow[]) {
-    startTransition(async () => {
-      const result = await reorderHeroBanners({ orderedIds: next.map((b) => b.id) });
-      if (!result.success) setError(result.error);
-    });
-  }
+  const isDirty = !sameOrder(items, savedItems);
 
   function handleDragStart(index: number) {
     draggedIndex.current = index;
@@ -59,7 +63,23 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
 
   function handleDrop() {
     draggedIndex.current = null;
-    persistOrder(items);
+  }
+
+  function handleSaveOrder() {
+    setError(null);
+    startTransition(async () => {
+      const result = await reorderHeroBanners({ orderedIds: items.map((b) => b.id) });
+      if (result.success) {
+        setSavedItems(items);
+      } else {
+        setError(result.error);
+      }
+    });
+  }
+
+  function handleDiscardOrder() {
+    setError(null);
+    setItems(savedItems);
   }
 
   function handleDelete(id: string, headline: string) {
@@ -68,7 +88,11 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
     startTransition(async () => {
       const result = await deleteHeroBanner({ id });
       if (result.success) {
+        // Deletion is still immediate/independent of the save-order flow —
+        // drop the row from both copies so an in-progress unsaved reorder
+        // doesn't suddenly reference a banner that's gone.
         setItems((current) => current.filter((b) => b.id !== id));
+        setSavedItems((current) => current.filter((b) => b.id !== id));
       } else {
         setError(result.error);
       }
@@ -81,7 +105,20 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
 
   return (
     <div className="space-y-2">
-      <p className="text-muted-foreground text-xs">Drag a banner to change its order on the homepage.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted-foreground text-xs">Drag a banner to change its order on the homepage.</p>
+        {isDirty && (
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Unsaved order</span>
+            <Button type="button" size="sm" variant="outline" disabled={isPending} onClick={handleDiscardOrder}>
+              Discard
+            </Button>
+            <Button type="button" size="sm" disabled={isPending} onClick={handleSaveOrder}>
+              {isPending ? "Saving…" : "Save order"}
+            </Button>
+          </div>
+        )}
+      </div>
       <ul className="space-y-2">
         {items.map((banner, index) => (
           <li
