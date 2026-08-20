@@ -142,6 +142,18 @@ model ProductImage {
   url       String
   altText   String?
   position  Int      @default(0)
+  // Which variant color this photo shows, e.g. "Black" — matches
+  // ProductVariant.color exactly (validated against the product's actual
+  // variant colors in uploadProductImage/updateProductImageColor, not
+  // enforced by the database). Null means a general/all-colors image, the
+  // gallery's fallback when nothing color-specific exists for the
+  // selected color — see ProductDetail.tsx. Deliberately just a plain
+  // string column, not a relation to ProductVariant: an image belongs to
+  // a color, not to one specific size+color variant (the same photo of a
+  // black t-shirt applies to every size), and a string keeps it robust to
+  // colors being added/renamed on variants without a cascading FK to
+  // manage.
+  color     String?
   createdAt DateTime @default(now())
 
   @@index([productId])

@@ -34,10 +34,18 @@ export function VariantSelector({
   productId,
   basePriceCents,
   variants,
+  selectedColor,
+  onColorChange,
 }: {
   productId: string;
   basePriceCents: number;
   variants: Variant[];
+  // Color selection is lifted to the parent (ProductDetail) so the photo
+  // gallery can react to it too — everything else about selection state
+  // (size, the fallback-pairing logic below) stays local to this
+  // component, since only color affects which photos show.
+  selectedColor: string;
+  onColorChange: (color: string) => void;
 }) {
   const sizes = useMemo(
     () => sortSizes([...new Set(variants.map((v) => v.size))]),
@@ -51,9 +59,6 @@ export function VariantSelector({
   const firstInStock = variants.find((v) => v.inventoryQuantity > 0);
   const [selectedSize, setSelectedSize] = useState(
     firstInStock?.size ?? variants[0]?.size
-  );
-  const [selectedColor, setSelectedColor] = useState(
-    firstInStock?.color ?? variants[0]?.color
   );
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<
@@ -94,12 +99,12 @@ export function VariantSelector({
       const fallbackColor = colors.find(
         (c) => (variantFor(size, c)?.inventoryQuantity ?? 0) > 0
       );
-      if (fallbackColor) setSelectedColor(fallbackColor);
+      if (fallbackColor) onColorChange(fallbackColor);
     }
   }
 
   function handleSelectColor(color: string) {
-    setSelectedColor(color);
+    onColorChange(color);
     const current = variantFor(selectedSize, color);
     if (!current || current.inventoryQuantity <= 0) {
       const fallbackSize = sizes.find(

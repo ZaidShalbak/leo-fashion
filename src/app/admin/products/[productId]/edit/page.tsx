@@ -54,7 +54,11 @@ export default async function EditProductPage({ params }: Props) {
 
       <div className="space-y-3">
         <h2 className="text-sm font-medium">Images</h2>
-        <ImageManager productId={product.id} images={product.images} />
+        <ImageManager
+          productId={product.id}
+          images={product.images}
+          colors={[...new Set(product.variants.map((v) => v.color))]}
+        />
       </div>
 
       <div className="space-y-3">

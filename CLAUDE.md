@@ -475,3 +475,59 @@ tests covering every rejection path inside `placeOrder`. Decisions worth knowing
   generated and applied against local dev Postgres only (this sandbox can't reach the real database —
   see section 6); running the equivalent `prisma migrate deploy` against the real project has to
   happen from the user's own machine before this feature works end-to-end in production.
+
+Current phase: **Per-variant (per-color) product images — complete.** Closes a gap flagged during the
+variant-model discussion above: `ProductImage` used to belong only to the whole product, so a shirt
+in Black and Navy showed the exact same photo no matter which color a shopper picked. Full check
+command passes. Decisions worth knowing about:
+
+- **Images are tagged by color, not by full size+color variant.** Added a single nullable
+  `ProductImage.color String?` column (matched against `ProductVariant.color` by exact string, not a
+  foreign key — see the field's comment in `schema.prisma`) rather than a variant-level association.
+  The reasoning: a photo of a black t-shirt is the same photo regardless of which size someone's
+  looking at, so tying it to a specific `(size, color)` variant would just mean re-uploading the same
+  picture once per size for no benefit. `color: null` means a general/all-colors photo — every
+  existing product's images default to this, so nothing regresses until an admin actually tags
+  something.
+- **Gallery fallback is three levels, in `ProductDetail.tsx`'s `imagesForColor`**: exact color match
+  first; if none, the product's untagged/general photos; if there are none of *those* either (a
+  product that hasn't had any photos tagged yet), every photo it has — so a product with zero color
+  tagging behaves exactly like the gallery always did, and partial tagging (some colors done, some
+  not) degrades gracefully instead of showing a blank gallery for an untouched color.
+- **Color selection was lifted out of `VariantSelector` into a new parent, `ProductDetail.tsx`**,
+  since the gallery needs to react to it too. `VariantSelector` now takes `selectedColor`/
+  `onColorChange` as controlled props instead of owning that piece of state itself; `selectedSize`
+  and all the existing fallback-pairing logic (auto-correcting to a valid combination when a shopper
+  picks a size/color that doesn't pair with the current selection) stayed put, since size doesn't
+  affect which photos show. `ProductDetail` renders both `ProductGallery` and `VariantSelector` as
+  fragment siblings (no wrapping element) so they still land as direct children of the page's
+  existing two-column CSS grid.
+- **The storefront product page (`page.tsx`) got thinner, not thicker** — it used to inline the
+  brand/title/description JSX around `VariantSelector`; that all moved into `ProductDetail` too,
+  since it needed to sit inside the same lifted-state component regardless. No behavior change there,
+  just relocated.
+- **Admin tagging happens in `ImageManager`** (`/admin/products/[id]/edit`): a color `<select>` next
+  to the upload button (defaulting to "General") tags a new photo on upload, and each existing
+  thumbnail gets its own small color `<select>` to retag it after the fact — added specifically so
+  photos uploaded *before* this feature existed (all currently `color: null`) can be tagged without
+  re-uploading. Both go through server-side validation (`uploadProductImage`/
+  `updateProductImageColor` in `src/server/actions/admin/images.ts`) that checks the submitted color
+  against the product's actual variant colors — a typo'd color can't silently create a tag that never
+  matches anything in the storefront gallery. The color dropdowns only render at all when a product
+  has more than one variant color; a single-color product has nothing worth tagging.
+- **Verified with Playwright against local dev**: tagged a real product's two existing placeholder
+  photos as "Black" and "White," confirmed the gallery's image `src` actually swaps when clicking
+  those color buttons, and confirmed picking the product's third (untagged) color falls back to
+  showing everything rather than a blank gallery. The admin image-tagging UI itself could only be
+  confirmed to redirect cleanly to `/login` rather than crash — same placeholder-Supabase-Auth
+  limitation as every other admin UI verified in this sandbox (see the discount-codes and
+  header-icons phases above).
+- **This branch was rebranched partway through**: it was originally cut from `main` before the
+  discount-codes PR merged; once the user merged that PR mid-session, `main` was re-synced and this
+  branch rebased onto the new tip (clean rebase, one straightforward conflict-free auto-merge in
+  `schema.prisma`) rather than left to diverge and produce a messier merge later.
+- **No new migration risk beyond the usual**: this is a single additive, nullable column
+  (`prisma/migrations/20260821090000_add_product_image_color/migration.sql`) — applied to local dev
+  Postgres only, same as every schema change in this project (see section 6). The equivalent
+  `prisma migrate deploy` still needs to run against the real Supabase database from the user's own
+  machine before this feature is live in production.
