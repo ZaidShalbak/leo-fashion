@@ -8,6 +8,7 @@ import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { placeOrderSchema, type PlaceOrderInput } from "@/lib/validators/order";
 import { calculateSubtotalCents, effectivePriceCents } from "@/lib/cart-totals";
+import { validateDiscountCode } from "@/lib/discount";
 
 export type PlaceOrderResult = { success: false; error: string };
 
@@ -147,23 +148,96 @@ export async function placeOrder(
 
       const subtotalCents = calculateSubtotalCents(orderItemsData);
 
+      // Discount, re-validated from scratch here rather than trusted from
+      // whatever the cart page last showed — the same "never trust
+      // pre-computed client/cart state" posture as everything else in
+      // this transaction. See src/lib/discount.ts and
+      // src/server/actions/discount.ts for why applying a code to the
+      // cart never touches redemptionCount: this is the only place that
+      // does, and it's the only place that has to.
+      let discountCodeId: string | null = null;
+      let discountCents = 0;
+      let discountCodeSnapshot: string | null = null;
+      let discountPercentSnapshot: number | null = null;
+
+      if (cart.appliedDiscountCode) {
+        const discount = await tx.discountCode.findUnique({
+          where: { code: cart.appliedDiscountCode },
+        });
+        const result = validateDiscountCode(discount, subtotalCents, new Date());
+        if (!result.valid) {
+          throw new OrderPlacementError(
+            "The discount code applied to your cart is no longer valid — please remove it and try again."
+          );
+        }
+
+        // Atomically reserve a redemption slot, same race-safe pattern as
+        // the inventory decrement above: only succeeds while
+        // redemptionCount is still under the limit (or unconditionally,
+        // when there's no limit at all).
+        const reserved = await tx.discountCode.updateMany({
+          where: {
+            id: discount!.id,
+            ...(discount!.maxRedemptions != null
+              ? { redemptionCount: { lt: discount!.maxRedemptions } }
+              : {}),
+          },
+          data: { redemptionCount: { increment: 1 } },
+        });
+        if (reserved.count === 0) {
+          throw new OrderPlacementError(
+            "That discount code just reached its redemption limit — please remove it and try again."
+          );
+        }
+
+        discountCodeId = discount!.id;
+        discountCents = result.discountCents;
+        discountCodeSnapshot = discount!.code;
+        discountPercentSnapshot = discount!.percentOff;
+      }
+
       if (newAddressToSave) {
         await tx.address.create({
           data: { ...newAddressToSave, userId: user.id },
         });
       }
 
-      const order = await tx.order.create({
-        data: {
-          userId: user.id,
-          status: "pending",
-          subtotalCents,
-          ...shipping,
-          items: { createMany: { data: orderItemsData } },
-        },
-      });
+      let order: { id: string };
+      try {
+        order = await tx.order.create({
+          data: {
+            userId: user.id,
+            status: "pending",
+            subtotalCents,
+            discountCodeId,
+            discountCents,
+            discountCodeSnapshot,
+            discountPercentSnapshot,
+            ...shipping,
+            items: { createMany: { data: orderItemsData } },
+          },
+        });
+      } catch (error) {
+        // The (discountCodeId, userId) unique constraint — see
+        // prisma/schema.prisma — is what actually enforces one redemption
+        // per customer per code; this is where it surfaces.
+        if (
+          discountCodeId &&
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          (error as Prisma.PrismaClientKnownRequestError).code === "P2002"
+        ) {
+          throw new OrderPlacementError("You've already used this discount code.");
+        }
+        throw error;
+      }
 
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      await tx.cart.update({
+        where: { id: cart.id },
+        data: { appliedDiscountCode: null },
+      });
 
       return order.id;
     });

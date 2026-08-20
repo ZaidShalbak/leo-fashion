@@ -191,6 +191,15 @@ model Cart {
   // Set for guest (unauthenticated) carts, read from a cookie. Merged into
   // the user's cart on login, then cleared — see Phase 3.
   guestToken String? @unique
+  // The code text the customer last successfully applied (see
+  // applyDiscountCode), normalized uppercase. Deliberately just a string,
+  // not a DiscountCode relation — this is a non-authoritative "what to try
+  // at checkout" hint, not a reservation; placeOrder re-validates it fully
+  // (active, not expired, redemption limits, min subtotal) inside its
+  // transaction before ever touching DiscountCode.redemptionCount, same
+  // "never trust client/cart state, re-check server-side" posture as
+  // everything else in that action.
+  appliedDiscountCode String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -243,6 +252,22 @@ model Order {
   subtotalCents  Int
   trackingNumber String?
 
+  // Discount, snapshotted at order time — never recomputed from the live
+  // DiscountCode later (same historical-record philosophy as OrderItem's
+  // titleSnapshot). discountCodeId is kept too (nullable, SetNull) purely
+  // for live admin lookups like "how many times has SUMMER20 been used";
+  // discountCodeSnapshot/discountPercentSnapshot are what every UI
+  // actually displays, so a later edit or deletion of the DiscountCode
+  // never changes what a past order shows. Total owed is always computed
+  // as subtotalCents - discountCents at display time (see
+  // src/lib/cart-totals.ts) — not stored separately, since it's fully
+  // derived from data already on this row.
+  discountCodeId          String?
+  discountCode            DiscountCode? @relation(fields: [discountCodeId], references: [id], onDelete: SetNull)
+  discountCodeSnapshot    String?
+  discountPercentSnapshot Int?
+  discountCents           Int           @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -251,6 +276,45 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  // Enforces "one redemption per customer per code" atomically at the DB
+  // level — Postgres treats every NULL as distinct in a unique index, so
+  // this only ever constrains the (real code, user) pairs, never the many
+  // orders with discountCodeId = null. See placeOrder's discount handling
+  // in src/server/actions/order.ts for how the resulting P2002 is turned
+  // into a friendly error.
+  @@unique([discountCodeId, userId])
+}
+
+// A store-wide percentage-off promo code. Redemption accounting
+// (redemptionCount, and the one-per-customer constraint on Order above)
+// only ever advances inside placeOrder's transaction — applying a code to
+// a cart (see Cart.appliedDiscountCode) is just a preview and never
+// touches this table, so browsing with a code typed in can't burn through
+// a limited redemption count or falsely mark it "used" for someone who
+// never actually checked out.
+model DiscountCode {
+  id         String  @id @default(cuid())
+  code       String  @unique
+  percentOff Int
+  isActive   Boolean @default(true)
+  // End-of-day (UTC) on the given date is treated as the expiry moment —
+  // see src/lib/validators/discount.ts. Null means it never expires.
+  expiresAt        DateTime?
+  minSubtotalCents Int?
+  // Null means unlimited. When set, redemptionCount is only ever advanced
+  // via a conditional updateMany (WHERE redemptionCount < maxRedemptions)
+  // inside placeOrder's transaction — the same race-safe pattern already
+  // used for ProductVariant.inventoryQuantity — so two concurrent
+  // checkouts racing for the last redemption slot can't both succeed.
+  maxRedemptions  Int?
+  redemptionCount Int  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([isActive])
 }
 
 model OrderItem {

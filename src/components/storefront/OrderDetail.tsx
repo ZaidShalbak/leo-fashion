@@ -1,5 +1,6 @@
 import type { Order, OrderItem } from "@prisma/client";
 
+import { calculateTotalCents } from "@/lib/cart-totals";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { formatPriceCents } from "./PriceDisplay";
 
@@ -41,9 +42,28 @@ export function OrderDetail({ order }: { order: OrderWithItems }) {
             </li>
           ))}
         </ul>
-        <div className="border-border mt-2 flex justify-between border-t pt-3 text-sm font-medium">
-          <span>Subtotal</span>
-          <span>{formatPriceCents(order.subtotalCents)}</span>
+        <div className="border-border mt-2 space-y-1 border-t pt-3">
+          <div className="text-muted-foreground flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>{formatPriceCents(order.subtotalCents)}</span>
+          </div>
+          {order.discountCents > 0 && (
+            <div className="flex justify-between text-sm text-green-700 dark:text-green-500">
+              <span>
+                Discount
+                {order.discountCodeSnapshot ? ` (${order.discountCodeSnapshot})` : ""}
+              </span>
+              <span>−{formatPriceCents(order.discountCents)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-sm font-medium">
+            <span>Total</span>
+            <span>
+              {formatPriceCents(
+                calculateTotalCents(order.subtotalCents, order.discountCents)
+              )}
+            </span>
+          </div>
         </div>
       </div>
 

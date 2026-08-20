@@ -18,3 +18,15 @@ export function effectivePriceCents(
 ): number {
   return priceOverrideCents ?? basePriceCents;
 }
+
+/**
+ * Total owed after a discount — deliberately not a stored column on
+ * Order, just subtotal minus discount computed at display time. See
+ * discountCents's comment in prisma/schema.prisma for why.
+ */
+export function calculateTotalCents(
+  subtotalCents: number,
+  discountCents: number
+): number {
+  return subtotalCents - discountCents;
+}

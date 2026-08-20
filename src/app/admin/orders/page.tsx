@@ -14,6 +14,7 @@ import {
 import { OrderStatusBadge } from "@/components/storefront/OrderStatusBadge";
 import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 import { OrderStatusFilter } from "@/components/admin/OrderStatusFilter";
+import { calculateTotalCents } from "@/lib/cart-totals";
 
 export const metadata: Metadata = { title: "Orders — Admin" };
 
@@ -68,7 +69,11 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 })}
               </TableCell>
               <TableCell>{order.items.length}</TableCell>
-              <TableCell>{formatPriceCents(order.subtotalCents)}</TableCell>
+              <TableCell>
+                {formatPriceCents(
+                  calculateTotalCents(order.subtotalCents, order.discountCents)
+                )}
+              </TableCell>
               <TableCell>
                 <OrderStatusBadge status={order.status} />
               </TableCell>
