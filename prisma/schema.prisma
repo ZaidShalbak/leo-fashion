@@ -192,6 +192,52 @@ model ProductVariant {
   @@index([productId])
 }
 
+// Homepage hero carousel slides, managed by an admin — replaces the earlier
+// behavior of auto-generating one slide per Collection (see git history /
+// CLAUDE.md for that phase). Deliberately its own model rather than fields
+// bolted onto Collection: a banner doesn't have to correspond to a
+// collection at all (a sale, an announcement, a brand spotlight), and this
+// way a collection can have zero, one, or several banners promoting it
+// without forcing a 1:1 relationship. The storefront (src/app/(storefront)
+// /page.tsx) falls back to the old collection-derived slides if there are
+// no live HeroBanner rows, so the homepage is never left with an empty
+// carousel while an admin hasn't set any banners up yet.
+model HeroBanner {
+  id           String  @id @default(cuid())
+  // Always a dedicated hero photo — never reused directly from
+  // ProductImage/Collection, since hero banners want a different crop
+  // (wide, 16:9–21:9) than product photos. Uploaded via
+  // uploadHeroBannerImageFile (src/server/storage.ts), same bucket as
+  // product images, different path prefix.
+  imageUrl     String
+  imageAltText String?
+  headline     String
+  subtext      String?
+  // Both optional independently — a banner can be a plain photo + headline
+  // with no button, or add a labeled CTA. ctaUrl is where the *whole*
+  // slide links to either way (see HeroCarousel), so a banner without a
+  // ctaLabel is still clickable; ctaLabel just adds a visible button chip.
+  ctaLabel String?
+  ctaUrl   String
+  // Manual drag-and-drop order in the admin UI — an explicit Int rather
+  // than relying on createdAt, so reordering doesn't require faking
+  // timestamps. Rewritten in full by reorderHeroBanners whenever the order
+  // changes (see src/server/actions/admin/heroBanners.ts).
+  position Int @default(0)
+  isActive Boolean @default(true)
+  // Optional scheduling window — both null means "always live" once
+  // active. Date-only inputs from the admin form are converted to
+  // start-of-day/end-of-day UTC (src/lib/heroBanners.ts's
+  // startOfDayUtc/endOfDayUtc), same pattern DiscountCode.expiresAt uses.
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, position])
+}
+
 // ---------------------------------------------------------------------------
 // Cart
 // ---------------------------------------------------------------------------

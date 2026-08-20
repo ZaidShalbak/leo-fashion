@@ -11,6 +11,8 @@ export type HeroSlide = {
   imageUrl: string;
   imageAlt: string;
   href: string;
+  /** Optional visible button chip — the whole slide is always a link to `href` either way. */
+  ctaLabel?: string | null;
 };
 
 const AUTO_ADVANCE_MS = 6000;
@@ -88,6 +90,11 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 <p className="text-background/90 max-w-md text-sm sm:text-base">
                   {slide.description}
                 </p>
+              )}
+              {slide.ctaLabel && (
+                <span className="bg-background text-foreground mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-medium sm:text-sm">
+                  {slide.ctaLabel}
+                </span>
               )}
             </div>
           </Link>

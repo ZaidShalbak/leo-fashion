@@ -58,6 +58,12 @@ export default async function AdminLayout({
               >
                 Discount codes
               </Link>
+              <Link
+                href="/admin/hero-banners"
+                className="text-muted-foreground hover:text-foreground transition"
+              >
+                Hero banners
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-4 text-sm">
