@@ -5,6 +5,7 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { OrderStatusBadge } from "@/components/storefront/OrderStatusBadge";
 import { formatPriceCents } from "@/components/storefront/PriceDisplay";
+import { calculateTotalCents } from "@/lib/cart-totals";
 
 export const metadata: Metadata = { title: "Your orders" };
 
@@ -54,7 +55,9 @@ export default async function AccountOrdersPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium">
-                    {formatPriceCents(order.subtotalCents)}
+                    {formatPriceCents(
+                      calculateTotalCents(order.subtotalCents, order.discountCents)
+                    )}
                   </span>
                   <OrderStatusBadge status={order.status} />
                 </div>

@@ -413,3 +413,65 @@ product page even though both had stock. Root cause and fix:
   matrix (e.g. one variant per size, different colors) exactly as they already were; the storefront
   now handles it correctly rather than requiring every size×color combination to exist just to make
   the picker usable.
+
+Current phase: **Discount / promo codes — complete.** Requested outside the Phase 1–5 roadmap.
+Scope was explicitly narrowed by the store owner up front: **percentage-off only** (no fixed-amount
+codes), **whole-order only** (no per-product/brand/category codes), with all four common limit types —
+expiration date, minimum order amount, one use per customer, and a max total redemption count. Full
+check command passes, including new unit tests for the pure validation logic and new integration
+tests covering every rejection path inside `placeOrder`. Decisions worth knowing about:
+
+- **A new `DiscountCode` model** (`code`, `percentOff`, `isActive`, `expiresAt`, `minSubtotalCents`,
+  `maxRedemptions`, `redemptionCount`) plus a nullable `Cart.appliedDiscountCode` string and four new
+  nullable/defaulted fields on `Order` (`discountCodeId`, `discountCodeSnapshot`,
+  `discountPercentSnapshot`, `discountCents`). See the field-level comments in `prisma/schema.prisma`
+  for the full reasoning; the short version is in the next few bullets.
+- **One use per customer per code is enforced at the database level**, not with a separate redemption
+  table: `Order` has `@@unique([discountCodeId, userId])`. This works because Postgres treats every
+  row with a NULL in a unique-index column as distinct from every other such row — the vast majority
+  of orders have `discountCodeId = null` and are never constrained by this index at all; it only ever
+  bites a real second order from the same user with the same non-null code.
+- **Applying a code to the cart (`src/server/actions/discount.ts`) is a non-authoritative preview
+  only.** It validates the code against the live subtotal and, if it checks out, just stores the code
+  string on the cart — it never touches `DiscountCode.redemptionCount` and never permanently reserves
+  anything. Only `placeOrder`'s transaction (`src/server/actions/order.ts`) does the real, final
+  validation and redemption, re-running the exact same pure `validateDiscountCode` check
+  (`src/lib/discount.ts`) from scratch rather than trusting whatever the cart page last showed —
+  same "never trust pre-computed client/cart state" posture as the rest of this codebase.
+- **Redemption-limit enforcement mirrors the existing inventory-decrement pattern**: advancing
+  `redemptionCount` is a conditional `updateMany` (`WHERE redemptionCount < maxRedemptions`, or
+  unconditional when there's no limit) inside `placeOrder`'s transaction, not a read-then-write — so
+  two concurrent checkouts racing for the last redemption slot can't both succeed. Covered by the same
+  style of real concurrency reasoning already used for stock (though the discount tests here cover
+  each rejection path individually rather than a race test, since the redemption-limit race is
+  structurally identical to the already-tested inventory race).
+- **No separate `Order.totalCents` column was added.** The amount actually owed is always computed at
+  display time as `subtotalCents - discountCents` (`calculateTotalCents` in
+  `src/lib/cart-totals.ts`) rather than stored — avoids any backfill question for existing orders,
+  which all default to `discountCents = 0` and so already compute the right total for free.
+- **Order history is snapshotted, not live-linked**, the same philosophy `OrderItem.titleSnapshot`
+  already established: `discountCodeSnapshot`/`discountPercentSnapshot`/`discountCents` are frozen at
+  order time and never recomputed from the live `DiscountCode` row, which can later be edited or even
+  deleted (`discountCodeId` is `ON DELETE SET NULL`) without changing what a past order displays.
+- **Admin discount-code management (`/admin/discount-codes`) follows the same full-resend edit-form
+  pattern as brands/categories** — the edit form is always pre-filled with the complete current row
+  and resubmits every field, so a blank `expiresAt`/`minSubtotalCents`/`maxRedemptions` on save means
+  "clear it," not "leave unchanged." `redemptionCount` is deliberately not editable through the form
+  at all — it only ever advances inside `placeOrder`'s transaction.
+- **The cart page (`/cart`) is the only place a code can be applied or removed** — `PromoCodeForm`, a
+  small client component, calls `applyDiscountCode`/`removeDiscountCode` and then
+  `router.refresh()`s so the discount line and total always reflect a fresh server read, not local
+  component state. Checkout, order confirmation, account order history, and the admin order list/detail
+  views all just *display* the resulting discount/total (`OrderDetail.tsx`'s shared component covers
+  three of those four); none of them offer an input.
+- **Verified with Playwright against local dev**: added an item to a guest cart, applied a made-up
+  code (correct rejection message), then applied a real 10%-off code seeded directly into the local
+  DB and confirmed the subtotal/discount/total math rendered correctly. The admin `/admin/discount-codes`
+  route was only confirmed to redirect cleanly to `/login` rather than crash — this sandbox's
+  placeholder Supabase Auth credentials mean a real signed-in admin session can't be exercised here
+  (same limitation noted for `UserMenu` in the header-icons phase above).
+- **The real Supabase Postgres database still needs this migration applied** — same as every schema
+  change in this project, `prisma/migrations/20260820120316_add_discount_codes/migration.sql` was
+  generated and applied against local dev Postgres only (this sandbox can't reach the real database —
+  see section 6); running the equivalent `prisma migrate deploy` against the real project has to
+  happen from the user's own machine before this feature works end-to-end in production.
