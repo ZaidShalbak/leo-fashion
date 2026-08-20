@@ -1,0 +1,256 @@
+{
+  "Metadata": {
+    "title": "ليو فاشون",
+    "description": "ليو فاشون — تسوق واطلب الملابس أونلاين."
+  },
+  "Nav": {
+    "brandName": "ليو فاشون",
+    "brands": "الماركات",
+    "signIn": "تسجيل الدخول",
+    "footer": "ليو فاشون — الدفع عند الاستلام أو عبر فاتورة، بدون الحاجة لبطاقة ائتمان.",
+    "languageSwitcherLabel": "اللغة"
+  },
+  "CartIcon": {
+    "label": "السلة",
+    "labelWithCount": "السلة، {count, plural, zero {# عنصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}"
+  },
+  "UserMenu": {
+    "accountMenu": "قائمة الحساب",
+    "orders": "الطلبات",
+    "admin": "لوحة التحكم",
+    "signOut": "تسجيل الخروج",
+    "signingOut": "جارٍ تسجيل الخروج…"
+  },
+  "CheckoutForm": {
+    "shippingAddress": "عنوان الشحن",
+    "useNewAddress": "استخدام عنوان جديد",
+    "fullName": "الاسم الكامل",
+    "addressLine1": "العنوان - السطر الأول",
+    "addressLine2": "العنوان - السطر الثاني",
+    "city": "المدينة",
+    "state": "المحافظة",
+    "postalCode": "الرمز البريدي",
+    "country": "الدولة",
+    "phone": "رقم الهاتف",
+    "placingOrder": "جارٍ تنفيذ الطلب…",
+    "placeOrder": "تنفيذ الطلب"
+  },
+  "Checkout": {
+    "title": "الدفع",
+    "orderSummary": "ملخص الطلب",
+    "lineItem": "{title} ({size}/{color}) × {quantity}",
+    "subtotal": "المجموع الفرعي",
+    "discount": "الخصم",
+    "discountWithCode": "الخصم ({code})",
+    "total": "الإجمالي",
+    "noPaymentNote": "لا يتم تحصيل أي دفعة هنا — هذا يسجل الطلب للتنفيذ عبر فاتورة أو الدفع عند الاستلام.",
+    "editCart": "تعديل السلة"
+  },
+  "CollectionPage": {
+    "fallbackTitle": "الفئة",
+    "noMatches": "لا توجد منتجات مطابقة لهذه الفلاتر."
+  },
+  "CollectionNotFound": {
+    "title": "الفئة غير موجودة",
+    "description": "هذه الفئة غير موجودة أو ربما تمت إزالتها.",
+    "backToHomepage": "العودة إلى الصفحة الرئيسية"
+  },
+  "ProductNotFound": {
+    "title": "المنتج غير موجود",
+    "description": "هذا المنتج غير موجود، أو لم يعد متوفرًا، أو أن الرابط قد يكون غير صحيح.",
+    "backToHomepage": "العودة إلى الصفحة الرئيسية"
+  },
+  "BrandsPage": {
+    "title": "الماركات",
+    "subtitle": "الموردون والماركات الشريكة التي نوفرها إلى جانب خطنا الخاص.",
+    "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}",
+    "noBrands": "لا توجد ماركات بعد — تحقق لاحقًا."
+  },
+  "BrandDetailPage": {
+    "fallbackTitle": "الماركة",
+    "noMatches": "لا توجد منتجات مطابقة لهذه الفلاتر."
+  },
+  "FilterBar": {
+    "size": "المقاس",
+    "allSizes": "كل المقاسات",
+    "color": "اللون",
+    "allColors": "كل الألوان",
+    "sort": "الترتيب",
+    "sortOptions": {
+      "newest": "الأحدث",
+      "price-asc": "السعر: من الأقل إلى الأعلى",
+      "price-desc": "السعر: من الأعلى إلى الأقل"
+    }
+  },
+  "LoginPage": {
+    "title": "تسجيل الدخول",
+    "welcomeBack": "مرحبًا بعودتك إلى ليو فاشون.",
+    "noAccount": "ليس لديك حساب؟",
+    "createOne": "أنشئ واحدًا"
+  },
+  "SignUpPage": {
+    "title": "إنشاء حساب",
+    "subtitle": "احفظ عناوينك وتابع طلباتك.",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "signIn": "تسجيل الدخول"
+  },
+  "LoginForm": {
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "signIn": "تسجيل الدخول"
+  },
+  "SignUpForm": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "passwordHint": "8 أحرف على الأقل.",
+    "creatingAccount": "جارٍ إنشاء الحساب…",
+    "createAccount": "إنشاء حساب"
+  },
+  "AuthActions": {
+    "nameRequired": "الاسم مطلوب.",
+    "emailInvalid": "أدخل بريدًا إلكترونيًا صالحًا.",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+    "passwordRequired": "كلمة المرور مطلوبة.",
+    "invalidInput": "بيانات غير صالحة.",
+    "emailAlreadyExists": "يوجد حساب مسجّل بهذا البريد الإلكتروني بالفعل.",
+    "couldNotCreateAccount": "تعذر إنشاء الحساب.",
+    "incorrectCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+  },
+  "PlaceOrder": {
+    "signInRequired": "يرجى تسجيل الدخول لإتمام الطلب.",
+    "invalidCheckoutDetails": "بيانات الدفع غير صالحة.",
+    "addressNotFound": "تعذر العثور على هذا العنوان.",
+    "cartEmpty": "سلتك فارغة.",
+    "itemUnavailable": "{title} لم يعد متوفرًا.",
+    "limitedStock": "لم تعد الكمية المتوفرة من {title} ({size}/{color}) كافية — يرجى تحديث سلتك والمحاولة مرة أخرى.",
+    "discountInvalid": "رمز الخصم المطبّق على سلتك لم يعد صالحًا — يرجى إزالته والمحاولة مرة أخرى.",
+    "discountRedemptionLimit": "وصل رمز الخصم هذا للتو إلى الحد الأقصى للاستخدام — يرجى إزالته والمحاولة مرة أخرى.",
+    "discountAlreadyUsed": "لقد استخدمت هذا الرمز من قبل."
+  },
+  "DiscountActions": {
+    "notFound": "هذا الرمز غير موجود.",
+    "inactive": "هذا الرمز لم يعد نشطًا.",
+    "expired": "انتهت صلاحية هذا الرمز.",
+    "redemptionLimit": "وصل هذا الرمز إلى الحد الأقصى لعدد مرات الاستخدام.",
+    "minSubtotal": "أضف {amount} أخرى إلى سلتك لاستخدام هذا الرمز.",
+    "enterCode": "أدخل رمزًا.",
+    "cartEmpty": "سلتك فارغة.",
+    "alreadyUsed": "لقد استخدمت هذا الرمز من قبل.",
+    "noCart": "لم يتم العثور على سلة."
+  },
+  "PromoCodeForm": {
+    "appliedPrefix": "رمز الخصم",
+    "appliedSuffix": "مُفعّل",
+    "removeCode": "إزالة رمز الخصم",
+    "placeholder": "رمز الخصم",
+    "apply": "تطبيق"
+  },
+  "CartLineItem": {
+    "decreaseQuantity": "إنقاص الكمية",
+    "increaseQuantity": "زيادة الكمية",
+    "remove": "إزالة",
+    "maxStockReached": "تم الوصول إلى الحد الأقصى من المخزون المتاح.",
+    "maxPerItem": "الحد الأقصى 20 لكل منتج."
+  },
+  "Cart": {
+    "title": "سلتك",
+    "emptyTitle": "سلتك فارغة",
+    "emptySubtitle": "تصفح الكتالوج وأضف ما يعجبك.",
+    "continueShopping": "متابعة التسوق",
+    "discountInvalidNotice": "رمز الخصم هذا لم يعد صالحًا ولن يُطبّق عند الدفع.",
+    "subtotal": "المجموع الفرعي",
+    "discount": "الخصم",
+    "total": "الإجمالي",
+    "shippingNote": "يتم احتساب الشحن والإجمالي عند الدفع. لا حاجة لدفع أي مبلغ الآن — يتم تسجيل الطلبات وتنفيذها مباشرة.",
+    "proceedToCheckout": "المتابعة إلى الدفع"
+  },
+  "OrderConfirmation": {
+    "metaTitle": "تم تأكيد الطلب",
+    "heading": "شكرًا — تم استلام طلبك.",
+    "subheading": "سنتابع معك بتفاصيل التنفيذ. لم يتم تحصيل أي دفعة — هذا الطلب عبر فاتورة أو الدفع عند الاستلام.",
+    "continueShopping": "متابعة التسوق",
+    "viewMyOrders": "عرض طلباتي"
+  },
+  "AccountOrders": {
+    "title": "طلباتك",
+    "noOrders": "لم تقم بأي طلب بعد.",
+    "startShopping": "ابدأ التسوق",
+    "orderNumber": "الطلب رقم {id}",
+    "dateAndItemCount": "{date} · {count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}"
+  },
+  "AccountOrderDetail": {
+    "metaTitle": "تفاصيل الطلب",
+    "allOrders": "كل الطلبات"
+  },
+  "OrderStatus": {
+    "pending": "قيد الانتظار",
+    "processing": "قيد المعالجة",
+    "shipped": "تم الشحن",
+    "delivered": "تم التسليم",
+    "cancelled": "ملغى"
+  },
+  "OrderDetail": {
+    "orderNumber": "الطلب رقم {id}",
+    "placed": "تم الطلب في {date}",
+    "items": "المنتجات",
+    "subtotal": "المجموع الفرعي",
+    "discount": "الخصم",
+    "discountWithCode": "الخصم ({code})",
+    "total": "الإجمالي",
+    "shippingAddress": "عنوان الشحن",
+    "tracking": "رقم التتبع"
+  },
+  "VariantSelector": {
+    "size": "المقاس",
+    "color": "اللون",
+    "outOfStock": "غير متوفر",
+    "adding": "جارٍ الإضافة…",
+    "addToCart": "أضف إلى السلة"
+  },
+  "CartActions": {
+    "invalidRequest": "طلب غير صالح.",
+    "itemUnavailable": "هذا المنتج لم يعد متوفرًا.",
+    "outOfStock": "هذا المقاس/اللون غير متوفر حاليًا.",
+    "itemNotInCart": "هذا العنصر غير موجود في سلتك.",
+    "added": "تمت الإضافة إلى السلة.",
+    "addedCapped": "تمت الإضافة — يتوفر {count} فقط في المخزون، وهذا أقصى ما يمكن إضافته."
+  },
+  "Product": {
+    "fallbackTitle": "منتج"
+  },
+  "ProductGallery": {
+    "showImage": "عرض الصورة {index} من {total}"
+  },
+  "BrandsSection": {
+    "shopByBrand": "تسوّق حسب الماركة",
+    "viewAll": "عرض الكل"
+  },
+  "ProductCard": {
+    "outOfStock": "غير متوفر",
+    "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}"
+  },
+  "HeroCarousel": {
+    "previousSlide": "الشريحة السابقة",
+    "nextSlide": "الشريحة التالية",
+    "goToSlide": "الانتقال إلى الشريحة {number}"
+  },
+  "Home": {
+    "title": "ليو فاشون",
+    "tagline": "أساسيات الخزانة، الملابس الخارجية، وقطع نهاية الأسبوع السهلة — اطلب أونلاين وادفع عند الاستلام أو عبر فاتورة.",
+    "shopByCategory": "تسوّق حسب الفئة",
+    "newArrivals": "وصل حديثًا",
+    "noProducts": "لا توجد منتجات متاحة بعد — تحقق لاحقًا."
+  },
+  "MobileNav": {
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "brands": "الماركات",
+    "orders": "الطلبات",
+    "admin": "لوحة التحكم",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "signingOut": "جارٍ تسجيل الخروج…"
+  }
+}

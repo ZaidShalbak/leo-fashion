@@ -634,3 +634,104 @@ actually clicked through on a real admin session — exactly the gap the note ab
 - Full check (`npm run lint`, `npm run typecheck`, `npm run test` — 79/79, `npx next build`) passes.
   Verifying the actual drag/save/discard interaction still hits the same placeholder-Supabase-Auth wall
   as everything else admin-side in this sandbox — worth confirming on a real signed-in session.
+
+Current phase: **Arabic / English bilingual, RTL-correct storefront — complete.** Scope was
+explicitly narrowed by the store owner up front (see conversation history for the full comparison):
+**storefront only** — the admin dashboard (`src/app/admin`) stays English/LTR, and product/brand/
+category database *content* (titles, descriptions — whatever language an admin typed them in) is
+**not** machine- or admin-translated and displays as-is regardless of UI locale. Everything else
+user-facing in the storefront — every label, button, empty state, form field, and server-action
+result/error message — is now bilingual and RTL-correct. Full check passes (79/79 tests, lint,
+typecheck, build), plus a Playwright click-through of browse/product/cart/login/signup/collections
+in both `/en` and `/ar` with screenshot verification of RTL mirroring. Decisions worth knowing about:
+
+- **Routing is `next-intl` (`src/i18n/`) with `localePrefix: "always"`** (`/en/...` and `/ar/...`,
+  no un-prefixed canonical route) — chosen over "as-needed" because the two locales are genuinely
+  symmetric here (no "default language has no prefix" convention to preserve) and an always-explicit
+  prefix removes any canonical-URL ambiguity for SEO. `src/proxy.ts` (Next.js 16 renamed
+  `middleware.ts` → `proxy.ts`, same mechanism) resolves the locale and excludes `/admin`, `/api`,
+  and static assets from its matcher — admin was never meant to be locale-routed at all.
+- **Admin and the storefront are two independent root layouts, not one shared one** — the
+  "multiple root layouts" pattern (new in Next.js 16.3, see `next/root-params` docs) is what makes
+  `/admin/*` (English/LTR, no i18n machinery) and `/[locale]/(storefront)/*` (bilingual/RTL) coexist
+  as siblings under `src/app/` with zero shared `app/layout.tsx`. `src/app/[locale]/layout.tsx` is the
+  storefront's own root (`<html lang={locale} dir={dir}>` wrapping `NextIntlClientProvider`);
+  `src/app/admin/layout.tsx` is a second, independent root (`<html lang="en" dir="ltr">`) around its
+  existing unchanged nav — this is *why* admin needed no translation work at all, not just a scope
+  choice: it's architecturally isolated from the i18n tree.
+- **RTL layout correctness leaned on the platform wherever possible, with targeted fixes only where
+  it doesn't hold.** Tailwind v4 ships logical CSS properties natively (`ms-`/`me-`, `ps-`/`pe-`,
+  `start-`/`end-`, `text-start`/`text-end` — confirmed in `node_modules/tailwindcss/dist/lib.js`, no
+  plugin needed) and both CSS Grid auto-placement and Flexbox's default `flex-row` are direction-aware,
+  so the product-detail and checkout two-column grids mirror correctly with **zero** extra code. The
+  one real bug this didn't cover: CSS `transform: translateX()` is *not* direction-aware (it always
+  moves in the physical +X direction), which silently broke `HeroCarousel`'s slide track under RTL —
+  fixed with an explicit sign flip (`const trackOffset = (isRtl ? 1 : -1) * index * 100`). Caught by
+  reasoning through the transform before it ever shipped broken, not by a user report.
+- **`dir="ltr"` "islands" pattern** applied to price displays (`PriceDisplay.tsx`), the promo-code
+  input, and Latin/numeral-heavy form fields (postal code, phone, email, password) — matches real-world
+  Arabic e-commerce convention (checked against a reference bilingual storefront the store owner
+  pointed at before work started) of keeping Latin-alphabet/numeral content left-to-right even inside
+  an RTL page, rather than mirroring digits and email addresses. Money formatting stays
+  `Intl.NumberFormat("en-US", {currency:"USD"})` regardless of UI locale for the same reason — this was
+  already true before this phase and stayed unchanged.
+- **Every server action result/error message is now translated too, not just component-level UI
+  text** — `cart.ts`, `discount.ts`, `order.ts`, and `auth.ts` all call `getTranslations` from
+  `next-intl/server` (confirmed via live testing that this works correctly inside `"use server"`
+  actions, not just Server/Client Components) and return a locale-appropriate string instead of a
+  hardcoded English one. Two scoped exceptions, both commented in place: `order.ts`'s top-level Zod
+  parse failure and `discount.ts`'s `applyDiscountCode` bypass their schema's raw issue message for a
+  single translated fallback string, since both forms only ever fail one realistic way in practice
+  (well-formed submissions from the UI; a parse failure means tampering, not a normal mistake).
+  `auth.ts` goes one step further for `signUp`/`signIn` — `authIssueMessage()` maps a Zod failure to a
+  translated string **per field** (name / email / password) rather than one generic fallback, since
+  unlike checkout or a promo code, a real user genuinely can hit any of name-missing / bad-email /
+  short-password on a normal signup attempt. Supabase's own error messages (e.g. from
+  `admin.createUser`) are passed through untranslated in the fallback case — external, can't be
+  localized from here — except the one common, recognizable case (duplicate email), which gets a real
+  translated message.
+- **Components shared between the (bilingual) storefront and the (permanently English) admin tree
+  needed a translation strategy that doesn't crash outside a `NextIntlClientProvider`.**
+  `SignOutButton` and `OrderStatusBadge` take optional label/labels props defaulting to English;
+  storefront callers pass real translated values, admin callers pass nothing and get the English
+  default. `OrderDetail` (too many strings for the prop-drilling approach to stay readable) instead
+  uses a new `src/i18n/getTranslator.ts` — a context-free translator built on `createTranslator` from
+  `use-intl/core`, taking an explicit `locale: AppLocale = "en"` rather than reading it from request
+  context, so it works identically whether it's rendered from the locale-aware storefront tree or the
+  locale-blind admin tree.
+- **`FilterBar.tsx` and `checkout/page.tsx` both had to switch off plain `next/navigation` imports** —
+  caught by an audit pass, not by a runtime bug. `checkout/page.tsx`'s empty-cart-redirect used
+  `next/navigation`'s `redirect("/cart")`, which resolves to the *unprefixed* `/cart` (relying on the
+  `NEXT_LOCALE` cookie the proxy already set on this same visit to bounce it back to the right locale)
+  rather than being locale-safe outright; switched to `@/i18n/navigation`'s `redirect({ href, locale })`
+  (paired with `getLocale()` from `next-intl/server`, since the locale-aware `redirect` requires it
+  explicitly server-side, unlike its client-side `useRouter` counterpart which infers it).
+  `FilterBar.tsx`'s `usePathname`/`useRouter` similarly moved to `@/i18n/navigation` — this one
+  happened to work by accident under `localePrefix: "always"` (the raw pathname already includes the
+  locale segment), but was inconsistent with the project's own navigation convention and would silently
+  stop being safe if `routing.ts` ever adopted localized pathnames.
+- **The Vitest suite broke in a way Playwright verification alone wouldn't have caught**: `cart.ts`,
+  `order.ts`, and `auth.ts` importing `getTranslations` from `"next-intl/server"` made every test that
+  exercises those actions (`cart.test.ts`, `order.test.ts`, `auth.test.ts`) throw `` `getTranslations`
+  is not supported in Client Components `` — `next-intl/server`'s real implementation only resolves
+  under Next's bundler-only `"react-server"` export condition, which Vitest never sets, so it always
+  falls through to the client-only build outside of an actual Next.js build. Fixed by mocking
+  `next-intl/server` in each of those three test files, driven off the real `messages/en.json` via
+  `use-intl`'s own `createTranslator` (same primitive `getTranslator.ts` uses) rather than a naive
+  key-echo stub — several existing assertions match on real English error substrings (e.g.
+  `/no longer valid/i`, `/already used/i`), so the mock had to produce the *actual* translated text,
+  not just any string. This was a latent bug from earlier in this same phase (as soon as `cart.ts` was
+  first translated) that only surfaced once `npm run test` was run again — worth remembering that
+  adding `next-intl/server` to any new server action needs the same mock added to its test file.
+- **Playwright verification covered browse (homepage, brands, a collection with sort/filter),
+  product detail (gallery + variant selector), add-to-cart, cart, login, and signup in both `/en` and
+  `/ar`**, screenshot-confirmed RTL mirroring throughout (nav order, two-column grids, filter dropdown
+  labels, Arabic plural forms rendering correctly per ICU category — e.g. "منتج/منتجان/3 منتجات"),
+  and confirmed zero console/page errors in either locale. `FilterBar`'s sort-select was also
+  interaction-tested (clicked a real option, confirmed the URL updated to `/ar/collections/...
+  ?sort=price-asc` — locale prefix preserved). Checkout, order placement, and admin `/admin/hero-
+  banners`-style UIs could only be confirmed to redirect cleanly rather than crash — same placeholder-
+  Supabase-Auth limitation as every prior phase (see section 6); worth a real signed-in click-through
+  of the checkout form and order-confirmation page once this ships.
+- **No new Prisma migration** — this is a pure application-code/i18n feature, no schema changes, so
+  there's no `prisma migrate deploy` reminder needed for this delivery (unlike most prior features).

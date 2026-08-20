@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/server/db";
@@ -37,17 +38,21 @@ class OrderPlacementError extends Error {}
 export async function placeOrder(
   input: PlaceOrderInput
 ): Promise<PlaceOrderResult> {
+  const t = await getTranslations("PlaceOrder");
+
   const user = await getCurrentUser();
   if (!user) {
-    return { success: false, error: "Please sign in to place an order." };
+    return { success: false, error: t("signInRequired") };
   }
 
   const parsed = placeOrderSchema.safeParse(input);
   if (!parsed.success) {
-    return {
-      success: false,
-      error: parsed.error.issues[0]?.message ?? "Invalid checkout details.",
-    };
+    // Bypassing the raw Zod issue message on purpose, same policy as
+    // applyDiscountCode in discount.ts — the checkout form always submits
+    // browser-validated, well-formed data, so a parse failure here only
+    // realistically happens from tampering, not a normal user mistake.
+    // One translated fallback string covers it.
+    return { success: false, error: t("invalidCheckoutDetails") };
   }
 
   // Resolve the shipping address snapshot up front (outside the
@@ -69,7 +74,7 @@ export async function placeOrder(
       where: { id: parsed.data.address.savedAddressId },
     });
     if (!saved || saved.userId !== user.id) {
-      return { success: false, error: "That address couldn't be found." };
+      return { success: false, error: t("addressNotFound") };
     }
     shipping = {
       shippingName: saved.fullName,
@@ -107,7 +112,7 @@ export async function placeOrder(
   });
 
   if (!cart || cart.items.length === 0) {
-    return { success: false, error: "Your cart is empty." };
+    return { success: false, error: t("cartEmpty") };
   }
 
   let orderId: string;
@@ -118,7 +123,7 @@ export async function placeOrder(
       for (const item of cart.items) {
         if (item.product.status !== "active") {
           throw new OrderPlacementError(
-            `${item.product.title} is no longer available.`
+            t("itemUnavailable", { title: item.product.title })
           );
         }
 
@@ -128,7 +133,11 @@ export async function placeOrder(
         });
         if (updateResult.count === 0) {
           throw new OrderPlacementError(
-            `Only a limited quantity of ${item.product.title} (${item.variant.size}/${item.variant.color}) is left — please update your cart and try again.`
+            t("limitedStock", {
+              title: item.product.title,
+              size: item.variant.size,
+              color: item.variant.color,
+            })
           );
         }
 
@@ -166,9 +175,7 @@ export async function placeOrder(
         });
         const result = validateDiscountCode(discount, subtotalCents, new Date());
         if (!result.valid) {
-          throw new OrderPlacementError(
-            "The discount code applied to your cart is no longer valid — please remove it and try again."
-          );
+          throw new OrderPlacementError(t("discountInvalid"));
         }
 
         // Atomically reserve a redemption slot, same race-safe pattern as
@@ -185,9 +192,7 @@ export async function placeOrder(
           data: { redemptionCount: { increment: 1 } },
         });
         if (reserved.count === 0) {
-          throw new OrderPlacementError(
-            "That discount code just reached its redemption limit — please remove it and try again."
-          );
+          throw new OrderPlacementError(t("discountRedemptionLimit"));
         }
 
         discountCodeId = discount!.id;
@@ -228,7 +233,7 @@ export async function placeOrder(
           "code" in error &&
           (error as Prisma.PrismaClientKnownRequestError).code === "P2002"
         ) {
-          throw new OrderPlacementError("You've already used this discount code.");
+          throw new OrderPlacementError(t("discountAlreadyUsed"));
         }
         throw error;
       }

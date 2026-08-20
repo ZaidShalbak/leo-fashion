@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { updateCartItem, removeCartItem } from "@/server/actions/cart";
 import { effectivePriceCents } from "@/lib/cart-totals";
 import { formatPriceCents } from "./PriceDisplay";
@@ -27,6 +28,7 @@ type CartLineItemData = {
 };
 
 export function CartLineItem({ item }: { item: CartLineItemData }) {
+  const t = useTranslations("CartLineItem");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const priceCents = effectivePriceCents(
@@ -95,7 +97,7 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
               disabled={isPending || item.quantity <= 1}
               onClick={() => handleQuantityChange(item.quantity - 1)}
               className="text-muted-foreground hover:text-foreground flex size-8 items-center justify-center disabled:opacity-40"
-              aria-label="Decrease quantity"
+              aria-label={t("decreaseQuantity")}
             >
               −
             </button>
@@ -107,7 +109,7 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
               disabled={isPending || item.quantity >= maxQuantity}
               onClick={() => handleQuantityChange(item.quantity + 1)}
               className="text-muted-foreground hover:text-foreground flex size-8 items-center justify-center disabled:opacity-40"
-              aria-label="Increase quantity"
+              aria-label={t("increaseQuantity")}
             >
               +
             </button>
@@ -121,15 +123,15 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
             onClick={handleRemove}
             className="text-muted-foreground"
           >
-            Remove
+            {t("remove")}
           </Button>
         </div>
 
         {item.quantity >= maxQuantity && (
           <p className="text-muted-foreground text-xs">
             {item.variant.inventoryQuantity <= 20
-              ? "Max available stock reached."
-              : "Max 20 per item."}
+              ? t("maxStockReached")
+              : t("maxPerItem")}
           </p>
         )}
         {error && (

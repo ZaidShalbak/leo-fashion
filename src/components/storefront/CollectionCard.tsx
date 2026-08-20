@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import type { Collection } from "@prisma/client";
+import { Link } from "@/i18n/navigation";
 
 /**
  * Category tile — doubles as the homepage's "shop by category" section

@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import {
@@ -21,6 +22,33 @@ const GUEST_CART_COOKIE = "cart_token";
 export type AuthActionResult =
   | { success: true }
   | { success: false; error: string };
+
+/**
+ * Translates a signUp/signIn Zod failure by field, not by forwarding the
+ * schema's hardcoded English message. Each field in signUpSchema/
+ * signInSchema has exactly one validation rule, so mapping by
+ * `issues[0].path[0]` alone (no need to inspect the Zod error code/message)
+ * is enough to pick the right translated string — same scoped-bypass policy
+ * as applyDiscountCode in discount.ts, just applied per-field instead of
+ * for the whole schema since there's more than one realistic failure mode
+ * here.
+ */
+function authIssueMessage(
+  t: Awaited<ReturnType<typeof getTranslations>>,
+  issues: { path: PropertyKey[] }[],
+  passwordKey: "passwordRequired" | "passwordTooShort"
+): string {
+  switch (issues[0]?.path[0]) {
+    case "name":
+      return t("nameRequired");
+    case "email":
+      return t("emailInvalid");
+    case "password":
+      return t(passwordKey);
+    default:
+      return t("invalidInput");
+  }
+}
 
 /**
  * Merges a guest cart (identified by the cart_token cookie) into the given
@@ -97,9 +125,14 @@ export async function signUp(
   input: SignUpInput,
   redirectTo: string = "/"
 ): Promise<AuthActionResult> {
+  const t = await getTranslations("AuthActions");
+
   const parsed = signUpSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      success: false,
+      error: authIssueMessage(t, parsed.error.issues, "passwordTooShort"),
+    };
   }
   const { name, email, password } = parsed.data;
 
@@ -111,12 +144,15 @@ export async function signUp(
     user_metadata: { name },
   });
   if (createError || !created.user) {
-    const message = createError?.message ?? "Could not create account.";
+    // Supabase's own error message (the fallback below) is an external,
+    // untranslated string — out of scope to localize. The one common case
+    // we can recognize (duplicate email) gets a translated message instead.
     return {
       success: false,
-      error: /already/i.test(message)
-        ? "An account with this email already exists."
-        : message,
+      error:
+        createError?.message && /already/i.test(createError.message)
+          ? t("emailAlreadyExists")
+          : (createError?.message ?? t("couldNotCreateAccount")),
     };
   }
 
@@ -144,15 +180,20 @@ export async function signIn(
   input: SignInInput,
   redirectTo: string = "/"
 ): Promise<AuthActionResult> {
+  const t = await getTranslations("AuthActions");
+
   const parsed = signInSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      success: false,
+      error: authIssueMessage(t, parsed.error.issues, "passwordRequired"),
+    };
   }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error || !data.user) {
-    return { success: false, error: "Incorrect email or password." };
+    return { success: false, error: t("incorrectCredentials") };
   }
 
   const appUser = await db.user.findUnique({

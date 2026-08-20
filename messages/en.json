@@ -1,0 +1,256 @@
+{
+  "Metadata": {
+    "title": "Leo Fashion",
+    "description": "Leo Fashion — clothing, browsed and ordered online."
+  },
+  "Nav": {
+    "brandName": "Leo Fashion",
+    "brands": "Brands",
+    "signIn": "Sign in",
+    "footer": "Leo Fashion — pay-on-delivery / invoice checkout, no card required.",
+    "languageSwitcherLabel": "Language"
+  },
+  "CartIcon": {
+    "label": "Cart",
+    "labelWithCount": "Cart, {count, plural, one {# item} other {# items}}"
+  },
+  "UserMenu": {
+    "accountMenu": "Account menu",
+    "orders": "Orders",
+    "admin": "Admin",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…"
+  },
+  "CheckoutForm": {
+    "shippingAddress": "Shipping address",
+    "useNewAddress": "Use a new address",
+    "fullName": "Full name",
+    "addressLine1": "Address line 1",
+    "addressLine2": "Address line 2",
+    "city": "City",
+    "state": "State",
+    "postalCode": "Postal code",
+    "country": "Country",
+    "phone": "Phone",
+    "placingOrder": "Placing order…",
+    "placeOrder": "Place order"
+  },
+  "Checkout": {
+    "title": "Checkout",
+    "orderSummary": "Order summary",
+    "lineItem": "{title} ({size}/{color}) × {quantity}",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "discountWithCode": "Discount ({code})",
+    "total": "Total",
+    "noPaymentNote": "No payment is collected here — this places the order for invoice/pay-on-delivery fulfillment.",
+    "editCart": "Edit cart"
+  },
+  "CollectionPage": {
+    "fallbackTitle": "Collection",
+    "noMatches": "No products match those filters."
+  },
+  "CollectionNotFound": {
+    "title": "Collection not found",
+    "description": "That collection doesn't exist or may have been removed.",
+    "backToHomepage": "Back to homepage"
+  },
+  "ProductNotFound": {
+    "title": "Product not found",
+    "description": "That product doesn't exist, is no longer available, or the link may be wrong.",
+    "backToHomepage": "Back to homepage"
+  },
+  "BrandsPage": {
+    "title": "Brands",
+    "subtitle": "The vendors and partner labels we carry alongside our own in-house line.",
+    "itemCount": "{count, plural, one {# item} other {# items}}",
+    "noBrands": "No brands yet — check back soon."
+  },
+  "BrandDetailPage": {
+    "fallbackTitle": "Brand",
+    "noMatches": "No products match those filters."
+  },
+  "FilterBar": {
+    "size": "Size",
+    "allSizes": "All sizes",
+    "color": "Color",
+    "allColors": "All colors",
+    "sort": "Sort",
+    "sortOptions": {
+      "newest": "Newest",
+      "price-asc": "Price: low to high",
+      "price-desc": "Price: high to low"
+    }
+  },
+  "LoginPage": {
+    "title": "Sign in",
+    "welcomeBack": "Welcome back to Leo Fashion.",
+    "noAccount": "Don't have an account?",
+    "createOne": "Create one"
+  },
+  "SignUpPage": {
+    "title": "Create account",
+    "subtitle": "Save addresses and track your orders.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "LoginForm": {
+    "email": "Email",
+    "password": "Password",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in"
+  },
+  "SignUpForm": {
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 8 characters.",
+    "creatingAccount": "Creating account…",
+    "createAccount": "Create account"
+  },
+  "AuthActions": {
+    "nameRequired": "Name is required.",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordRequired": "Password is required.",
+    "invalidInput": "Invalid input.",
+    "emailAlreadyExists": "An account with this email already exists.",
+    "couldNotCreateAccount": "Could not create account.",
+    "incorrectCredentials": "Incorrect email or password."
+  },
+  "PlaceOrder": {
+    "signInRequired": "Please sign in to place an order.",
+    "invalidCheckoutDetails": "Invalid checkout details.",
+    "addressNotFound": "That address couldn't be found.",
+    "cartEmpty": "Your cart is empty.",
+    "itemUnavailable": "{title} is no longer available.",
+    "limitedStock": "Only a limited quantity of {title} ({size}/{color}) is left — please update your cart and try again.",
+    "discountInvalid": "The discount code applied to your cart is no longer valid — please remove it and try again.",
+    "discountRedemptionLimit": "That discount code just reached its redemption limit — please remove it and try again.",
+    "discountAlreadyUsed": "You've already used this discount code."
+  },
+  "DiscountActions": {
+    "notFound": "That code doesn't exist.",
+    "inactive": "That code is no longer active.",
+    "expired": "That code has expired.",
+    "redemptionLimit": "That code has reached its redemption limit.",
+    "minSubtotal": "Add {amount} more to your cart to use this code.",
+    "enterCode": "Enter a code.",
+    "cartEmpty": "Your cart is empty.",
+    "alreadyUsed": "You've already used this code.",
+    "noCart": "No cart found."
+  },
+  "PromoCodeForm": {
+    "appliedPrefix": "Promo code",
+    "appliedSuffix": "applied",
+    "removeCode": "Remove promo code",
+    "placeholder": "Promo code",
+    "apply": "Apply"
+  },
+  "CartLineItem": {
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "remove": "Remove",
+    "maxStockReached": "Max available stock reached.",
+    "maxPerItem": "Max 20 per item."
+  },
+  "Cart": {
+    "title": "Your cart",
+    "emptyTitle": "Your cart is empty",
+    "emptySubtitle": "Browse the catalog and add something you like.",
+    "continueShopping": "Continue shopping",
+    "discountInvalidNotice": "This promo code is no longer valid and won't be applied at checkout.",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "total": "Total",
+    "shippingNote": "Shipping and totals are calculated at checkout. No payment required — orders are placed on account and fulfilled directly.",
+    "proceedToCheckout": "Proceed to checkout"
+  },
+  "OrderConfirmation": {
+    "metaTitle": "Order confirmed",
+    "heading": "Thanks — your order is in.",
+    "subheading": "We'll follow up with fulfillment details. No payment was collected — this order is invoice / pay-on-delivery.",
+    "continueShopping": "Continue shopping",
+    "viewMyOrders": "View my orders"
+  },
+  "AccountOrders": {
+    "title": "Your orders",
+    "noOrders": "You haven't placed any orders yet.",
+    "startShopping": "Start shopping",
+    "orderNumber": "Order #{id}",
+    "dateAndItemCount": "{date} · {count, plural, one {# item} other {# items}}"
+  },
+  "AccountOrderDetail": {
+    "metaTitle": "Order details",
+    "allOrders": "All orders"
+  },
+  "OrderStatus": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled"
+  },
+  "OrderDetail": {
+    "orderNumber": "Order #{id}",
+    "placed": "Placed {date}",
+    "items": "Items",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "discountWithCode": "Discount ({code})",
+    "total": "Total",
+    "shippingAddress": "Shipping address",
+    "tracking": "Tracking"
+  },
+  "VariantSelector": {
+    "size": "Size",
+    "color": "Color",
+    "outOfStock": "Out of stock",
+    "adding": "Adding…",
+    "addToCart": "Add to cart"
+  },
+  "CartActions": {
+    "invalidRequest": "Invalid request.",
+    "itemUnavailable": "This item is no longer available.",
+    "outOfStock": "This size/color is out of stock.",
+    "itemNotInCart": "That item isn't in your cart.",
+    "added": "Added to cart.",
+    "addedCapped": "Added — only {count} in stock, so that's the most we could add."
+  },
+  "Product": {
+    "fallbackTitle": "Product"
+  },
+  "ProductGallery": {
+    "showImage": "Show image {index} of {total}"
+  },
+  "BrandsSection": {
+    "shopByBrand": "Shop by brand",
+    "viewAll": "View all"
+  },
+  "ProductCard": {
+    "outOfStock": "Out of stock",
+    "colorCount": "{count, plural, one {# color} other {# colors}}"
+  },
+  "HeroCarousel": {
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "goToSlide": "Go to slide {number}"
+  },
+  "Home": {
+    "title": "Leo Fashion",
+    "tagline": "Wardrobe staples, outerwear, and easy weekend pieces — order online, pay on delivery or by invoice.",
+    "shopByCategory": "Shop by category",
+    "newArrivals": "New arrivals",
+    "noProducts": "No products are available yet — check back soon."
+  },
+  "MobileNav": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "brands": "Brands",
+    "orders": "Orders",
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…"
+  }
+}

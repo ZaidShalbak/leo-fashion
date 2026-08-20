@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { signIn } from "@/server/actions/auth";
 
 export function LoginForm({ redirectTo }: { redirectTo: string }) {
+  const t = useTranslations("LoginForm");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -28,16 +30,24 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+        <Label htmlFor="email">{t("email")}</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          dir="ltr"
+          required
+        />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t("password")}</Label>
         <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
+          dir="ltr"
           required
         />
       </div>
@@ -49,7 +59,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
       )}
 
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Signing in…" : "Sign in"}
+        {isPending ? t("signingIn") : t("signIn")}
       </Button>
     </form>
   );

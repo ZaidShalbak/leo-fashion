@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Link } from "@/i18n/navigation";
 
 export type HeroSlide = {
   id: string;
@@ -26,6 +28,8 @@ const AUTO_ADVANCE_MS = 6000;
  * than pulling in a carousel library for three-ish slides.
  */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
+  const t = useTranslations("HeroCarousel");
+  const isRtl = useLocale() === "ar";
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const count = slides.length;
@@ -54,6 +58,15 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
   if (count === 0) return null;
 
+  // `translateX` is a raw physical transform — it always moves the track
+  // toward +X (visually right) for a positive value, regardless of `dir`.
+  // The flex track itself already lays out slide 0 on the correct side on
+  // its own (browsers reverse `flex-direction: row` under dir="rtl"), but
+  // sliding it forward means moving further *toward the reading-start
+  // side*, which is -X in LTR and +X in RTL — so the sign has to flip, or
+  // "next slide" would visually run backwards in Arabic.
+  const trackOffset = (isRtl ? 1 : -1) * index * 100;
+
   return (
     <section
       className="group/carousel border-border relative overflow-hidden rounded-lg border"
@@ -65,7 +78,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     >
       <div
         className="flex transition-transform duration-500 ease-out"
-        style={{ transform: `translateX(-${index * 100}%)` }}
+        style={{ transform: `translateX(${trackOffset}%)` }}
       >
         {slides.map((slide) => (
           <Link
@@ -103,21 +116,25 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
       {count > 1 && (
         <>
+          {/* Positioned with logical start-/end- (not left-/right-) so they
+              swap sides in RTL, and the glyphs themselves flip too — a
+              "previous" arrow should point toward the reading-start side,
+              which is visually right-to-left in Arabic, not always "‹". */}
           <button
             type="button"
             onClick={prev}
-            aria-label="Previous slide"
-            className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 left-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
+            aria-label={t("previousSlide")}
+            className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 start-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
           >
-            ‹
+            {isRtl ? "›" : "‹"}
           </button>
           <button
             type="button"
             onClick={next}
-            aria-label="Next slide"
-            className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
+            aria-label={t("nextSlide")}
+            className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 end-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
           >
-            ›
+            {isRtl ? "‹" : "›"}
           </button>
 
           <div className="absolute inset-x-0 bottom-2 flex justify-center gap-2 sm:bottom-3">
@@ -126,7 +143,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 key={slide.id}
                 type="button"
                 onClick={() => goTo(i)}
-                aria-label={`Go to slide ${i + 1}`}
+                aria-label={t("goToSlide", { number: i + 1 })}
                 aria-current={i === index}
                 className={`h-1.5 rounded-full transition-all ${
                   i === index ? "bg-background w-6" : "bg-background/60 w-1.5"

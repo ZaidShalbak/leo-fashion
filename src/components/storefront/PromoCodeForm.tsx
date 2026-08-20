@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { applyDiscountCode, removeDiscountCode } from "@/server/actions/discount
  * discount line/total shown here always reflects the DB, not local state.
  */
 export function PromoCodeForm({ appliedCode }: { appliedCode: string | null }) {
+  const t = useTranslations("PromoCodeForm");
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,13 +56,14 @@ export function PromoCodeForm({ appliedCode }: { appliedCode: string | null }) {
       <div>
         <div className="border-input flex items-center justify-between rounded-md border px-3 py-2 text-sm">
           <span>
-            Promo code <span className="font-medium">{appliedCode}</span> applied
+            {t("appliedPrefix")} <span className="font-medium" dir="ltr">{appliedCode}</span>{" "}
+            {t("appliedSuffix")}
           </span>
           <button
             type="button"
             onClick={handleRemove}
             disabled={isPending}
-            aria-label="Remove promo code"
+            aria-label={t("removeCode")}
             className="text-muted-foreground hover:text-foreground disabled:opacity-40"
           >
             <XIcon className="size-4" />
@@ -81,9 +84,12 @@ export function PromoCodeForm({ appliedCode }: { appliedCode: string | null }) {
         <Input
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="Promo code"
+          placeholder={t("placeholder")}
           disabled={isPending}
           aria-invalid={error ? true : undefined}
+          // Discount codes are always plain Latin/numeric strings — pinning
+          // ltr keeps typing/cursor behavior predictable inside an RTL page.
+          dir="ltr"
         />
         {error && (
           <p role="alert" className="text-destructive mt-1 text-xs">
@@ -92,7 +98,7 @@ export function PromoCodeForm({ appliedCode }: { appliedCode: string | null }) {
         )}
       </div>
       <Button type="submit" variant="outline" disabled={isPending || !code.trim()}>
-        Apply
+        {t("apply")}
       </Button>
     </form>
   );

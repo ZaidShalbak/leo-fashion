@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export function VariantSelector({
   selectedColor: string;
   onColorChange: (color: string) => void;
 }) {
+  const t = useTranslations("VariantSelector");
   const sizes = useMemo(
     () => sortSizes([...new Set(variants.map((v) => v.size))]),
     [variants]
@@ -136,7 +138,7 @@ export function VariantSelector({
       <p className="text-xl font-medium">{formatPriceCents(priceCents)}</p>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Size</p>
+        <p className="mb-2 text-sm font-medium">{t("size")}</p>
         <div className="flex flex-wrap gap-2">
           {sizes.map((size) => {
             const disabled = !sizeHasAnyStock(size);
@@ -162,7 +164,7 @@ export function VariantSelector({
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium">Color</p>
+        <p className="mb-2 text-sm font-medium">{t("color")}</p>
         <div className="flex flex-wrap gap-2">
           {colors.map((color) => {
             const disabled = !colorHasAnyStock(color);
@@ -194,11 +196,7 @@ export function VariantSelector({
         onClick={handleAddToCart}
         className="w-full sm:w-auto"
       >
-        {isOutOfStock
-          ? "Out of stock"
-          : isPending
-            ? "Adding…"
-            : "Add to cart"}
+        {isOutOfStock ? t("outOfStock") : isPending ? t("adding") : t("addToCart")}
       </Button>
 
       {feedback && (

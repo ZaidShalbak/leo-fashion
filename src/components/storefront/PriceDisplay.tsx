@@ -23,10 +23,16 @@ export function PriceDisplay({
     typeof compareAtCents === "number" && compareAtCents > cents;
 
   return (
-    <span className={className}>
+    // dir="ltr" pins the numerals/currency symbol to a consistent
+    // left-to-right order regardless of page direction — prices deliberately
+    // stay in Western-numeral USD formatting even on the Arabic storefront
+    // (see formatter above), which is the same convention most Arabic
+    // e-commerce sites use, so this is a plain LTR "island" inside an RTL
+    // page rather than something that should mirror.
+    <span className={className} dir="ltr">
       <span className="font-medium">{formatPriceCents(cents)}</span>
       {hasDiscount && (
-        <span className="text-muted-foreground ml-2 line-through">
+        <span className="text-muted-foreground ms-2 line-through">
           {formatPriceCents(compareAtCents)}
         </span>
       )}

@@ -5,6 +5,13 @@
 // redirect, and next/cache's revalidatePath are mocked because placeOrder
 // needs a request-scoped context (and a real redirect throw) that doesn't
 // exist in a plain Vitest run — see cart.test.ts for the same rationale.
+// next-intl/server is mocked too: its "next-intl/server" entrypoint only
+// resolves to the real (getTranslations-capable) implementation under
+// Next's bundler-only "react-server" export condition, which Vitest never
+// sets — outside of that, importing it throws "not supported in Client
+// Components". The mock below drives it off the real messages/en.json via
+// use-intl's own createTranslator, so assertions on actual English error
+// text (see the /no longer valid/i-style matchers below) still hold.
 import "dotenv/config";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -21,6 +28,22 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("use-intl/core");
+  const en = (await import("../../../messages/en.json")).default;
+  return {
+    getTranslations: async (arg?: string | { namespace?: string }) => {
+      const namespace = typeof arg === "string" ? arg : arg?.namespace;
+      return createTranslator({
+        locale: "en",
+        messages: en,
+        namespace: namespace as never,
+      });
+    },
+    getLocale: async () => "en",
+  };
+});
 
 const { db } = await import("@/server/db");
 const { placeOrder } = await import("./order");
