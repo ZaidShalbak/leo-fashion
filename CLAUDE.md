@@ -414,6 +414,22 @@ product page even though both had stock. Root cause and fix:
   now handles it correctly rather than requiring every size×color combination to exist just to make
   the picker usable.
 
+Current phase: **Variant picker cross-out for non-matching pairings — complete.** Follow-up to the
+partial-matrix fix above: sizes/colors that have stock overall but not paired with the *other*
+currently selected dimension were clickable (correct) but visually looked identical to a fully
+available option — no hint that clicking would also switch the other selector. Added a `crossed`
+state, distinct from `disabled`:
+
+- **`disabled`** (unchanged) — this size/color has zero stock in *any* pairing at all; greyed out,
+  `cursor-not-allowed`, not clickable.
+- **`crossed`** (new) — this size/color has stock somewhere, just not paired with the current other
+  selection; renders with `line-through` only (no opacity/cursor change, stays fully clickable) plus
+  a `title` tooltip ("Not available in Navy — selecting will switch color") previewing what the
+  auto-correct from the partial-matrix fix will do. The cross is a preview of that side-effect, not a
+  restriction.
+- **Verified visually** with the same throwaway M/Black + L/Navy test product as the prior fix: with
+  L/Navy selected, M and Black both render struck-through but clickable; clicking either still
+  triggers the existing auto-correct behavior unchanged. Test data deleted after verifying.
 Current phase: **Discount / promo codes — complete.** Requested outside the Phase 1–5 roadmap.
 Scope was explicitly narrowed by the store owner up front: **percentage-off only** (no fixed-amount
 codes), **whole-order only** (no per-product/brand/category codes), with all four common limit types —

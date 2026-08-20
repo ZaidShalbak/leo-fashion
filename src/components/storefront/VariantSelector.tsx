@@ -140,16 +140,31 @@ export function VariantSelector({
         <div className="flex flex-wrap gap-2">
           {sizes.map((size) => {
             const disabled = !sizeHasAnyStock(size);
+            // Crossed but still clickable: this size has stock overall,
+            // just not paired with the color that's currently selected.
+            // Selecting it falls through to handleSelectSize's fallback,
+            // which jumps the color to whatever this size actually comes
+            // in — the cross is a preview of that ahead of the click, not
+            // a dead end.
+            const crossed =
+              !disabled &&
+              (variantFor(size, selectedColor)?.inventoryQuantity ?? 0) <= 0;
             return (
               <button
                 key={size}
                 type="button"
                 disabled={disabled}
                 aria-pressed={size === selectedSize}
+                title={
+                  crossed
+                    ? `Not available in ${selectedColor} — selecting will switch color`
+                    : undefined
+                }
                 onClick={() => handleSelectSize(size)}
                 className={cn(
                   "border-input min-w-10 rounded-md border px-3 py-1.5 text-sm transition",
                   size === selectedSize && "border-primary bg-primary/5",
+                  crossed && "text-muted-foreground line-through",
                   disabled &&
                     "text-muted-foreground cursor-not-allowed line-through opacity-50"
                 )}
@@ -166,16 +181,28 @@ export function VariantSelector({
         <div className="flex flex-wrap gap-2">
           {colors.map((color) => {
             const disabled = !colorHasAnyStock(color);
+            // Same "crossed but clickable" idea as size, mirrored: this
+            // color has stock overall, just not in the currently selected
+            // size.
+            const crossed =
+              !disabled &&
+              (variantFor(selectedSize, color)?.inventoryQuantity ?? 0) <= 0;
             return (
               <button
                 key={color}
                 type="button"
                 disabled={disabled}
                 aria-pressed={color === selectedColor}
+                title={
+                  crossed
+                    ? `Not available in size ${selectedSize} — selecting will switch size`
+                    : undefined
+                }
                 onClick={() => handleSelectColor(color)}
                 className={cn(
                   "border-input rounded-md border px-3 py-1.5 text-sm transition",
                   color === selectedColor && "border-primary bg-primary/5",
+                  crossed && "text-muted-foreground line-through",
                   disabled &&
                     "text-muted-foreground cursor-not-allowed line-through opacity-50"
                 )}
