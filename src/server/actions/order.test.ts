@@ -260,6 +260,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantHappyId, quantity: 2 }],
+      notes: "Please ring the doorbell twice.",
     });
 
     expect(result).toBeUndefined(); // placeOrder redirects on success; nothing to return
@@ -276,6 +277,7 @@ describe("placeOrder", () => {
     expect(order!.items).toHaveLength(1);
     expect(order!.items[0]!.quantity).toBe(2);
     expect(order!.shippingName).toBe(validNewAddress.fullName);
+    expect(order!.notes).toBe("Please ring the doorbell twice.");
 
     const variant = await db.productVariant.findUnique({ where: { id: variantHappyId } });
     expect(variant!.inventoryQuantity).toBe(3); // 5 - 2
@@ -301,6 +303,7 @@ describe("placeOrder", () => {
     const order = await db.order.findUnique({ where: { id: orderId } });
     expect(order!.shippingLine1).toBe("456 Saved Ave");
     expect(order!.shippingCity).toBe("Bethlehem");
+    expect(order!.notes).toBeNull(); // omitted entirely — should default to null, not error
   });
 
   it("rejects a savedAddressId belonging to another user", async () => {

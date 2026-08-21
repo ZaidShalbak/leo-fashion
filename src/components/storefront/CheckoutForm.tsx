@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { placeOrder } from "@/server/actions/order";
 import type { PlaceOrderInput } from "@/lib/validators/order";
 
@@ -41,9 +42,10 @@ export function CheckoutForm({
     event.preventDefault();
     setError(null);
 
+    const formData = new FormData(event.currentTarget);
+
     let address: PlaceOrderInput["address"];
     if (selected === "new") {
-      const formData = new FormData(event.currentTarget);
       address = {
         newAddress: {
           fullName: String(formData.get("fullName") ?? ""),
@@ -60,8 +62,13 @@ export function CheckoutForm({
       address = { savedAddressId: selected };
     }
 
+    // Order-level, not part of either address shape — read regardless of
+    // which address mode is selected (the notes field itself always
+    // renders, see below).
+    const notes = (formData.get("notes") as string) || undefined;
+
     startTransition(async () => {
-      const result = await placeOrder({ address, items });
+      const result = await placeOrder({ address, items, notes });
       // On success the action redirects and never resolves here.
       if (!result.success) setError(result.error);
     });
@@ -155,6 +162,15 @@ export function CheckoutForm({
           </div>
         </div>
       )}
+
+      {/* Order-level, independent of the address mode above — always
+          rendered regardless of whether "selected" is a saved address or
+          "new". See the checkout-notes migration/comment in schema.prisma
+          for why this lives on Order directly. */}
+      <div className="space-y-1.5">
+        <Label htmlFor="notes">{t("notes")}</Label>
+        <Textarea id="notes" name="notes" maxLength={500} placeholder={t("notesPlaceholder")} />
+      </div>
 
       {error && (
         <p role="alert" className="text-destructive text-sm">

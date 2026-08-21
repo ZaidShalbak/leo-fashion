@@ -41,6 +41,21 @@ export const placeOrderSchema = z.object({
     }),
   ]),
   items: z.array(orderItemInputSchema).min(1, "Cart is empty"),
+  // Order-level, not tied to either address shape above (a saved address
+  // has no notes field, and a fresh note shouldn't get saved into the
+  // address book the way a new address does) — same blank-string ->
+  // undefined transform used for other optional free-text fields
+  // elsewhere in this codebase (e.g. heroBannerFieldsSchema), but with
+  // .optional() *after* .transform() rather than before it: unlike that
+  // schema (only ever fed a fully-supplied plain object via safeParse),
+  // PlaceOrderInput is a type real callers (CheckoutForm, tests) construct
+  // by hand, and optional-before-transform infers a required "notes:
+  // string | undefined" key rather than a truly optional "notes?:" one —
+  // this ordering is what actually makes the key itself optional.
+  notes: z
+    .union([z.string().trim().max(500), z.literal("")])
+    .transform((v) => (v ? v : undefined))
+    .optional(),
 });
 export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;
 

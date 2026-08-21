@@ -50,6 +50,8 @@
     "postalCode": "الرمز البريدي",
     "country": "الدولة",
     "phone": "رقم الهاتف",
+    "notes": "ملاحظات الطلب (اختياري)",
+    "notesPlaceholder": "تعليمات التوصيل، الوقت المفضل للتواصل، إلخ.",
     "placingOrder": "جارٍ تنفيذ الطلب…",
     "placeOrder": "تنفيذ الطلب"
   },
@@ -220,7 +222,8 @@
     "discountWithCode": "الخصم ({code})",
     "total": "الإجمالي",
     "shippingAddress": "عنوان الشحن",
-    "tracking": "رقم التتبع"
+    "tracking": "رقم التتبع",
+    "notes": "ملاحظات"
   },
   "VariantSelector": {
     "size": "المقاس",

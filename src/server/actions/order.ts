@@ -218,6 +218,7 @@ export async function placeOrder(
             discountCents,
             discountCodeSnapshot,
             discountPercentSnapshot,
+            notes: parsed.data.notes ?? null,
             ...shipping,
             items: { createMany: { data: orderItemsData } },
           },
