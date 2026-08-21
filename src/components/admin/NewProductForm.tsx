@@ -142,7 +142,7 @@ export function NewProductForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="basePrice">Base price (USD)</Label>
+          <Label htmlFor="basePrice">Base price (ILS)</Label>
           <Input id="basePrice" name="basePrice" type="number" step="0.01" min="0" required />
         </div>
         <div className="space-y-1.5">
