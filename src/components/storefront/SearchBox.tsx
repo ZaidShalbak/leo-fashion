@@ -143,7 +143,17 @@ export function SearchBox() {
           // 320px panel always has room.
           className="border-border bg-background fixed inset-x-4 top-16 z-20 max-h-96 overflow-auto rounded-md border py-1 text-sm shadow-md sm:absolute sm:inset-x-auto sm:top-full sm:end-0 sm:mt-1 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
         >
-          {isPending && !hasSearched && (
+          {/* !hasSearched, not isPending && !hasSearched — showPanel already
+              guarantees a non-empty query, and there's a debounce-sized gap
+              between the first keystroke and startTransition actually
+              kicking off (isPending only flips true once the debounce timer
+              fires). Gating on isPending alone left that gap rendering an
+              empty panel with nothing in it. !hasSearched covers the whole
+              "no first result yet" window — both waiting out the debounce
+              and the search itself being pending — while still handing off
+              to the results/noResults branches below once a first result
+              has landed, so retyping doesn't re-show the spinner. */}
+          {!hasSearched && (
             <div className="flex items-center justify-center px-3 py-4">
               <LeoLoadingMark label={t("searching")} className="text-muted-foreground h-6 w-auto" />
             </div>
