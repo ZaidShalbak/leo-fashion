@@ -32,6 +32,27 @@ vi.mock("next/headers", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+// next-intl/server's real (getTranslations-capable) implementation only
+// resolves under Next's bundler-only "react-server" export condition, which
+// Vitest never sets — see order.test.ts for the full rationale. Mocked here
+// off the real messages/en.json via use-intl's createTranslator so it stays
+// truthful to what addToCart/updateCartItem/removeCartItem actually return.
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("use-intl/core");
+  const en = (await import("../../../messages/en.json")).default;
+  return {
+    getTranslations: async (arg?: string | { namespace?: string }) => {
+      const namespace = typeof arg === "string" ? arg : arg?.namespace;
+      return createTranslator({
+        locale: "en",
+        messages: en,
+        namespace: namespace as never,
+      });
+    },
+    getLocale: async () => "en",
+  };
+});
+
 const { db } = await import("@/server/db");
 const { addToCart, updateCartItem, removeCartItem, getCurrentCart } =
   await import("./cart");

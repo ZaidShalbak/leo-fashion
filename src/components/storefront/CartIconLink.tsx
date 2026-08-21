@@ -1,5 +1,7 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ShoppingBagIcon } from "lucide-react";
+
+import { Link } from "@/i18n/navigation";
 
 /**
  * Cart entry point in the header — a bag icon with a small count badge
@@ -8,15 +10,17 @@ import { ShoppingBagIcon } from "lucide-react";
  * sync if the treatment ever changes.
  */
 export function CartIconLink({ itemCount }: { itemCount: number }) {
+  const t = useTranslations("CartIcon");
+
   return (
     <Link
       href="/cart"
-      aria-label={itemCount > 0 ? `Cart, ${itemCount} item${itemCount === 1 ? "" : "s"}` : "Cart"}
+      aria-label={itemCount > 0 ? t("labelWithCount", { count: itemCount }) : t("label")}
       className="text-muted-foreground hover:text-foreground relative flex size-9 items-center justify-center transition"
     >
       <ShoppingBagIcon className="size-5" />
       {itemCount > 0 && (
-        <span className="bg-foreground text-background absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium">
+        <span className="bg-foreground text-background absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium">
           {itemCount > 9 ? "9+" : itemCount}
         </span>
       )}

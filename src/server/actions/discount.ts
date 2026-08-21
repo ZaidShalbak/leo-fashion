@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
@@ -13,19 +14,20 @@ import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 export type ApplyDiscountResult = { success: true } | { success: false; error: string };
 
 function reasonToMessage(
-  result: Extract<DiscountValidationResult, { valid: false }>
+  result: Extract<DiscountValidationResult, { valid: false }>,
+  t: Awaited<ReturnType<typeof getTranslations>>
 ): string {
   switch (result.reason) {
     case "not_found":
-      return "That code doesn't exist.";
+      return t("notFound");
     case "inactive":
-      return "That code is no longer active.";
+      return t("inactive");
     case "expired":
-      return "That code has expired.";
+      return t("expired");
     case "redemption_limit":
-      return "That code has reached its redemption limit.";
+      return t("redemptionLimit");
     case "min_subtotal":
-      return `Add ${formatPriceCents(result.minSubtotalCents ?? 0)} more to your cart to use this code.`;
+      return t("minSubtotal", { amount: formatPriceCents(result.minSubtotalCents ?? 0) });
   }
 }
 
@@ -40,15 +42,20 @@ function reasonToMessage(
 export async function applyDiscountCode(
   input: { code: string }
 ): Promise<ApplyDiscountResult> {
+  const t = await getTranslations("DiscountActions");
   const parsed = applyDiscountCodeSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Enter a code." };
+    // Bypassing the raw Zod issue message on purpose — this schema only
+    // ever fails one realistic way (empty/too-long code), so a single
+    // translated string covers it without needing a full Zod locale/error
+    // map for what's otherwise a one-field form.
+    return { success: false, error: t("enterCode") };
   }
   const code = parsed.data.code.toUpperCase();
 
   const cart = await getCurrentCart();
   if (!cart || cart.items.length === 0) {
-    return { success: false, error: "Your cart is empty." };
+    return { success: false, error: t("cartEmpty") };
   }
 
   const discount = await db.discountCode.findUnique({ where: { code } });
@@ -64,7 +71,7 @@ export async function applyDiscountCode(
 
   const result = validateDiscountCode(discount, subtotalCents, new Date());
   if (!result.valid) {
-    return { success: false, error: reasonToMessage(result) };
+    return { success: false, error: reasonToMessage(result, t) };
   }
 
   // Early, best-effort "already used" check for a signed-in shopper — the
@@ -79,7 +86,7 @@ export async function applyDiscountCode(
       select: { id: true },
     });
     if (alreadyUsed) {
-      return { success: false, error: "You've already used this code." };
+      return { success: false, error: t("alreadyUsed") };
     }
   }
 
@@ -94,8 +101,9 @@ export async function applyDiscountCode(
 }
 
 export async function removeDiscountCode(): Promise<ApplyDiscountResult> {
+  const t = await getTranslations("DiscountActions");
   const cart = await getCurrentCart();
-  if (!cart) return { success: false, error: "No cart found." };
+  if (!cart) return { success: false, error: t("noCart") };
 
   await db.cart.update({
     where: { id: cart.id },

@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import type { Cart } from "@prisma/client";
 
 import { db } from "@/server/db";
@@ -111,9 +112,10 @@ async function getOrCreateCart(): Promise<Cart> {
 export async function addToCart(
   input: AddToCartInput
 ): Promise<AddToCartResult> {
+  const t = await getTranslations("CartActions");
   const parsed = addToCartSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: "Invalid request." };
+    return { success: false, error: t("invalidRequest") };
   }
 
   const variant = await db.productVariant.findUnique({
@@ -122,11 +124,11 @@ export async function addToCart(
   });
 
   if (!variant || variant.product.status !== "active") {
-    return { success: false, error: "This item is no longer available." };
+    return { success: false, error: t("itemUnavailable") };
   }
 
   if (variant.inventoryQuantity <= 0) {
-    return { success: false, error: "This size/color is out of stock." };
+    return { success: false, error: t("outOfStock") };
   }
 
   const cart = await getOrCreateCart();
@@ -161,8 +163,8 @@ export async function addToCart(
 
   const message =
     cappedQuantity < requestedTotal
-      ? `Added — only ${cappedQuantity} in stock, so that's the most we could add.`
-      : "Added to cart.";
+      ? t("addedCapped", { count: cappedQuantity })
+      : t("added");
 
   revalidatePath("/cart");
   return { success: true, message };
@@ -177,15 +179,16 @@ export async function addToCart(
 export async function updateCartItem(
   input: UpdateCartItemInput
 ): Promise<CartMutationResult> {
+  const t = await getTranslations("CartActions");
   const parsed = updateCartItemSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: "Invalid request." };
+    return { success: false, error: t("invalidRequest") };
   }
 
   const cart = await getCurrentCart();
   const item = cart?.items.find((i) => i.id === parsed.data.cartItemId);
   if (!cart || !item) {
-    return { success: false, error: "That item isn't in your cart." };
+    return { success: false, error: t("itemNotInCart") };
   }
 
   const cappedQuantity = Math.min(
@@ -207,15 +210,16 @@ export async function updateCartItem(
 export async function removeCartItem(
   input: RemoveCartItemInput
 ): Promise<CartMutationResult> {
+  const t = await getTranslations("CartActions");
   const parsed = removeCartItemSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: "Invalid request." };
+    return { success: false, error: t("invalidRequest") };
   }
 
   const cart = await getCurrentCart();
   const item = cart?.items.find((i) => i.id === parsed.data.cartItemId);
   if (!cart || !item) {
-    return { success: false, error: "That item isn't in your cart." };
+    return { success: false, error: t("itemNotInCart") };
   }
 
   await db.cartItem.delete({ where: { id: item.id } });

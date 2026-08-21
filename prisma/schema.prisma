@@ -87,6 +87,12 @@ model Collection {
   title       String
   handle      String   @unique
   description String?
+  // Optional Arabic overrides for the storefront's ar locale — see
+  // Product.titleAr's comment for the full reasoning (same pattern here).
+  // Null/empty means "no Arabic override yet"; the storefront falls back
+  // to title/description in that case (src/lib/localizedContent.ts).
+  titleAr       String?
+  descriptionAr String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -104,6 +110,9 @@ model Brand {
   slug        String   @unique
   logoUrl     String?
   description String?
+  // Optional Arabic overrides — see Product.titleAr's comment.
+  nameAr        String?
+  descriptionAr String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -115,6 +124,21 @@ model Product {
   title          String
   slug           String        @unique
   description    String?
+  // Optional per-row Arabic overrides for the storefront's ar locale.
+  // Catalog content is entered once, in whatever language an admin
+  // types it in (see CLAUDE.md's bilingual-storefront phase — this was
+  // deliberately out of scope there); these let an admin *additionally*
+  // supply a real Arabic title/description for a given row. Deliberately
+  // plain nullable columns, not a separate translations table — there
+  // are only ever two locales here (see src/i18n/routing.ts), so a join
+  // table would just be overhead for what's really "one extra optional
+  // field per locale beyond the first." Null or blank means no Arabic
+  // override yet; the storefront falls back to title/description in that
+  // case (src/lib/localizedContent.ts). The admin dashboard itself always
+  // shows/edits the base title/description — it's English/LTR-only and
+  // was never in scope for translation.
+  titleAr        String?
+  descriptionAr  String?
   basePriceCents Int
   status         ProductStatus @default(draft)
   brandId        String?

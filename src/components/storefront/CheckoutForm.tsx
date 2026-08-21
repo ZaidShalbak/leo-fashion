@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export function CheckoutForm({
   addresses: SavedAddress[];
   items: PlaceOrderInput["items"];
 }) {
+  const t = useTranslations("CheckoutForm");
   const defaultAddress =
     addresses.find((a) => a.isDefault) ?? addresses[0] ?? null;
   const [selected, setSelected] = useState<string>(defaultAddress?.id ?? "new");
@@ -69,7 +71,7 @@ export function CheckoutForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {addresses.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium">Shipping address</p>
+          <p className="text-sm font-medium">{t("shippingAddress")}</p>
           {addresses.map((addr) => (
             <label
               key={addr.id}
@@ -105,7 +107,7 @@ export function CheckoutForm({
               checked={selected === "new"}
               onChange={() => setSelected("new")}
             />
-            Use a new address
+            {t("useNewAddress")}
           </label>
         </div>
       )}
@@ -113,43 +115,43 @@ export function CheckoutForm({
       {selected === "new" && (
         <div className="space-y-4">
           {addresses.length === 0 && (
-            <p className="text-sm font-medium">Shipping address</p>
+            <p className="text-sm font-medium">{t("shippingAddress")}</p>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor="fullName">Full name</Label>
+            <Label htmlFor="fullName">{t("fullName")}</Label>
             <Input id="fullName" name="fullName" required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="line1">Address line 1</Label>
+            <Label htmlFor="line1">{t("addressLine1")}</Label>
             <Input id="line1" name="line1" required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="line2">Address line 2 (optional)</Label>
+            <Label htmlFor="line2">{t("addressLine2")}</Label>
             <Input id="line2" name="line2" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">{t("city")}</Label>
               <Input id="city" name="city" required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="state">State / region (optional)</Label>
+              <Label htmlFor="state">{t("state")}</Label>
               <Input id="state" name="state" />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="postalCode">Postal code</Label>
-              <Input id="postalCode" name="postalCode" required />
+              <Label htmlFor="postalCode">{t("postalCode")}</Label>
+              <Input id="postalCode" name="postalCode" required dir="ltr" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country">{t("country")}</Label>
               <Input id="country" name="country" required />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone (optional)</Label>
-            <Input id="phone" name="phone" type="tel" />
+            <Label htmlFor="phone">{t("phone")}</Label>
+            <Input id="phone" name="phone" type="tel" dir="ltr" />
           </div>
         </div>
       )}
@@ -161,7 +163,7 @@ export function CheckoutForm({
       )}
 
       <Button type="submit" size="lg" className="w-full" disabled={isPending}>
-        {isPending ? "Placing order…" : "Place order"}
+        {isPending ? t("placingOrder") : t("placeOrder")}
       </Button>
     </form>
   );

@@ -1,7 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 
+import { usePathname, useRouter } from "@/i18n/navigation";
 import {
   Select,
   SelectContent,
@@ -10,11 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "price-asc", label: "Price: low to high" },
-  { value: "price-desc", label: "Price: high to low" },
-];
+const SORT_OPTIONS = ["newest", "price-asc", "price-desc"] as const;
 
 /**
  * Filter/sort controls for a collection page. Reads and writes the size,
@@ -30,6 +28,7 @@ export function FilterBar({
   sizes: string[];
   colors: string[];
 }) {
+  const t = useTranslations("FilterBar");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,10 +52,10 @@ export function FilterBar({
     <div className="flex flex-wrap items-center gap-3" data-slot="filter-bar">
       <Select value={currentSize} onValueChange={(v) => setParam("size", v)}>
         <SelectTrigger size="sm" className="w-32">
-          <SelectValue placeholder="Size" />
+          <SelectValue placeholder={t("size")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All sizes</SelectItem>
+          <SelectItem value="all">{t("allSizes")}</SelectItem>
           {sizes.map((size) => (
             <SelectItem key={size} value={size}>
               {size}
@@ -70,10 +69,10 @@ export function FilterBar({
         onValueChange={(v) => setParam("color", v)}
       >
         <SelectTrigger size="sm" className="w-36">
-          <SelectValue placeholder="Color" />
+          <SelectValue placeholder={t("color")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All colors</SelectItem>
+          <SelectItem value="all">{t("allColors")}</SelectItem>
           {colors.map((color) => (
             <SelectItem key={color} value={color}>
               {color}
@@ -84,12 +83,12 @@ export function FilterBar({
 
       <Select value={currentSort} onValueChange={(v) => setParam("sort", v)}>
         <SelectTrigger size="sm" className="w-44">
-          <SelectValue placeholder="Sort" />
+          <SelectValue placeholder={t("sort")} />
         </SelectTrigger>
         <SelectContent>
           {SORT_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
+            <SelectItem key={option} value={option}>
+              {t(`sortOptions.${option}`)}
             </SelectItem>
           ))}
         </SelectContent>

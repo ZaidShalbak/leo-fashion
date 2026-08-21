@@ -1,10 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import type { ProductCardData } from "@/types/product";
+import { Link } from "@/i18n/navigation";
 import { PriceDisplay } from "./PriceDisplay";
 
 export function ProductCard({ product }: { product: ProductCardData }) {
+  const t = useTranslations("ProductCard");
   const primaryImage = [...product.images].sort(
     (a, b) => a.position - b.position
   )[0];
@@ -30,8 +32,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           />
         ) : null}
         {isOutOfStock && (
-          <span className="bg-background/90 text-foreground absolute top-2 left-2 rounded-md px-2 py-1 text-xs font-medium">
-            Out of stock
+          <span className="bg-background/90 text-foreground absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium">
+            {t("outOfStock")}
           </span>
         )}
       </div>
@@ -44,7 +46,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         <h3 className="text-sm font-medium">{product.title}</h3>
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <PriceDisplay cents={product.basePriceCents} />
-          {colorCount > 1 && <span>{colorCount} colors</span>}
+          {colorCount > 1 && <span>{t("colorCount", { count: colorCount })}</span>}
         </div>
       </div>
     </Link>

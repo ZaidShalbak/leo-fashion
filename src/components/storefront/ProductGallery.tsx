@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ export function ProductGallery({
   images: { id: string; url: string; altText: string | null }[];
   productTitle: string;
 }) {
+  const t = useTranslations("ProductGallery");
   const [activeIndex, setActiveIndex] = useState(0);
   const active = images[activeIndex];
 
@@ -40,7 +42,7 @@ export function ProductGallery({
               key={image.id}
               type="button"
               onClick={() => setActiveIndex(index)}
-              aria-label={`Show image ${index + 1} of ${images.length}`}
+              aria-label={t("showImage", { index: index + 1, total: images.length })}
               aria-current={index === activeIndex}
               className={cn(
                 "bg-muted relative h-16 w-16 overflow-hidden rounded-md ring-offset-2 transition",

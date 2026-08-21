@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import NextLink from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Link } from "@/i18n/navigation";
 import { SignOutButton } from "./SignOutButton";
 
 type Collection = { id: string; handle: string; title: string };
@@ -13,6 +15,9 @@ type Collection = { id: string; handle: string; title: string };
  * its place instead of trying to squeeze the same links onto one line.
  * Cart stays as its own always-visible icon link in the header regardless
  * of screen size, since it's the single most-used link.
+ *
+ * The "Admin" item uses plain next/link (aliased `NextLink`), not the
+ * locale-aware `Link` — same reasoning as UserMenu.
  */
 export function MobileNav({
   collections,
@@ -23,6 +28,7 @@ export function MobileNav({
   isSignedIn: boolean;
   isAdmin?: boolean;
 }) {
+  const t = useTranslations("MobileNav");
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,10 +37,10 @@ export function MobileNav({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
         className="border-border flex size-9 items-center justify-center rounded-md border"
       >
-        <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
+        <span className="sr-only">{open ? t("closeMenu") : t("openMenu")}</span>
         {open ? (
           <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
@@ -63,7 +69,7 @@ export function MobileNav({
             onClick={() => setOpen(false)}
             className="text-muted-foreground hover:text-foreground py-2 transition"
           >
-            Brands
+            {t("brands")}
           </Link>
           {isSignedIn ? (
             <>
@@ -72,19 +78,19 @@ export function MobileNav({
                 onClick={() => setOpen(false)}
                 className="text-muted-foreground hover:text-foreground py-2 transition"
               >
-                Orders
+                {t("orders")}
               </Link>
               {isAdmin && (
-                <Link
+                <NextLink
                   href="/admin"
                   onClick={() => setOpen(false)}
                   className="text-muted-foreground hover:text-foreground py-2 transition"
                 >
-                  Admin
-                </Link>
+                  {t("admin")}
+                </NextLink>
               )}
               <div className="py-2">
-                <SignOutButton />
+                <SignOutButton label={t("signOut")} pendingLabel={t("signingOut")} />
               </div>
             </>
           ) : (
@@ -93,7 +99,7 @@ export function MobileNav({
               onClick={() => setOpen(false)}
               className="text-muted-foreground hover:text-foreground py-2 transition"
             >
-              Sign in
+              {t("signIn")}
             </Link>
           )}
         </nav>

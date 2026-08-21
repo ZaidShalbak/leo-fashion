@@ -1,5 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+import { Link } from "@/i18n/navigation";
 
 export type BrandSummary = {
   id: string;
@@ -16,17 +18,18 @@ export type BrandSummary = {
  * a simple 2-column layout on mobile without extra work.
  */
 export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
+  const t = useTranslations("BrandsSection");
   if (brands.length === 0) return null;
 
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Shop by brand</h2>
+        <h2 className="text-lg font-medium">{t("shopByBrand")}</h2>
         <Link
           href="/brands"
           className="text-muted-foreground hover:text-foreground text-sm transition"
         >
-          View all
+          {t("viewAll")}
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">

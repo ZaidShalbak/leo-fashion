@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { signUp } from "@/server/actions/auth";
 
 export function SignUpForm({ redirectTo }: { redirectTo: string }) {
+  const t = useTranslations("SignUpForm");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -29,24 +31,32 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t("name")}</Label>
         <Input id="name" name="name" type="text" autoComplete="name" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+        <Label htmlFor="email">{t("email")}</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          dir="ltr"
+          required
+        />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t("password")}</Label>
         <Input
           id="password"
           name="password"
           type="password"
           autoComplete="new-password"
+          dir="ltr"
           minLength={8}
           required
         />
-        <p className="text-muted-foreground text-xs">At least 8 characters.</p>
+        <p className="text-muted-foreground text-xs">{t("passwordHint")}</p>
       </div>
 
       {error && (
@@ -56,7 +66,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
       )}
 
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Creating account…" : "Create account"}
+        {isPending ? t("creatingAccount") : t("createAccount")}
       </Button>
     </form>
   );
