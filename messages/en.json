@@ -3,6 +3,9 @@
     "title": "Leo Fashion",
     "description": "Leo Fashion — clothing, browsed and ordered online."
   },
+  "Loading": {
+    "label": "Loading…"
+  },
   "Nav": {
     "brandName": "Leo Fashion",
     "brands": "Brands",

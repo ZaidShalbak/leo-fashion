@@ -3,6 +3,9 @@
     "title": "Leo Fashion",
     "description": "Leo Fashion — تسوق واطلب الملابس أونلاين."
   },
+  "Loading": {
+    "label": "جارٍ التحميل…"
+  },
   "Nav": {
     "brandName": "Leo Fashion",
     "brands": "الماركات",
