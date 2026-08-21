@@ -74,6 +74,20 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Used by LeoLoadingMark (src/components/storefront/Logo.tsx) — a
+     staggered opacity pulse applied to each letter group with increasing
+     animation-delay, so the wave sweeps left-to-right across L, E, O. */
+  --animate-leo-pulse: leo-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes leo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
 
 @layer base {
