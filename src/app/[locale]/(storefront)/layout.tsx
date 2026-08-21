@@ -57,7 +57,7 @@ export default async function StorefrontLayout({
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="relative border-b border-white/10 bg-[#0a0a0a]">
+      <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <Link href="/" aria-label={t("brandName")} dir="ltr">
             <LeoFashionLogo variant="mark" className="h-7 w-auto text-white" />
@@ -103,7 +103,14 @@ export default async function StorefrontLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-white/10 bg-[#0a0a0a] py-10 text-center text-sm text-white/70">
+      {/* z-50 on both header and footer (matching, not just "above the
+          overlay") is deliberate: FilterBar's loading overlay is a
+          fixed inset-0 at a lower z-index, meant to cover only the main
+          content area. Rather than measuring header/footer heights to
+          geometrically exclude them, this leans on both already having
+          solid black backgrounds — stacking them above the overlay just
+          hides it behind their opaque bg, no coordinates needed. */}
+      <footer className="relative z-50 border-t border-white/10 bg-[#0a0a0a] py-10 text-center text-sm text-white/70">
         <LeoFashionLogo variant="full" className="mx-auto mb-6 h-16 w-auto text-white" />
         <SocialLinks />
         <p className="mt-4">{t("footer")}</p>

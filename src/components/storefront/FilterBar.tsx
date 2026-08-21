@@ -122,7 +122,9 @@ export function FilterBar({
       )}
 
       {isPending && (
-        <LeoLoadingMark label={t("applying")} className="text-foreground h-5 w-auto" />
+        <div className="bg-background/90 fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+          <LeoLoadingMark label={t("applying")} className="text-foreground h-16 w-auto sm:h-20" />
+        </div>
       )}
     </div>
   );
