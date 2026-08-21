@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { motion } from "motion/react";
 
 import type { ProductCardData } from "@/types/product";
 import { Link } from "@/i18n/navigation";
@@ -24,44 +27,61 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const isLowStock = !isOutOfStock && totalStock <= LOW_STOCK_THRESHOLD;
 
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group block"
-      data-slot="product-card"
+    <motion.div
+      // Scroll-reveal — deliberately no index-based stagger delay (which
+      // would need every call site of ProductCard, across the homepage,
+      // collection/brand listings, and "similar products," to start
+      // passing an index prop just for this). Scrolling itself already
+      // staggers *when* each card crosses the viewport threshold, so
+      // cards further down a grid naturally reveal a beat after the ones
+      // above them with zero prop drilling. `once: true` so this plays on
+      // first scroll into view and never replays when scrolling back up;
+      // `margin` starts the reveal a little before the card is fully in
+      // view so it doesn't feel like it's racing the scroll.
+      initial={{ opacity: 0, y: 32, scale: 0.94, filter: "blur(8px)" }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="bg-muted relative aspect-[4/5] overflow-hidden rounded-lg">
-        {primaryImage ? (
-          <Image
-            src={primaryImage.url}
-            alt={primaryImage.altText ?? product.title}
-            fill
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : null}
-        {isOutOfStock && (
-          <span className="bg-background/90 text-foreground absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium">
-            {t("outOfStock")}
-          </span>
-        )}
-        {isLowStock && (
-          <span className="bg-destructive absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium text-white">
-            {t("lowStock", { count: totalStock })}
-          </span>
-        )}
-      </div>
-      <div className="mt-3 space-y-1">
-        {product.brand && (
-          <span className="text-muted-foreground text-xs tracking-wide uppercase">
-            {product.brand.name}
-          </span>
-        )}
-        <h3 className="text-sm font-medium">{product.title}</h3>
-        <div className="text-muted-foreground flex items-center justify-between text-sm">
-          <PriceDisplay cents={product.basePriceCents} />
-          {colorCount > 1 && <span>{t("colorCount", { count: colorCount })}</span>}
+      <Link
+        href={`/products/${product.slug}`}
+        className="group block"
+        data-slot="product-card"
+      >
+        <div className="bg-muted relative aspect-[4/5] overflow-hidden rounded-lg">
+          {primaryImage ? (
+            <Image
+              src={primaryImage.url}
+              alt={primaryImage.altText ?? product.title}
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : null}
+          {isOutOfStock && (
+            <span className="bg-background/90 text-foreground absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium">
+              {t("outOfStock")}
+            </span>
+          )}
+          {isLowStock && (
+            <span className="bg-destructive absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium text-white">
+              {t("lowStock", { count: totalStock })}
+            </span>
+          )}
         </div>
-      </div>
-    </Link>
+        <div className="mt-3 space-y-1">
+          {product.brand && (
+            <span className="text-muted-foreground text-xs tracking-wide uppercase">
+              {product.brand.name}
+            </span>
+          )}
+          <h3 className="text-sm font-medium">{product.title}</h3>
+          <div className="text-muted-foreground flex items-center justify-between text-sm">
+            <PriceDisplay cents={product.basePriceCents} />
+            {colorCount > 1 && <span>{t("colorCount", { count: colorCount })}</span>}
+          </div>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
