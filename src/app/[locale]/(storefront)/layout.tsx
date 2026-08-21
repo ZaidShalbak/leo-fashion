@@ -9,6 +9,7 @@ import { CartIconLink } from "@/components/storefront/CartIconLink";
 import { UserMenu } from "@/components/storefront/UserMenu";
 import { MobileNav } from "@/components/storefront/MobileNav";
 import { LanguageSwitcher } from "@/components/storefront/LanguageSwitcher";
+import { SocialLinks } from "@/components/storefront/SocialLinks";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -108,7 +109,8 @@ export default async function StorefrontLayout({
       </header>
       <main className="flex-1">{children}</main>
       <footer className="border-border text-muted-foreground border-t py-8 text-center text-sm">
-        {t("footer")}
+        <SocialLinks />
+        <p className="mt-4">{t("footer")}</p>
       </footer>
     </div>
   );
