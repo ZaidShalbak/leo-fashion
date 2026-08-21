@@ -5,7 +5,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ShirtIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -296,10 +296,13 @@ export function VariantSelector({
         </p>
       )}
 
-      {/* Fly-to-cart flourish — a small dot travels from the button to
-          whichever cart icon is currently visible (see findVisibleCartIcon
-          above) and shrinks away as it arrives, roughly timed to land
-          alongside the badge's own pop-in (see CartIconLink). Portaled to
+      {/* Fly-to-cart flourish — a small shirt icon (a clothing-store-
+          appropriate stand-in for "the item," since actually cloning the
+          product photo would need extra prop plumbing this component
+          doesn't otherwise need) travels from the button to whichever
+          cart icon is currently visible (see findVisibleCartIcon above)
+          and shrinks away as it arrives, roughly timed to land alongside
+          the badge's own pop-in (see CartIconLink). Portaled to
           document.body (not rendered in place) since it needs to be
           `position: fixed` relative to the viewport and fly across
           unrelated parts of the page — the header it's flying toward
@@ -311,12 +314,12 @@ export function VariantSelector({
         createPortal(
           <motion.div
             key={flyRun.id}
-            className="bg-foreground pointer-events-none fixed z-[70] size-3 rounded-full"
+            className="bg-foreground text-background pointer-events-none fixed z-[70] flex size-8 items-center justify-center rounded-full shadow-lg"
             style={{
-              left: flyRun.start.left + flyRun.start.width / 2 - 6,
-              top: flyRun.start.top + flyRun.start.height / 2 - 6,
+              left: flyRun.start.left + flyRun.start.width / 2 - 16,
+              top: flyRun.start.top + flyRun.start.height / 2 - 16,
             }}
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+            initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
             animate={{
               x:
                 flyRun.end.left +
@@ -326,12 +329,15 @@ export function VariantSelector({
                 flyRun.end.top +
                 flyRun.end.height / 2 -
                 (flyRun.start.top + flyRun.start.height / 2),
-              scale: 0.3,
+              scale: 0.4,
               opacity: 0,
+              rotate: 15,
             }}
-            transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
+            transition={{ duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}
             onAnimationComplete={() => setFlyRun(null)}
-          />,
+          >
+            <ShirtIcon className="size-4" />
+          </motion.div>,
           document.body
         )}
     </div>
