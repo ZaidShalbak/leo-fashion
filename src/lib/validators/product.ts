@@ -29,6 +29,11 @@ export const productSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   slug: slugLike("Slug"),
   description: z.string().trim().max(5000).optional(),
+  // Optional Arabic overrides — see Product.titleAr's comment in
+  // schema.prisma. Left blank, the storefront falls back to
+  // title/description for ar locale visitors too.
+  titleAr: z.string().trim().max(200).optional(),
+  descriptionAr: z.string().trim().max(5000).optional(),
   basePriceCents: z.number().int().nonnegative("Price cannot be negative"),
   status: productStatusSchema.default("draft"),
   // Nullable at the schema/DB level (existing products predate the
@@ -51,6 +56,10 @@ export const collectionSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(120),
   handle: slugLike("Handle"),
   description: z.string().trim().max(2000).optional(),
+  // Optional Arabic overrides — see Collection.titleAr's comment in
+  // schema.prisma.
+  titleAr: z.string().trim().max(120).optional(),
+  descriptionAr: z.string().trim().max(2000).optional(),
 });
 export type CollectionInput = z.infer<typeof collectionSchema>;
 

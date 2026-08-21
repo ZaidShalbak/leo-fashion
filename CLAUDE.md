@@ -735,3 +735,54 @@ in both `/en` and `/ar` with screenshot verification of RTL mirroring. Decisions
   of the checkout form and order-confirmation page once this ships.
 - **No new Prisma migration** — this is a pure application-code/i18n feature, no schema changes, so
   there's no `prisma migrate deploy` reminder needed for this delivery (unlike most prior features).
+
+**Follow-up (post-click-through feedback):** two real-catalog issues surfaced once the feature was
+actually clicked through on `/ar` — same "verify on the real thing" gap the bilingual-storefront
+phase above already flagged.
+
+- **"Leo Fashion" (the store's own name) was being machine-translated to Arabic**, which read as
+  wrong for a proper noun/wordmark the store owner said will likely become a logo image later.
+  Fixed by keeping the literal string `"Leo Fashion"` in `messages/ar.json` (`Metadata.title`,
+  `Nav.brandName`, `Home.title`) instead of an Arabic transliteration, and adding `dir="ltr"` to the
+  nav wordmark link and the homepage `<h1>` so it stays left-to-right and left-aligned even inside
+  an RTL page — same "island" pattern already used for prices/postal codes/phone numbers.
+- **Catalog content (product/category/brand names and descriptions) not translating to Arabic
+  turned out to be unwanted, not the agreed behavior** — the store owner wants these to actually
+  translate, reversing the "stays as-is in whatever language it was entered" scope decision from the
+  bilingual-storefront phase above. Implemented as **optional per-row Arabic overrides**, not a hard
+  requirement or a full translations table: `Product.titleAr`/`descriptionAr`,
+  `Collection.titleAr`/`descriptionAr`, `Brand.nameAr`/`descriptionAr` — all nullable, additive
+  columns (`prisma/migrations/20260821080138_add_arabic_catalog_fields`). With only ever two locales
+  (`src/i18n/routing.ts`), a join-table translations model would be pure overhead for what's really
+  "one extra optional field per locale beyond the first."
+- **One helper decides "which language wins," everywhere**: `src/lib/localizedContent.ts`'s
+  `localize`/`localizeOptional` return the Arabic override when the current locale is `ar` *and* a
+  real (non-blank) override has been entered, else fall back to the base field. Every storefront
+  data-fetch site (homepage, nav, collection/brand listing + detail pages, product detail, cart,
+  checkout) calls this once right after querying Prisma, then passes already-localized objects down
+  to components — `ProductCard`, `CollectionCard`, `BrandsSection`, `CartLineItem`, etc. all needed
+  **zero** changes, since they just render whatever `.title`/`.name`/`.description` they're handed.
+  `locale` is typed as a plain `string` in the helper (not `AppLocale`) purely so it composes with
+  `getLocale()`'s return type without a cast at every call site.
+- **The admin dashboard always shows/edits the base field, never a localized one** — unchanged from
+  the bilingual-storefront phase's scope: admin stays English/LTR-only. `NewProductForm`/
+  `EditProductForm`, `NewCollectionForm`/`EditCollectionForm`, and `NewBrandForm`/`EditBrandForm` each
+  gained an optional "(Arabic)" title/name + description block (RTL input via `dir="rtl"`, explicitly
+  labeled "optional," explained as shown on the storefront when browsing in Arabic) below the existing
+  fields — not a toggle or a separate tab, since this is genuinely optional per-row metadata most
+  products won't have filled in yet.
+- **`OrderItem.titleSnapshot` and `HeroBanner.headline`/`subtext` were deliberately left out of
+  scope** — an order snapshot is a frozen historical record by design (same reasoning as the shipping
+  address snapshot; a later Arabic override shouldn't rewrite what a past order shows), and hero
+  banners are admin-authored marketing copy, not catalog data — extending localization to either
+  would be new scope beyond "categories, products, and brand names."
+- **Verified with Playwright against local dev**: temporarily set an Arabic override on a real brand,
+  product, and category, confirmed `/ar` renders the Arabic text (and `/en` still renders the base
+  text unchanged) on the brand detail page, category tile, and page `<html dir>`, then reverted those
+  three rows back to `null` afterward so local dev data stays clean — no throwaway rows needed since
+  this only touched existing seed/real rows' new optional columns.
+- Full check (`npm run lint`, `npm run typecheck`, `npm run test` — 79/79, `npm run build`) passes.
+- **This migration is local-dev-only so far, like every other one** — the equivalent
+  `prisma migrate deploy` needs to run against the real Supabase database from the user's own machine
+  before this feature works in production (see section 6). Until then, entering Arabic overrides in
+  the admin UI against the real database will fail (the columns won't exist there yet).

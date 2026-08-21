@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
+import { localize, localizeOptional } from "@/lib/localizedContent";
 import { ProductDetail } from "@/components/storefront/ProductDetail";
 
 type Props = {
@@ -26,11 +27,14 @@ export async function generateMetadata({
   const { slug, locale } = await params;
   const product = await getProduct(slug);
   const t = await getTranslations({ locale, namespace: "Product" });
-  return { title: product?.title ?? t("fallbackTitle") };
+  return {
+    title: product ? localize(product.title, product.titleAr, locale) : t("fallbackTitle"),
+  };
 }
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const product = await getProduct(slug);
 
   if (!product || product.status !== "active") notFound();
@@ -40,9 +44,13 @@ export default async function ProductPage({ params }: Props) {
       <div className="grid gap-10 lg:grid-cols-2">
         <ProductDetail
           productId={product.id}
-          productTitle={product.title}
-          brand={product.brand}
-          description={product.description}
+          productTitle={localize(product.title, product.titleAr, locale)}
+          brand={
+            product.brand
+              ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+              : product.brand
+          }
+          description={localizeOptional(product.description, product.descriptionAr, locale)}
           basePriceCents={product.basePriceCents}
           images={product.images}
           variants={product.variants}

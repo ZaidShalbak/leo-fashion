@@ -15,6 +15,9 @@ export const brandSchema = z.object({
   slug: slugLike,
   logoUrl: z.string().trim().url("Enter a valid URL").optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional(),
+  // Optional Arabic overrides — see Brand.nameAr's comment in schema.prisma.
+  nameAr: z.string().trim().max(120).optional(),
+  descriptionAr: z.string().trim().max(2000).optional(),
 });
 export type BrandInput = z.infer<typeof brandSchema>;
 

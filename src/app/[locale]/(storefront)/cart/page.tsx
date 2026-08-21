@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { getCurrentCart } from "@/server/actions/cart";
 import { Link } from "@/i18n/navigation";
+import { localize } from "@/lib/localizedContent";
 import { CartLineItem } from "@/components/storefront/CartLineItem";
 import { PromoCodeForm } from "@/components/storefront/PromoCodeForm";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,15 @@ export async function generateMetadata(
 
 export default async function CartPage() {
   const t = await getTranslations("Cart");
+  const locale = await getLocale();
   const cart = await getCurrentCart();
   const items = cart?.items ?? [];
+  // Only the display copy (product.title) needs a localized version — the
+  // money math below reads priceCents off the same items either way.
+  const localizedItems = items.map((item) => ({
+    ...item,
+    product: { ...item.product, title: localize(item.product.title, item.product.titleAr, locale) },
+  }));
 
   if (items.length === 0) {
     return (
@@ -75,7 +83,7 @@ export default async function CartPage() {
       <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
 
       <div className="divide-border mt-6 divide-y">
-        {items.map((item) => (
+        {localizedItems.map((item) => (
           <CartLineItem key={item.id} item={item} />
         ))}
       </div>

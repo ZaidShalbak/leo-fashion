@@ -23,6 +23,8 @@ export function NewBrandForm() {
         slug: String(formData.get("slug") ?? ""),
         logoUrl: (formData.get("logoUrl") as string) || "",
         description: (formData.get("description") as string) || undefined,
+        nameAr: (formData.get("nameAr") as string) || undefined,
+        descriptionAr: (formData.get("descriptionAr") as string) || undefined,
       });
       if (result.success) {
         formRef.current?.reset();
@@ -54,6 +56,27 @@ export function NewBrandForm() {
           rows={3}
           className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
         />
+      </div>
+      <div className="border-border space-y-4 border-t pt-4">
+        <p className="text-muted-foreground text-xs">
+          Optional — shown on the storefront when a shopper is browsing in
+          Arabic. Leave blank to keep showing the name/description above.
+          The brand&apos;s wordmark/logo is unaffected either way.
+        </p>
+        <div className="space-y-1.5">
+          <Label htmlFor="nameAr">Name (Arabic)</Label>
+          <Input id="nameAr" name="nameAr" dir="rtl" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <textarea
+            id="descriptionAr"
+            name="descriptionAr"
+            rows={3}
+            dir="rtl"
+            className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+          />
+        </div>
       </div>
 
       {error && (

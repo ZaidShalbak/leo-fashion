@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
+import { localize, localizeOptional } from "@/lib/localizedContent";
 import { CollectionCard } from "@/components/storefront/CollectionCard";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
@@ -9,7 +10,8 @@ import { BrandsSection } from "@/components/storefront/BrandsSection";
 
 export default async function HomePage() {
   const t = await getTranslations("Home");
-  const [heroBanners, collectionsWithLead, products, brands] = await Promise.all([
+  const locale = await getLocale();
+  const [heroBanners, collectionsWithLeadRaw, productsRaw, brandsRaw] = await Promise.all([
     // Admin-managed banners (see /admin/hero-banners) take priority over
     // the collection-derived fallback below. Fetching every *active* row
     // (not narrowing the scheduling window in SQL) and filtering with the
@@ -46,6 +48,28 @@ export default async function HomePage() {
     }),
     db.brand.findMany({ orderBy: { name: "asc" } }),
   ]);
+
+  // Catalog content (collection/product/brand names & descriptions) may
+  // have an admin-entered Arabic override — localize once here, right
+  // after fetching, so everything below (hero fallback slides, category
+  // tiles, product grid, brand grid) already sees the right-language
+  // strings. See src/lib/localizedContent.ts.
+  const collectionsWithLead = collectionsWithLeadRaw.map((collection) => ({
+    ...collection,
+    title: localize(collection.title, collection.titleAr, locale),
+    description: localizeOptional(collection.description, collection.descriptionAr, locale),
+  }));
+  const products = productsRaw.map((product) => ({
+    ...product,
+    title: localize(product.title, product.titleAr, locale),
+    brand: product.brand
+      ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+      : product.brand,
+  }));
+  const brands = brandsRaw.map((brand) => ({
+    ...brand,
+    name: localize(brand.name, brand.nameAr, locale),
+  }));
 
   const liveBannerSlides: HeroSlide[] = heroBanners
     .filter((banner) => isHeroBannerLive(banner, new Date()))
@@ -84,7 +108,10 @@ export default async function HomePage() {
       {heroSlides.length > 0 && <HeroCarousel slides={heroSlides} />}
 
       <section className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1
+          className="text-2xl font-semibold tracking-tight sm:text-3xl"
+          dir="ltr"
+        >
           {t("title")}
         </h1>
         <p className="text-muted-foreground max-w-xl">{t("tagline")}</p>

@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { Link } from "@/i18n/navigation";
+import { localize } from "@/lib/localizedContent";
 import { CartIconLink } from "@/components/storefront/CartIconLink";
 import { UserMenu } from "@/components/storefront/UserMenu";
 import { MobileNav } from "@/components/storefront/MobileNav";
@@ -37,17 +38,28 @@ export default async function StorefrontLayout({
   children: React.ReactNode;
 }) {
   const t = await getTranslations("Nav");
-  const [collections, user, cartItemCount] = await Promise.all([
+  const locale = await getLocale();
+  const [collectionsRaw, user, cartItemCount] = await Promise.all([
     db.collection.findMany({ orderBy: { title: "asc" } }),
     getCurrentUser(),
     getCartItemCount(),
   ]);
+  // Localized once here and reused for both the desktop nav below and
+  // MobileNav — see src/lib/localizedContent.ts.
+  const collections = collectionsRaw.map((collection) => ({
+    ...collection,
+    title: localize(collection.title, collection.titleAr, locale),
+  }));
 
   return (
     <div className="flex min-h-full flex-col">
       <header className="border-border relative border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <Link href="/" className="text-lg font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="text-lg font-semibold tracking-tight"
+            dir="ltr"
+          >
             {t("brandName")}
           </Link>
 

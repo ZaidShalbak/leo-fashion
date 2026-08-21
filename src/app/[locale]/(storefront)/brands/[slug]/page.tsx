@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import type { AppLocale } from "@/i18n/routing";
+import { localize, localizeOptional } from "@/lib/localizedContent";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { FilterBar } from "@/components/storefront/FilterBar";
 
@@ -19,16 +20,21 @@ export async function generateMetadata({
   const { slug, locale } = await params;
   const t = await getTranslations({ locale, namespace: "BrandDetailPage" });
   const brand = await db.brand.findUnique({ where: { slug } });
-  return { title: brand?.name ?? t("fallbackTitle") };
+  return { title: brand ? localize(brand.name, brand.nameAr, locale) : t("fallbackTitle") };
 }
 
 export default async function BrandPage({ params, searchParams }: Props) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const { size, color, sort } = await searchParams;
   const t = await getTranslations("BrandDetailPage");
 
-  const brand = await db.brand.findUnique({ where: { slug } });
-  if (!brand) notFound();
+  const brandRaw = await db.brand.findUnique({ where: { slug } });
+  if (!brandRaw) notFound();
+  const brand = {
+    ...brandRaw,
+    name: localize(brandRaw.name, brandRaw.nameAr, locale),
+    description: localizeOptional(brandRaw.description, brandRaw.descriptionAr, locale),
+  };
 
   // All variant size/color values across the *unfiltered* brand catalog, so
   // the filter controls don't shrink as filters are applied — same pattern
@@ -47,7 +53,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
         ? { basePriceCents: "desc" }
         : { createdAt: "desc" };
 
-  const products = await db.product.findMany({
+  const productsRaw = await db.product.findMany({
     where: {
       status: "active",
       brandId: brand.id,
@@ -65,6 +71,13 @@ export default async function BrandPage({ params, searchParams }: Props) {
     include: { images: true, variants: true, brand: true },
     orderBy,
   });
+  const products = productsRaw.map((product) => ({
+    ...product,
+    title: localize(product.title, product.titleAr, locale),
+    brand: product.brand
+      ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+      : product.brand,
+  }));
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">

@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/server/db";
 import { Link } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
+import { localize } from "@/lib/localizedContent";
 
 type Props = {
   params: Promise<{ locale: AppLocale }>;
@@ -18,12 +19,17 @@ export async function generateMetadata({
   return { title: t("title") };
 }
 
-export default async function BrandsPage() {
+export default async function BrandsPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations("BrandsPage");
-  const brands = await db.brand.findMany({
+  const brandsRaw = await db.brand.findMany({
     orderBy: { name: "asc" },
     include: { _count: { select: { products: { where: { status: "active" } } } } },
   });
+  const brands = brandsRaw.map((brand) => ({
+    ...brand,
+    name: localize(brand.name, brand.nameAr, locale),
+  }));
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">

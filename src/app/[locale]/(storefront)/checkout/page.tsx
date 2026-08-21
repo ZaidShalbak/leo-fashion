@@ -13,6 +13,7 @@ import {
 } from "@/lib/cart-totals";
 import { validateDiscountCode } from "@/lib/discount";
 import { formatPriceCents } from "@/components/storefront/PriceDisplay";
+import { localize } from "@/lib/localizedContent";
 
 export async function generateMetadata(
   props: PageProps<"/[locale]/checkout">
@@ -24,6 +25,7 @@ export async function generateMetadata(
 
 export default async function CheckoutPage() {
   const t = await getTranslations("Checkout");
+  const locale = await getLocale();
   const user = await requireUser("/checkout");
 
   const [cart, addresses] = await Promise.all([
@@ -36,7 +38,6 @@ export default async function CheckoutPage() {
 
   const items = cart?.items ?? [];
   if (items.length === 0) {
-    const locale = await getLocale();
     redirect({ href: "/cart", locale });
   }
 
@@ -92,7 +93,7 @@ export default async function CheckoutPage() {
                 >
                   <span>
                     {t("lineItem", {
-                      title: item.product.title,
+                      title: localize(item.product.title, item.product.titleAr, locale),
                       size: item.variant.size,
                       color: item.variant.color,
                       quantity: item.quantity,
