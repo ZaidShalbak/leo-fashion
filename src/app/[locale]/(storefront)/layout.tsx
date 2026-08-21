@@ -10,6 +10,7 @@ import { UserMenu } from "@/components/storefront/UserMenu";
 import { MobileNav } from "@/components/storefront/MobileNav";
 import { LanguageSwitcher } from "@/components/storefront/LanguageSwitcher";
 import { SocialLinks } from "@/components/storefront/SocialLinks";
+import { SearchBox } from "@/components/storefront/SearchBox";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -82,6 +83,7 @@ export default async function StorefrontLayout({
             >
               {t("brands")}
             </Link>
+            <SearchBox />
             <CartIconLink itemCount={cartItemCount} />
             {user ? (
               <UserMenu isAdmin={user.role === "admin"} />
@@ -97,6 +99,7 @@ export default async function StorefrontLayout({
           </nav>
 
           <div className="flex items-center gap-1 sm:hidden">
+            <SearchBox />
             <CartIconLink itemCount={cartItemCount} />
             <LanguageSwitcher />
             <MobileNav
