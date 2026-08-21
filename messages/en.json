@@ -239,7 +239,8 @@
     "addedCapped": "Added — only {count} in stock, so that's the most we could add."
   },
   "Product": {
-    "fallbackTitle": "Product"
+    "fallbackTitle": "Product",
+    "similarProducts": "You might also like"
   },
   "ProductGallery": {
     "showImage": "Show image {index} of {total}"
