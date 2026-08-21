@@ -242,7 +242,10 @@
     "fallbackTitle": "منتج"
   },
   "ProductGallery": {
-    "showImage": "عرض الصورة {index} من {total}"
+    "showImage": "عرض الصورة {index} من {total}",
+    "zoomImage": "تكبير صورة المنتج",
+    "zoomedTitle": "صورة مكبّرة لـ {title}",
+    "closeZoom": "إغلاق الصورة المكبّرة"
   },
   "BrandsSection": {
     "shopByBrand": "تسوّق حسب الماركة",
