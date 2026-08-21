@@ -12,6 +12,7 @@ import { LanguageSwitcher } from "@/components/storefront/LanguageSwitcher";
 import { SocialLinks } from "@/components/storefront/SocialLinks";
 import { SearchBox } from "@/components/storefront/SearchBox";
 import { LeoFashionLogo } from "@/components/storefront/Logo";
+import { WhatsAppButton } from "@/components/storefront/WhatsAppButton";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -107,6 +108,7 @@ export default async function StorefrontLayout({
         <SocialLinks />
         <p className="mt-4">{t("footer")}</p>
       </footer>
+      <WhatsAppButton />
     </div>
   );
 }

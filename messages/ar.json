@@ -22,6 +22,9 @@
     "categories": "الفئات",
     "products": "المنتجات"
   },
+  "WhatsAppButton": {
+    "label": "راسلونا على واتساب"
+  },
   "CartIcon": {
     "label": "السلة",
     "labelWithCount": "السلة، {count, plural, zero {# عنصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}"
