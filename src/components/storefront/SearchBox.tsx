@@ -7,6 +7,7 @@ import { SearchIcon, XIcon } from "lucide-react";
 
 import { Link } from "@/i18n/navigation";
 import { searchSite, type SearchResults } from "@/server/actions/search";
+import { LeoLoadingMark } from "./Logo";
 import { PriceDisplay } from "./PriceDisplay";
 
 const EMPTY_RESULTS: SearchResults = { products: [], brands: [], collections: [] };
@@ -143,7 +144,9 @@ export function SearchBox() {
           className="border-border bg-background fixed inset-x-4 top-16 z-20 max-h-96 overflow-auto rounded-md border py-1 text-sm shadow-md sm:absolute sm:inset-x-auto sm:top-full sm:end-0 sm:mt-1 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
         >
           {isPending && !hasSearched && (
-            <p className="text-muted-foreground px-3 py-3">{t("searching")}</p>
+            <div className="flex items-center justify-center px-3 py-4">
+              <LeoLoadingMark label={t("searching")} className="text-muted-foreground h-6 w-auto" />
+            </div>
           )}
 
           {noResults && (
