@@ -95,7 +95,8 @@
       "newest": "Newest",
       "price-asc": "Price: low to high",
       "price-desc": "Price: high to low"
-    }
+    },
+    "clearFilters": "Clear filters"
   },
   "LoginPage": {
     "title": "Sign in",
