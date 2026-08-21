@@ -1,8 +1,8 @@
-// Money is stored/computed as integer cents everywhere except this — the
-// UI edge — per CLAUDE.md.
+// Money is stored/computed as integer cents (here, agorot) everywhere
+// except this — the UI edge — per CLAUDE.md.
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "USD",
+  currency: "ILS",
 });
 
 export function formatPriceCents(cents: number): string {
@@ -25,7 +25,7 @@ export function PriceDisplay({
   return (
     // dir="ltr" pins the numerals/currency symbol to a consistent
     // left-to-right order regardless of page direction — prices deliberately
-    // stay in Western-numeral USD formatting even on the Arabic storefront
+    // stay in Western-numeral ILS formatting even on the Arabic storefront
     // (see formatter above), which is the same convention most Arabic
     // e-commerce sites use, so this is a plain LTR "island" inside an RTL
     // page rather than something that should mirror.

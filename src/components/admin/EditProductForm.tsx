@@ -124,7 +124,7 @@ export function EditProductForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="basePrice">Base price (USD)</Label>
+          <Label htmlFor="basePrice">Base price (ILS)</Label>
           <Input
             id="basePrice"
             name="basePrice"
