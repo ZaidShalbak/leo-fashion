@@ -178,7 +178,7 @@ export function VariantSelector({
         // place.
         router.refresh();
         setJustAdded(true);
-        setTimeout(() => setJustAdded(false), 1400);
+        setTimeout(() => setJustAdded(false), 1900);
         if (startEl && endEl) {
           setFlyRun({
             id: Date.now(),
@@ -333,7 +333,7 @@ export function VariantSelector({
               opacity: 0,
               rotate: 15,
             }}
-            transition={{ duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}
+            transition={{ duration: 1.7, ease: [0.2, 0.7, 0.2, 1] }}
             onAnimationComplete={() => setFlyRun(null)}
           >
             <ShirtIcon className="size-4" />
