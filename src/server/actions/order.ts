@@ -201,6 +201,19 @@ export async function placeOrder(
         discountPercentSnapshot = discount!.percentOff;
       }
 
+      // Delivery zone, re-read from the database inside the transaction
+      // rather than trusted from the id alone — same "never trust
+      // client-supplied prices" posture as everything else here. A zone
+      // an admin has deactivated (or deleted) since the checkout page
+      // loaded can no longer be selected, even if the client still sends
+      // its id.
+      const deliveryZone = await tx.deliveryZone.findUnique({
+        where: { id: parsed.data.deliveryZoneId },
+      });
+      if (!deliveryZone || !deliveryZone.isActive) {
+        throw new OrderPlacementError(t("deliveryZoneInvalid"));
+      }
+
       if (newAddressToSave) {
         await tx.address.create({
           data: { ...newAddressToSave, userId: user.id },
@@ -218,6 +231,9 @@ export async function placeOrder(
             discountCents,
             discountCodeSnapshot,
             discountPercentSnapshot,
+            deliveryZoneId: deliveryZone.id,
+            deliveryZoneNameSnapshot: deliveryZone.name,
+            deliveryFeeCents: deliveryZone.feeCents,
             notes: parsed.data.notes ?? null,
             ...shipping,
             items: { createMany: { data: orderItemsData } },

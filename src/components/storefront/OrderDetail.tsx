@@ -90,11 +90,29 @@ export function OrderDetail({
               <span>−{formatPriceCents(order.discountCents)}</span>
             </div>
           )}
+          {order.deliveryFeeCents != null && (
+            <div className="text-muted-foreground flex justify-between text-sm">
+              <span>
+                {t("delivery")}
+                {order.deliveryZoneNameSnapshot && (
+                  <>
+                    {" "}
+                    <span dir="rtl">({order.deliveryZoneNameSnapshot})</span>
+                  </>
+                )}
+              </span>
+              <span>{formatPriceCents(order.deliveryFeeCents)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm font-medium">
             <span>{t("total")}</span>
             <span>
               {formatPriceCents(
-                calculateTotalCents(order.subtotalCents, order.discountCents)
+                calculateTotalCents(
+                  order.subtotalCents,
+                  order.discountCents,
+                  order.deliveryFeeCents ?? 0
+                )
               )}
             </span>
           </div>

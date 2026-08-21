@@ -41,6 +41,12 @@ export const placeOrderSchema = z.object({
     }),
   ]),
   items: z.array(orderItemInputSchema).min(1, "Cart is empty"),
+  // Required — every order placed from here on must pick a delivery area
+  // (see DeliveryZone). Re-validated (existence, isActive, and the fee
+  // itself) from scratch inside placeOrder's transaction rather than
+  // trusted from this id alone — same "never trust client-supplied
+  // prices" posture as the rest of this codebase.
+  deliveryZoneId: z.string().cuid(),
   // Order-level, not tied to either address shape above (a saved address
   // has no notes field, and a fresh note shouldn't get saved into the
   // address book the way a new address does) — same blank-string ->

@@ -62,6 +62,8 @@ let variantDiscountEId: string; // stock 5, for discount tests
 let userA: { id: string };
 let userB: { id: string };
 let savedAddressId: string;
+let deliveryZoneId: string;
+let inactiveDeliveryZoneId: string;
 
 let discountValidId: string; // 10% off, no limits
 let discountExpiredId: string;
@@ -146,6 +148,15 @@ beforeAll(async () => {
     },
   });
 
+  const deliveryZone = await db.deliveryZone.create({
+    data: { name: "TEST_ZONE_ORDER", feeCents: 1500, position: 0 },
+  });
+  deliveryZoneId = deliveryZone.id;
+  const inactiveZone = await db.deliveryZone.create({
+    data: { name: "TEST_ZONE_INACTIVE", feeCents: 1500, isActive: false, position: 1 },
+  });
+  inactiveDeliveryZoneId = inactiveZone.id;
+
   const address = await db.address.create({
     data: {
       userId: userA.id,
@@ -228,6 +239,9 @@ afterAll(async () => {
   await db.user.delete({ where: { id: userA.id } }).catch(() => {});
   await db.user.delete({ where: { id: userB.id } }).catch(() => {});
   await db.product.delete({ where: { id: productId } }).catch(() => {});
+  await db.deliveryZone
+    .deleteMany({ where: { id: { in: [deliveryZoneId, inactiveDeliveryZoneId] } } })
+    .catch(() => {});
   await db.$disconnect();
 });
 
@@ -237,6 +251,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantHappyId, quantity: 1 }],
+      deliveryZoneId,
     });
     expect(result.success).toBe(false);
     expect(mockRedirect).not.toHaveBeenCalled();
@@ -248,6 +263,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantHappyId, quantity: 1 }],
+      deliveryZoneId,
     });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toMatch(/empty/i);
@@ -260,6 +276,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantHappyId, quantity: 2 }],
+      deliveryZoneId,
       notes: "Please ring the doorbell twice.",
     });
 
@@ -296,6 +313,7 @@ describe("placeOrder", () => {
     await placeOrder({
       address: { savedAddressId },
       items: [{ variantId: variantSavedId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     const [redirectUrl] = mockRedirect.mock.calls[0]!;
@@ -313,6 +331,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { savedAddressId }, // belongs to userA
       items: [{ variantId: variantSavedId, quantity: 1 }],
+      deliveryZoneId,
     });
     expect(result.success).toBe(false);
   });
@@ -324,6 +343,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantInsufficientId, quantity: 5 }],
+      deliveryZoneId,
     });
 
     expect(result.success).toBe(false);
@@ -352,10 +372,12 @@ describe("placeOrder", () => {
     const resultA = placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantConcurrentId, quantity: 1 }],
+      deliveryZoneId,
     });
     const resultB = placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantConcurrentId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     const [outcomeA, outcomeB] = await Promise.all([resultA, resultB]);
@@ -382,6 +404,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantDiscountAId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     expect(result).toBeUndefined();
@@ -414,6 +437,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantDiscountBId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     expect(result.success).toBe(false);
@@ -434,6 +458,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantDiscountCId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     expect(result.success).toBe(false);
@@ -450,6 +475,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantDiscountCId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     expect(result.success).toBe(false);
@@ -464,6 +490,7 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantDiscountDId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     expect(result.success).toBe(false);
@@ -481,9 +508,45 @@ describe("placeOrder", () => {
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
       items: [{ variantId: variantDiscountEId, quantity: 1 }],
+      deliveryZoneId,
     });
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toMatch(/no longer valid/i);
+  });
+
+  it("rejects placing an order against an inactive delivery zone, even if the client still sends its id", async () => {
+    mockGetCurrentUser.mockResolvedValue(userB);
+    await setCartItem(userB.id, variantDiscountEId, 1);
+
+    const result = await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [{ variantId: variantDiscountEId, quantity: 1 }],
+      deliveryZoneId: inactiveDeliveryZoneId,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toMatch(/delivery area/i);
+
+    const items = await db.orderItem.findMany({ where: { variantId: variantDiscountEId } });
+    expect(items).toHaveLength(0); // no partial order committed
+  });
+
+  it("snapshots the delivery zone's name and fee onto the order", async () => {
+    mockGetCurrentUser.mockResolvedValue(userA);
+    await setCartItem(userA.id, variantSavedId, 1);
+
+    await placeOrder({
+      address: { savedAddressId },
+      items: [{ variantId: variantSavedId, quantity: 1 }],
+      deliveryZoneId,
+    });
+
+    const [redirectUrl] = mockRedirect.mock.calls.at(-1)!;
+    const orderId = redirectUrl.replace("/order-confirmation/", "");
+    const order = await db.order.findUnique({ where: { id: orderId } });
+    expect(order!.deliveryZoneId).toBe(deliveryZoneId);
+    expect(order!.deliveryZoneNameSnapshot).toBe("TEST_ZONE_ORDER");
+    expect(order!.deliveryFeeCents).toBe(1500);
   });
 });

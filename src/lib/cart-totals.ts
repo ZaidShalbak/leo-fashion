@@ -20,13 +20,17 @@ export function effectivePriceCents(
 }
 
 /**
- * Total owed after a discount — deliberately not a stored column on
- * Order, just subtotal minus discount computed at display time. See
- * discountCents's comment in prisma/schema.prisma for why.
+ * Total owed after a discount and delivery fee — deliberately not a
+ * stored column on Order, just computed at display time from fields that
+ * already are. See discountCents's/deliveryFeeCents's comments in
+ * prisma/schema.prisma for why. deliveryFeeCents defaults to 0 so every
+ * existing call site (cart page, before a delivery zone is even chosen)
+ * keeps working unchanged.
  */
 export function calculateTotalCents(
   subtotalCents: number,
-  discountCents: number
+  discountCents: number,
+  deliveryFeeCents: number = 0
 ): number {
-  return subtotalCents - discountCents;
+  return subtotalCents - discountCents + deliveryFeeCents;
 }

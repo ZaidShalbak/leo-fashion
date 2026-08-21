@@ -362,6 +362,22 @@ model Order {
   discountPercentSnapshot Int?
   discountCents           Int           @default(0)
 
+  // Delivery area selected at checkout, snapshotted the same way discount
+  // codes are (see above) — deliveryZoneId is kept for live admin lookups,
+  // but deliveryZoneNameSnapshot/deliveryFeeCents are what every UI
+  // actually displays, so a later admin edit (fee change, rename) or
+  // deletion of the DeliveryZone never changes what a past order shows or
+  // was charged. Both snapshot fields are nullable rather than backfilled
+  // with a fake value, since every order placed before this feature
+  // existed genuinely had no delivery zone/fee — nullable is the honest
+  // reflection of that history. New orders always populate both (enforced
+  // by placeOrderSchema requiring deliveryZoneId), so display code treats
+  // a null deliveryFeeCents as 0 (see calculateTotalCents).
+  deliveryZoneId           String?
+  deliveryZone             DeliveryZone? @relation(fields: [deliveryZoneId], references: [id], onDelete: SetNull)
+  deliveryZoneNameSnapshot String?
+  deliveryFeeCents         Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -377,6 +393,34 @@ model Order {
   // in src/server/actions/order.ts for how the resulting P2002 is turned
   // into a friendly error.
   @@unique([discountCodeId, userId])
+}
+
+// A delivery destination the customer picks at checkout, each with its own
+// flat fee — admin-managed (see /admin/delivery-zones), not hardcoded,
+// since the store owner may need to add/retire areas or adjust fees over
+// time. `name` is deliberately a plain string holding literal Arabic text,
+// not run through the title/titleAr localize() pattern Product/Collection/
+// Brand use (see src/lib/localizedContent.ts) — the store owner wants
+// these shown in Arabic on the storefront regardless of the active UI
+// locale, not translated per-locale.
+model DeliveryZone {
+  id       String  @id @default(cuid())
+  name     String
+  feeCents Int
+  isActive Boolean @default(true)
+  // Manual display order (checkout radio list, admin table) — a plain
+  // editable integer rather than drag-and-drop reordering (see
+  // HeroBanner.position for that pattern): with only ever a handful of
+  // delivery areas and no visual/marketing reason to reorder often, a
+  // number field is simpler and this isn't worth the added complexity.
+  position Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([isActive])
 }
 
 // A store-wide percentage-off promo code. Redemption accounting

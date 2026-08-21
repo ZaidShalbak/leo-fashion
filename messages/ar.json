@@ -50,6 +50,8 @@
     "postalCode": "الرمز البريدي",
     "country": "الدولة",
     "phone": "رقم الهاتف",
+    "deliveryZone": "منطقة التوصيل",
+    "noDeliveryZones": "لا توجد مناطق توصيل متاحة حاليًا — يرجى المحاولة لاحقًا.",
     "notes": "ملاحظات الطلب (اختياري)",
     "notesPlaceholder": "تعليمات التوصيل، الوقت المفضل للتواصل، إلخ.",
     "placingOrder": "جارٍ تنفيذ الطلب…",
@@ -62,6 +64,8 @@
     "subtotal": "المجموع الفرعي",
     "discount": "الخصم",
     "discountWithCode": "الخصم ({code})",
+    "delivery": "التوصيل",
+    "selectDeliveryArea": "اختر منطقة التوصيل",
     "total": "الإجمالي",
     "noPaymentNote": "لا يتم تحصيل أي دفعة هنا — هذا يسجل الطلب للتنفيذ عبر فاتورة أو الدفع عند الاستلام.",
     "editCart": "تعديل السلة"
@@ -149,7 +153,8 @@
     "limitedStock": "لم تعد الكمية المتوفرة من {title} ({size}/{color}) كافية — يرجى تحديث سلتك والمحاولة مرة أخرى.",
     "discountInvalid": "رمز الخصم المطبّق على سلتك لم يعد صالحًا — يرجى إزالته والمحاولة مرة أخرى.",
     "discountRedemptionLimit": "وصل رمز الخصم هذا للتو إلى الحد الأقصى للاستخدام — يرجى إزالته والمحاولة مرة أخرى.",
-    "discountAlreadyUsed": "لقد استخدمت هذا الرمز من قبل."
+    "discountAlreadyUsed": "لقد استخدمت هذا الرمز من قبل.",
+    "deliveryZoneInvalid": "يرجى اختيار منطقة توصيل صالحة."
   },
   "DiscountActions": {
     "notFound": "هذا الرمز غير موجود.",
@@ -220,6 +225,7 @@
     "subtotal": "المجموع الفرعي",
     "discount": "الخصم",
     "discountWithCode": "الخصم ({code})",
+    "delivery": "التوصيل",
     "total": "الإجمالي",
     "shippingAddress": "عنوان الشحن",
     "tracking": "رقم التتبع",
