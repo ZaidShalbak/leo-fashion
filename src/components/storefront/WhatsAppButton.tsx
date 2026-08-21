@@ -16,11 +16,11 @@ function WhatsAppIcon({ className }: { className?: string }) {
 /**
  * Floating WhatsApp contact button, present on every storefront page (see
  * StorefrontLayout) — fixed bottom-end corner so it stays reachable while
- * scrolling. Styled to match the site's own black/white brand (same
- * #0a0a0a as the header/footer) rather than WhatsApp's standard green
- * bubble: the recognizable WhatsApp glyph silhouette, hand-drawn as a
- * monochrome white icon instead of brand green, same approach as the
- * Instagram/Facebook icons in SocialLinks.tsx.
+ * scrolling. Uses WhatsApp's own brand green (#25D366) + the recognizable
+ * glyph silhouette (hand-drawn, same approach as the Instagram/Facebook
+ * icons in SocialLinks.tsx) rather than the site's black/white brand
+ * colors — deliberate call from the store owner: this button should read
+ * as "this is WhatsApp" at a glance rather than blend into the site chrome.
  */
 export function WhatsAppButton() {
   const t = useTranslations("WhatsAppButton");
@@ -31,7 +31,7 @@ export function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t("label")}
-      className="fixed bottom-4 end-4 z-40 flex size-14 items-center justify-center rounded-full border-2 border-white/20 bg-[#0a0a0a] text-white shadow-lg transition hover:scale-105 hover:border-white/40 hover:bg-black sm:bottom-6 sm:end-6"
+      className="fixed bottom-4 end-4 z-40 flex size-14 items-center justify-center rounded-full border-2 border-white/30 bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:border-white/50 sm:bottom-6 sm:end-6"
     >
       <WhatsAppIcon className="size-6" />
     </a>
