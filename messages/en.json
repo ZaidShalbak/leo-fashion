@@ -50,6 +50,8 @@
     "postalCode": "Postal code",
     "country": "Country",
     "phone": "Phone",
+    "notes": "Order notes (optional)",
+    "notesPlaceholder": "Delivery instructions, preferred contact time, etc.",
     "placingOrder": "Placing order…",
     "placeOrder": "Place order"
   },
@@ -220,7 +222,8 @@
     "discountWithCode": "Discount ({code})",
     "total": "Total",
     "shippingAddress": "Shipping address",
-    "tracking": "Tracking"
+    "tracking": "Tracking",
+    "notes": "Notes"
   },
   "VariantSelector": {
     "size": "Size",

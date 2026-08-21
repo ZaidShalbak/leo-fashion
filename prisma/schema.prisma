@@ -335,6 +335,13 @@ model Order {
   shippingCountry    String
   shippingPhone      String?
 
+  // Free-text notes a customer can leave at checkout (delivery instructions,
+  // preferred contact time, etc.) — optional, shown to admins on the order
+  // detail page alongside the shipping address. Checkout form changes are
+  // planned later; this field may move around within the form then, but the
+  // column/data itself should stay as-is unless that work says otherwise.
+  notes String?
+
   // Sum of OrderItem.priceCents * quantity at the time the order was placed.
   subtotalCents  Int
   trackingNumber String?

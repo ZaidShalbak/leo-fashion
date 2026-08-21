@@ -124,6 +124,13 @@ export function OrderDetail({
           <p className="text-muted-foreground text-sm">{order.trackingNumber}</p>
         </div>
       )}
+
+      {order.notes && (
+        <div>
+          <p className="mb-1 text-sm font-medium">{t("notes")}</p>
+          <p className="text-muted-foreground text-sm whitespace-pre-wrap">{order.notes}</p>
+        </div>
+      )}
     </div>
   );
 }
