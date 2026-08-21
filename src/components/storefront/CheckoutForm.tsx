@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { placeOrder } from "@/server/actions/order";
 import type { PlaceOrderInput } from "@/lib/validators/order";
+import { formatPriceCents } from "./PriceDisplay";
 
 type SavedAddress = {
   id: string;
@@ -24,12 +25,25 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
+export type DeliveryZoneOption = { id: string; name: string; feeCents: number };
+
 export function CheckoutForm({
   addresses,
   items,
+  zones,
+  selectedZoneId,
+  onZoneChange,
 }: {
   addresses: SavedAddress[];
   items: PlaceOrderInput["items"];
+  zones: DeliveryZoneOption[];
+  // Delivery zone selection is lifted to a shared parent (see
+  // CheckoutClient) so the order summary sidebar can react to it too and
+  // show the right fee/total — same lifted-state pattern ProductDetail
+  // uses to share color selection with both the gallery and the variant
+  // picker.
+  selectedZoneId: string;
+  onZoneChange: (zoneId: string) => void;
 }) {
   const t = useTranslations("CheckoutForm");
   const defaultAddress =
@@ -68,7 +82,12 @@ export function CheckoutForm({
     const notes = (formData.get("notes") as string) || undefined;
 
     startTransition(async () => {
-      const result = await placeOrder({ address, items, notes });
+      const result = await placeOrder({
+        address,
+        items,
+        notes,
+        deliveryZoneId: selectedZoneId,
+      });
       // On success the action redirects and never resolves here.
       if (!result.success) setError(result.error);
     });
@@ -162,6 +181,39 @@ export function CheckoutForm({
           </div>
         </div>
       )}
+
+      {/* Order-level, independent of the address mode above — required
+          regardless of which address mode is selected. Names are always
+          Arabic literal text (see DeliveryZone's comment in schema.prisma),
+          not translated per locale, so each label gets an explicit dir
+          regardless of the page's own direction. */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t("deliveryZone")}</p>
+        {zones.map((zone) => (
+          <label
+            key={zone.id}
+            className="border-input has-[:checked]:border-primary flex cursor-pointer items-center justify-between gap-3 rounded-md border p-3 text-sm"
+          >
+            <span className="flex items-center gap-3">
+              <input
+                type="radio"
+                name="deliveryZone"
+                value={zone.id}
+                checked={selectedZoneId === zone.id}
+                onChange={() => onZoneChange(zone.id)}
+                required
+              />
+              <span dir="rtl">{zone.name}</span>
+            </span>
+            <span className="text-muted-foreground">
+              {formatPriceCents(zone.feeCents)}
+            </span>
+          </label>
+        ))}
+        {zones.length === 0 && (
+          <p className="text-destructive text-sm">{t("noDeliveryZones")}</p>
+        )}
+      </div>
 
       {/* Order-level, independent of the address mode above — always
           rendered regardless of whether "selected" is a saved address or

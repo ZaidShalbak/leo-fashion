@@ -50,6 +50,8 @@
     "postalCode": "Postal code",
     "country": "Country",
     "phone": "Phone",
+    "deliveryZone": "Delivery area",
+    "noDeliveryZones": "No delivery areas are available right now — please check back later.",
     "notes": "Order notes (optional)",
     "notesPlaceholder": "Delivery instructions, preferred contact time, etc.",
     "placingOrder": "Placing order…",
@@ -62,6 +64,8 @@
     "subtotal": "Subtotal",
     "discount": "Discount",
     "discountWithCode": "Discount ({code})",
+    "delivery": "Delivery",
+    "selectDeliveryArea": "Select a delivery area",
     "total": "Total",
     "noPaymentNote": "No payment is collected here — this places the order for invoice/pay-on-delivery fulfillment.",
     "editCart": "Edit cart"
@@ -149,7 +153,8 @@
     "limitedStock": "Only a limited quantity of {title} ({size}/{color}) is left — please update your cart and try again.",
     "discountInvalid": "The discount code applied to your cart is no longer valid — please remove it and try again.",
     "discountRedemptionLimit": "That discount code just reached its redemption limit — please remove it and try again.",
-    "discountAlreadyUsed": "You've already used this discount code."
+    "discountAlreadyUsed": "You've already used this discount code.",
+    "deliveryZoneInvalid": "Please select a valid delivery area."
   },
   "DiscountActions": {
     "notFound": "That code doesn't exist.",
@@ -220,6 +225,7 @@
     "subtotal": "Subtotal",
     "discount": "Discount",
     "discountWithCode": "Discount ({code})",
+    "delivery": "Delivery",
     "total": "Total",
     "shippingAddress": "Shipping address",
     "tracking": "Tracking",

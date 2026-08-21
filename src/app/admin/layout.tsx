@@ -89,6 +89,12 @@ export default async function AdminLayout({
                     Discount codes
                   </Link>
                   <Link
+                    href="/admin/delivery-zones"
+                    className="text-muted-foreground hover:text-foreground transition"
+                  >
+                    Delivery areas
+                  </Link>
+                  <Link
                     href="/admin/hero-banners"
                     className="text-muted-foreground hover:text-foreground transition"
                   >

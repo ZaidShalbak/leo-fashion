@@ -20,11 +20,13 @@ describe("ORDER_STATUS_TRANSITIONS", () => {
 
 describe("placeOrderSchema", () => {
   const items = [{ variantId: "c000000000000000000000001", quantity: 2 }];
+  const deliveryZoneId = "c000000000000000000000003";
 
   it("accepts a saved address reference", () => {
     const result = placeOrderSchema.safeParse({
       address: { savedAddressId: "c000000000000000000000002" },
       items,
+      deliveryZoneId,
     });
     expect(result.success).toBe(true);
   });
@@ -41,6 +43,7 @@ describe("placeOrderSchema", () => {
         },
       },
       items,
+      deliveryZoneId,
     });
     expect(result.success).toBe(true);
   });
@@ -49,6 +52,15 @@ describe("placeOrderSchema", () => {
     const result = placeOrderSchema.safeParse({
       address: { savedAddressId: "c000000000000000000000002" },
       items: [],
+      deliveryZoneId,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a missing delivery zone", () => {
+    const result = placeOrderSchema.safeParse({
+      address: { savedAddressId: "c000000000000000000000002" },
+      items,
     });
     expect(result.success).toBe(false);
   });

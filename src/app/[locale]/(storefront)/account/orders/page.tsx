@@ -81,7 +81,11 @@ export default async function AccountOrdersPage(
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium">
                     {formatPriceCents(
-                      calculateTotalCents(order.subtotalCents, order.discountCents)
+                      calculateTotalCents(
+                        order.subtotalCents,
+                        order.discountCents,
+                        order.deliveryFeeCents ?? 0
+                      )
                     )}
                   </span>
                   <OrderStatusBadge status={order.status} labels={statusLabels} />

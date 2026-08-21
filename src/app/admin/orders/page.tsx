@@ -71,7 +71,11 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
               <TableCell>{order.items.length}</TableCell>
               <TableCell>
                 {formatPriceCents(
-                  calculateTotalCents(order.subtotalCents, order.discountCents)
+                  calculateTotalCents(
+                    order.subtotalCents,
+                    order.discountCents,
+                    order.deliveryFeeCents ?? 0
+                  )
                 )}
               </TableCell>
               <TableCell>
