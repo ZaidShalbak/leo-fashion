@@ -11,6 +11,7 @@ import { MobileNav } from "@/components/storefront/MobileNav";
 import { LanguageSwitcher } from "@/components/storefront/LanguageSwitcher";
 import { SocialLinks } from "@/components/storefront/SocialLinks";
 import { SearchBox } from "@/components/storefront/SearchBox";
+import { LeoFashionLogo } from "@/components/storefront/Logo";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -55,14 +56,10 @@ export default async function StorefrontLayout({
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-border relative border-b">
+      <header className="relative border-b border-white/10 bg-[#0a0a0a]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight"
-            dir="ltr"
-          >
-            {t("brandName")}
+          <Link href="/" aria-label={t("brandName")} dir="ltr">
+            <LeoFashionLogo variant="mark" className="h-7 w-auto text-white" />
           </Link>
 
           {/* Full inline nav — desktop/tablet only; MobileNav below covers
@@ -72,15 +69,12 @@ export default async function StorefrontLayout({
               <Link
                 key={collection.id}
                 href={`/collections/${collection.handle}`}
-                className="text-muted-foreground hover:text-foreground transition"
+                className="text-white/70 transition hover:text-white"
               >
                 {collection.title}
               </Link>
             ))}
-            <Link
-              href="/brands"
-              className="text-muted-foreground hover:text-foreground transition"
-            >
+            <Link href="/brands" className="text-white/70 transition hover:text-white">
               {t("brands")}
             </Link>
             <SearchBox />
@@ -88,10 +82,7 @@ export default async function StorefrontLayout({
             {user ? (
               <UserMenu isAdmin={user.role === "admin"} />
             ) : (
-              <Link
-                href="/login"
-                className="text-muted-foreground hover:text-foreground transition"
-              >
+              <Link href="/login" className="text-white/70 transition hover:text-white">
                 {t("signIn")}
               </Link>
             )}
@@ -111,7 +102,8 @@ export default async function StorefrontLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-border text-muted-foreground border-t py-8 text-center text-sm">
+      <footer className="border-t border-white/10 bg-[#0a0a0a] py-10 text-center text-sm text-white/70">
+        <LeoFashionLogo variant="full" className="mx-auto mb-6 h-16 w-auto text-white" />
         <SocialLinks />
         <p className="mt-4">{t("footer")}</p>
       </footer>

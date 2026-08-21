@@ -58,7 +58,7 @@ export function UserMenu({ isAdmin = false }: { isAdmin?: boolean }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t("accountMenu")}
-        className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center transition"
+        className="flex size-9 items-center justify-center text-white/70 transition hover:text-white"
       >
         <UserIcon className="size-5" />
       </button>

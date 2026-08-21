@@ -16,11 +16,11 @@ export function CartIconLink({ itemCount }: { itemCount: number }) {
     <Link
       href="/cart"
       aria-label={itemCount > 0 ? t("labelWithCount", { count: itemCount }) : t("label")}
-      className="text-muted-foreground hover:text-foreground relative flex size-9 items-center justify-center transition"
+      className="relative flex size-9 items-center justify-center text-white/70 transition hover:text-white"
     >
       <ShoppingBagIcon className="size-5" />
       {itemCount > 0 && (
-        <span className="bg-foreground text-background absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium">
+        <span className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none font-medium text-black">
           {itemCount > 9 ? "9+" : itemCount}
         </span>
       )}

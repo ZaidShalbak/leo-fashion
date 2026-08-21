@@ -61,7 +61,7 @@ export function SocialLinks() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t(`${key}Link`)}
-            className="text-muted-foreground hover:text-foreground transition"
+            className="text-white/70 transition hover:text-white"
           >
             <Icon className="size-5" />
           </a>

@@ -38,7 +38,7 @@ export function MobileNav({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={open ? t("closeMenu") : t("openMenu")}
-        className="border-border flex size-9 items-center justify-center rounded-md border"
+        className="flex size-9 items-center justify-center rounded-md border border-white/20 text-white"
       >
         <span className="sr-only">{open ? t("closeMenu") : t("openMenu")}</span>
         {open ? (
