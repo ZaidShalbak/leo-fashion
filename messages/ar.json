@@ -239,7 +239,8 @@
     "addedCapped": "تمت الإضافة — يتوفر {count} فقط في المخزون، وهذا أقصى ما يمكن إضافته."
   },
   "Product": {
-    "fallbackTitle": "منتج"
+    "fallbackTitle": "منتج",
+    "similarProducts": "قد يعجبك أيضًا"
   },
   "ProductGallery": {
     "showImage": "عرض الصورة {index} من {total}",
