@@ -8,10 +8,46 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
 import { BrandsSection } from "@/components/storefront/BrandsSection";
 
+// Ranks products by total units sold across every non-cancelled order,
+// then re-fetches the top N as full ProductCardData — groupBy only
+// returns the aggregated productId/sum, not the product itself. A
+// cancelled order never shipped, so it shouldn't count as a "sale" for
+// ranking purposes. Products that have since been archived (status !=
+// "active") are filtered out after the fact rather than in the groupBy's
+// where clause, since OrderItem has no direct product-status column to
+// filter on — same "quantity" for a since-archived product still exists
+// in order history, it just shouldn't show up here.
+async function getBestSellers() {
+  const ranked = await db.orderItem.groupBy({
+    by: ["productId"],
+    where: { productId: { not: null }, order: { status: { not: "cancelled" } } },
+    _sum: { quantity: true },
+    orderBy: { _sum: { quantity: "desc" } },
+    take: 8,
+  });
+  const productIds = ranked
+    .map((row) => row.productId)
+    .filter((id): id is string => id !== null);
+  if (productIds.length === 0) return [];
+
+  const products = await db.product.findMany({
+    where: { id: { in: productIds }, status: "active" },
+    include: { images: true, variants: true, brand: true },
+  });
+  const productById = new Map(products.map((product) => [product.id, product]));
+  // groupBy's own ordering (by units sold) is what makes this "best
+  // sellers" rather than an arbitrary product list — findMany's `in`
+  // filter doesn't preserve it, so re-order by walking productIds.
+  return productIds
+    .map((id) => productById.get(id))
+    .filter((product): product is NonNullable<typeof product> => product !== undefined);
+}
+
 export default async function HomePage() {
   const t = await getTranslations("Home");
   const locale = await getLocale();
-  const [heroBanners, collectionsWithLeadRaw, productsRaw, brandsRaw] = await Promise.all([
+  const [heroBanners, collectionsWithLeadRaw, productsRaw, bestSellersRaw, brandsRaw] =
+    await Promise.all([
     // Admin-managed banners (see /admin/hero-banners) take priority over
     // the collection-derived fallback below. Fetching every *active* row
     // (not narrowing the scheduling window in SQL) and filtering with the
@@ -46,6 +82,7 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
+    getBestSellers(),
     db.brand.findMany({ orderBy: { name: "asc" } }),
   ]);
 
@@ -60,6 +97,13 @@ export default async function HomePage() {
     description: localizeOptional(collection.description, collection.descriptionAr, locale),
   }));
   const products = productsRaw.map((product) => ({
+    ...product,
+    title: localize(product.title, product.titleAr, locale),
+    brand: product.brand
+      ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+      : product.brand,
+  }));
+  const bestSellers = bestSellersRaw.map((product) => ({
     ...product,
     title: localize(product.title, product.titleAr, locale),
     brand: product.brand
@@ -143,6 +187,17 @@ export default async function HomePage() {
         )}
 
         <BrandsSection brands={brands} />
+
+        {bestSellers.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-medium">{t("bestSellers")}</h2>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {bestSellers.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="space-y-4">
           <h2 className="text-lg font-medium">{t("newArrivals")}</h2>
