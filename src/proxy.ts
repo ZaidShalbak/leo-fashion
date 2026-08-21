@@ -16,11 +16,20 @@ const handleI18nRouting = createIntlProxy(routing);
  * dashboard never gets locale-prefixed or redirected — see
  * src/i18n/routing.ts and CLAUDE.md for why admin stays English-only and
  * outside this routing scheme entirely.
+ *
+ * `icon`/`apple-icon` are also excluded explicitly: they're Next's
+ * code-generated app-icon file convention (see apple-icon.tsx), which
+ * Next serves at a literal extension-less path like `/apple-icon` — the
+ * `.*\\..*` dot-extension exclusion below doesn't catch that (there's no
+ * dot in the URL), so without this it 404s via a redirect to
+ * `/en/apple-icon`. icon.svg already has a dot and doesn't need this, but
+ * `icon` is here too in case a code-generated (extension-less) icon route
+ * is ever added alongside it.
  */
 export function proxy(request: NextRequest) {
   return handleI18nRouting(request);
 }
 
 export const config = {
-  matcher: ["/((?!api|admin|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|admin|icon|apple-icon|_next|_vercel|.*\\..*).*)"],
 };

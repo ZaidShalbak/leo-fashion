@@ -37,7 +37,7 @@ export function LanguageSwitcher() {
     <div
       role="group"
       aria-label={t("languageSwitcherLabel")}
-      className="border-border text-muted-foreground inline-flex items-center rounded-md border p-0.5 text-xs"
+      className="inline-flex items-center rounded-md border border-white/20 p-0.5 text-xs text-white/70"
     >
       {(Object.keys(LOCALE_LABELS) as AppLocale[]).map((code) => (
         <button
@@ -48,8 +48,8 @@ export function LanguageSwitcher() {
           aria-pressed={code === locale}
           className={
             code === locale
-              ? "bg-foreground text-background rounded px-2 py-1 font-medium"
-              : "hover:text-foreground rounded px-2 py-1 transition"
+              ? "rounded bg-white px-2 py-1 font-medium text-black"
+              : "rounded px-2 py-1 transition hover:text-white"
           }
         >
           {LOCALE_LABELS[code]}

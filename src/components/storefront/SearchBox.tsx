@@ -98,8 +98,8 @@ export function SearchBox() {
   return (
     <div ref={containerRef} className="relative">
       {open ? (
-        <div className="border-border flex h-9 items-center gap-1.5 rounded-md border px-2">
-          <SearchIcon className="text-muted-foreground size-4 shrink-0" />
+        <div className="flex h-9 items-center gap-1.5 rounded-md border border-white/20 px-2">
+          <SearchIcon className="size-4 shrink-0 text-white/70" />
           <input
             ref={inputRef}
             type="text"
@@ -107,13 +107,13 @@ export function SearchBox() {
             onChange={(e) => handleQueryChange(e.target.value)}
             placeholder={t("placeholder")}
             aria-label={t("placeholder")}
-            className="w-32 bg-transparent text-sm outline-none sm:w-48"
+            className="w-32 bg-transparent text-sm text-white outline-none placeholder:text-white/50 sm:w-48"
           />
           <button
             type="button"
             onClick={close}
             aria-label={t("close")}
-            className="text-muted-foreground hover:text-foreground shrink-0 transition"
+            className="shrink-0 text-white/70 transition hover:text-white"
           >
             <XIcon className="size-4" />
           </button>
@@ -123,7 +123,7 @@ export function SearchBox() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label={t("open")}
-          className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center transition"
+          className="flex size-9 items-center justify-center text-white/70 transition hover:text-white"
         >
           <SearchIcon className="size-5" />
         </button>
