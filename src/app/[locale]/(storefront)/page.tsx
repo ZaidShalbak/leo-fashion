@@ -104,52 +104,59 @@ export default async function HomePage() {
   const heroSlides = liveBannerSlides.length > 0 ? liveBannerSlides : collectionSlides;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:space-y-16 sm:py-10">
+    <>
+      {/* Rendered outside the max-w-6xl/px-4 container below (its direct
+          parent, <main>, has no padding or max-width of its own) so it's
+          naturally full-bleed and sits flush against the header — no
+          breakout margin hack needed, and no vertical gap from the
+          container's py-8/py-10. */}
       {heroSlides.length > 0 && <HeroCarousel slides={heroSlides} />}
 
-      <section className="space-y-3">
-        <h1
-          className="text-2xl font-semibold tracking-tight sm:text-3xl"
-          dir="ltr"
-        >
-          {t("title")}
-        </h1>
-        <p className="text-muted-foreground max-w-xl">{t("tagline")}</p>
-      </section>
-
-      {collectionsWithLead.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-medium">{t("shopByCategory")}</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {collectionsWithLead.map((collection) => {
-              const leadImage = collection.products[0]?.product.images[0];
-              return (
-                <CollectionCard
-                  key={collection.id}
-                  collection={collection}
-                  imageUrl={leadImage?.url}
-                  imageAlt={leadImage?.altText ?? collection.title}
-                />
-              );
-            })}
-          </div>
+      <div className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:space-y-16 sm:py-10">
+        <section className="space-y-3">
+          <h1
+            className="text-2xl font-semibold tracking-tight sm:text-3xl"
+            dir="ltr"
+          >
+            {t("title")}
+          </h1>
+          <p className="text-muted-foreground max-w-xl">{t("tagline")}</p>
         </section>
-      )}
 
-      <BrandsSection brands={brands} />
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-medium">{t("newArrivals")}</h2>
-        {products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">{t("noProducts")}</p>
+        {collectionsWithLead.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-medium">{t("shopByCategory")}</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {collectionsWithLead.map((collection) => {
+                const leadImage = collection.products[0]?.product.images[0];
+                return (
+                  <CollectionCard
+                    key={collection.id}
+                    collection={collection}
+                    imageUrl={leadImage?.url}
+                    imageAlt={leadImage?.altText ?? collection.title}
+                  />
+                );
+              })}
+            </div>
+          </section>
         )}
-      </section>
-    </div>
+
+        <BrandsSection brands={brands} />
+
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">{t("newArrivals")}</h2>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">{t("noProducts")}</p>
+          )}
+        </section>
+      </div>
+    </>
   );
 }
