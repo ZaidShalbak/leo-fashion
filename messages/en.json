@@ -8,7 +8,9 @@
     "brands": "Brands",
     "signIn": "Sign in",
     "footer": "Leo Fashion — pay-on-delivery / invoice checkout, no card required.",
-    "languageSwitcherLabel": "Language"
+    "languageSwitcherLabel": "Language",
+    "instagramLink": "Follow us on Instagram",
+    "facebookLink": "Follow us on Facebook"
   },
   "CartIcon": {
     "label": "Cart",

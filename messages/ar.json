@@ -8,7 +8,9 @@
     "brands": "الماركات",
     "signIn": "تسجيل الدخول",
     "footer": "ليو فاشون — الدفع عند الاستلام أو عبر فاتورة، بدون الحاجة لبطاقة ائتمان.",
-    "languageSwitcherLabel": "اللغة"
+    "languageSwitcherLabel": "اللغة",
+    "instagramLink": "تابعونا على إنستغرام",
+    "facebookLink": "تابعونا على فيسبوك"
   },
   "CartIcon": {
     "label": "السلة",
