@@ -10,12 +10,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { LOW_STOCK_THRESHOLD as DEFAULT_THRESHOLD } from "@/lib/inventory";
 import { ThresholdControl } from "@/components/admin/ThresholdControl";
 import { InventoryAdjustControl } from "@/components/admin/InventoryAdjustRow";
 
 export const metadata: Metadata = { title: "Inventory — Admin" };
-
-const DEFAULT_THRESHOLD = 5;
 
 type Props = {
   searchParams: Promise<{ threshold?: string }>;

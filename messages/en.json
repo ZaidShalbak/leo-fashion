@@ -221,6 +221,7 @@
     "size": "Size",
     "color": "Color",
     "outOfStock": "Out of stock",
+    "lowStock": "Only {count} left",
     "adding": "Adding…",
     "addToCart": "Add to cart"
   },
@@ -244,6 +245,7 @@
   },
   "ProductCard": {
     "outOfStock": "Out of stock",
+    "lowStock": "Only {count} left",
     "colorCount": "{count, plural, one {# color} other {# colors}}"
   },
   "HeroCarousel": {

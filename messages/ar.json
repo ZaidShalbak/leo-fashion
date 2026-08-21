@@ -221,6 +221,7 @@
     "size": "المقاس",
     "color": "اللون",
     "outOfStock": "غير متوفر",
+    "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",
     "adding": "جارٍ الإضافة…",
     "addToCart": "أضف إلى السلة"
   },
@@ -244,6 +245,7 @@
   },
   "ProductCard": {
     "outOfStock": "غير متوفر",
+    "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",
     "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}"
   },
   "HeroCarousel": {
