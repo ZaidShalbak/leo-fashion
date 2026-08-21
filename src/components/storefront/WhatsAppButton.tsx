@@ -31,7 +31,11 @@ export function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t("label")}
-      className="fixed bottom-4 end-4 z-40 flex size-14 items-center justify-center rounded-full border-2 border-white/30 bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:border-white/50 sm:bottom-6 sm:end-6"
+      // z-[60]: above the header/footer's z-50 (see the comment in
+      // StorefrontLayout) — this button is fixed near the bottom of the
+      // viewport, so it visually overlaps the footer, and z-40 was losing
+      // to the footer's opaque z-50 background.
+      className="fixed bottom-4 end-4 z-[60] flex size-14 items-center justify-center rounded-full border-2 border-white/30 bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:border-white/50 sm:bottom-6 sm:end-6"
     >
       <WhatsAppIcon className="size-6" />
     </a>
