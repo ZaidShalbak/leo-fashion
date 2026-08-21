@@ -1,13 +1,32 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
+import { motion } from "motion/react";
+import { CheckIcon, ShirtIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import { addToCart } from "@/server/actions/cart";
 import { formatPriceCents } from "./PriceDisplay";
+
+/** Start/end rects (viewport-relative) for one fly-to-cart animation run. */
+type FlyRun = { id: number; start: DOMRect; end: DOMRect };
+
+/**
+ * Picks whichever cart-icon instance is actually visible at the current
+ * viewport width — CartIconLink renders once in the desktop nav and once
+ * in the mobile top bar (see its own comment), and exactly one of the two
+ * has a real, non-zero layout box at any given time since they're mutually
+ * exclusive via Tailwind breakpoints.
+ */
+function findVisibleCartIcon(): Element | null {
+  const candidates = document.querySelectorAll("[data-cart-icon-target]");
+  return Array.from(candidates).find((el) => el.getClientRects().length > 0) ?? null;
+}
 
 type Variant = {
   id: string;
@@ -67,6 +86,10 @@ export function VariantSelector({
   const [feedback, setFeedback] = useState<
     { type: "success" | "error"; message: string } | null
   >(null);
+  const [justAdded, setJustAdded] = useState(false);
+  const [flyRun, setFlyRun] = useState<FlyRun | null>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
 
   const matched = variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor
@@ -126,6 +149,13 @@ export function VariantSelector({
   function handleAddToCart() {
     if (!matched) return;
     setFeedback(null);
+
+    // Captured before the transition starts, not after — the button's own
+    // rect doesn't move once clicked, but grabbing it up front keeps this
+    // independent of whatever the button renders while pending.
+    const startEl = addButtonRef.current;
+    const endEl = findVisibleCartIcon();
+
     startTransition(async () => {
       const result = await addToCart({
         productId,
@@ -137,6 +167,26 @@ export function VariantSelector({
           ? { type: "success", message: result.message }
           : { type: "error", message: result.error }
       );
+      if (result.success) {
+        // The header's cart count is a server-computed prop (see
+        // StorefrontLayout) — addToCart's own revalidatePath only covers
+        // /cart, a different route segment, so without an explicit
+        // refresh the badge would silently stay stale until the next
+        // full navigation. router.refresh() re-runs this route's server
+        // reads (the layout included) so the badge's pop-in below
+        // actually reflects the new count, not the old one animating in
+        // place.
+        router.refresh();
+        setJustAdded(true);
+        setTimeout(() => setJustAdded(false), 1900);
+        if (startEl && endEl) {
+          setFlyRun({
+            id: Date.now(),
+            start: startEl.getBoundingClientRect(),
+            end: endEl.getBoundingClientRect(),
+          });
+        }
+      }
     });
   }
 
@@ -204,13 +254,34 @@ export function VariantSelector({
       </div>
 
       <Button
+        ref={addButtonRef}
         type="button"
         size="lg"
         disabled={isOutOfStock || isPending}
         onClick={handleAddToCart}
-        className="w-full sm:w-auto"
+        className="w-full overflow-hidden sm:w-auto"
       >
-        {isOutOfStock ? t("outOfStock") : isPending ? t("adding") : t("addToCart")}
+        <motion.span
+          // Keyed, not wrapped in AnimatePresence — a plain keyed span
+          // still replays its `initial` -> `animate` pop on every key
+          // change, without needing AnimatePresence's coordinated exit-
+          // then-enter sequencing (mode="wait"), which is unnecessary
+          // complexity for a single-line label swap like this one.
+          key={isOutOfStock ? "out" : isPending ? "adding" : justAdded ? "added" : "idle"}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.15 }}
+          className="flex items-center gap-1.5"
+        >
+          {justAdded && !isOutOfStock && !isPending && <CheckIcon className="size-4" />}
+          {isOutOfStock
+            ? t("outOfStock")
+            : isPending
+              ? t("adding")
+              : justAdded
+                ? t("added")
+                : t("addToCart")}
+        </motion.span>
       </Button>
 
       {feedback && (
@@ -224,6 +295,51 @@ export function VariantSelector({
           {feedback.message}
         </p>
       )}
+
+      {/* Fly-to-cart flourish — a small shirt icon (a clothing-store-
+          appropriate stand-in for "the item," since actually cloning the
+          product photo would need extra prop plumbing this component
+          doesn't otherwise need) travels from the button to whichever
+          cart icon is currently visible (see findVisibleCartIcon above)
+          and shrinks away as it arrives, roughly timed to land alongside
+          the badge's own pop-in (see CartIconLink). Portaled to
+          document.body (not rendered in place) since it needs to be
+          `position: fixed` relative to the viewport and fly across
+          unrelated parts of the page — the header it's flying toward
+          isn't a descendant of this component. z-[70]: above the header/
+          footer's z-50 and the WhatsApp button's z-[60] (see that
+          button's comment) so it stays visible the entire flight,
+          including over the header itself. */}
+      {flyRun &&
+        createPortal(
+          <motion.div
+            key={flyRun.id}
+            className="bg-foreground text-background pointer-events-none fixed z-[70] flex size-8 items-center justify-center rounded-full shadow-lg"
+            style={{
+              left: flyRun.start.left + flyRun.start.width / 2 - 16,
+              top: flyRun.start.top + flyRun.start.height / 2 - 16,
+            }}
+            initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
+            animate={{
+              x:
+                flyRun.end.left +
+                flyRun.end.width / 2 -
+                (flyRun.start.left + flyRun.start.width / 2),
+              y:
+                flyRun.end.top +
+                flyRun.end.height / 2 -
+                (flyRun.start.top + flyRun.start.height / 2),
+              scale: 0.4,
+              opacity: 0,
+              rotate: 15,
+            }}
+            transition={{ duration: 1.7, ease: [0.2, 0.7, 0.2, 1] }}
+            onAnimationComplete={() => setFlyRun(null)}
+          >
+            <ShirtIcon className="size-4" />
+          </motion.div>,
+          document.body
+        )}
     </div>
   );
 }

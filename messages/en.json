@@ -237,6 +237,7 @@
     "outOfStock": "Out of stock",
     "lowStock": "Only {count} left",
     "adding": "Adding…",
+    "added": "Added",
     "addToCart": "Add to cart"
   },
   "CartActions": {
