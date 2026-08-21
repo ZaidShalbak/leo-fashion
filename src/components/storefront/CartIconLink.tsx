@@ -20,7 +20,7 @@ export function CartIconLink({ itemCount }: { itemCount: number }) {
     >
       <ShoppingBagIcon className="size-5" />
       {itemCount > 0 && (
-        <span className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-white text-[10px] leading-none font-medium text-black">
+        <span className="bg-destructive absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium text-white">
           {itemCount > 9 ? "9+" : itemCount}
         </span>
       )}
