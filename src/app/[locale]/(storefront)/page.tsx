@@ -78,7 +78,7 @@ export default async function HomePage() {
       title: banner.headline,
       description: banner.subtext,
       imageUrl: banner.imageUrl,
-      imageAlt: banner.imageAltText ?? banner.headline,
+      imageAlt: banner.imageAltText ?? banner.headline ?? "Leo Fashion",
       href: banner.ctaUrl,
       ctaLabel: banner.ctaLabel,
     }));
@@ -87,7 +87,7 @@ export default async function HomePage() {
   // admin sets up a banner) only when there's nothing live to show —
   // see /admin/hero-banners.
   const collectionSlides: HeroSlide[] = collectionsWithLead
-    .map((collection) => {
+    .map((collection): HeroSlide | null => {
       const leadImage = collection.products[0]?.product.images[0];
       if (!leadImage) return null;
       return {

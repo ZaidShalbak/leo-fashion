@@ -79,14 +79,16 @@ export function NewHeroBannerForm() {
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="headline">Headline</Label>
+          <Label htmlFor="headline">Headline (optional)</Label>
           <Input
             id="headline"
             name="headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            required
           />
+          <p className="text-muted-foreground text-xs">
+            Leave blank if the image already has its own text baked in.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="subtext">Subtext (optional)</Label>

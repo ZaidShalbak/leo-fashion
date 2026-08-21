@@ -11,7 +11,7 @@ import { reorderHeroBanners, deleteHeroBanner } from "@/server/actions/admin/her
 type HeroBannerRow = {
   id: string;
   imageUrl: string;
-  headline: string;
+  headline: string | null;
   status: "live" | "scheduled" | "expired" | "inactive";
 };
 
@@ -82,8 +82,8 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
     setItems(savedItems);
   }
 
-  function handleDelete(id: string, headline: string) {
-    if (!window.confirm(`Delete "${headline}"? This can't be undone.`)) return;
+  function handleDelete(id: string, headline: string | null) {
+    if (!window.confirm(`Delete "${headline ?? "this banner"}"? This can't be undone.`)) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteHeroBanner({ id });
@@ -140,7 +140,7 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
                 href={`/admin/hero-banners/${banner.id}/edit`}
                 className="block truncate text-sm font-medium hover:underline"
               >
-                {banner.headline}
+                {banner.headline ?? <span className="text-muted-foreground italic">No headline (image text only)</span>}
               </Link>
             </div>
             {banner.status === "live" && <Badge>Live</Badge>}

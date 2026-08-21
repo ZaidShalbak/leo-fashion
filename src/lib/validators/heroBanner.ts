@@ -13,7 +13,10 @@ const dateOnly = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid date");
 
 export const heroBannerFieldsSchema = z.object({
-  headline: z.string().trim().min(1, "Add a headline").max(120),
+  headline: z
+    .union([z.string().trim().max(120), z.literal("")])
+    .optional()
+    .transform((v) => (v ? v : undefined)),
   subtext: z
     .union([z.string().trim().max(240), z.literal("")])
     .optional()
