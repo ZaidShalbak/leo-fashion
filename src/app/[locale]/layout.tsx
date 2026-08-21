@@ -63,7 +63,7 @@ export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
       dir={dir}
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overflow-x-hidden">
         <NextIntlClientProvider>{props.children}</NextIntlClientProvider>
       </body>
     </html>

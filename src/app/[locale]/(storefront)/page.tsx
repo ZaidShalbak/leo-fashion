@@ -105,7 +105,19 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:space-y-16 sm:py-10">
-      {heroSlides.length > 0 && <HeroCarousel slides={heroSlides} />}
+      {heroSlides.length > 0 && (
+        // Full-bleed breakout from the max-w-6xl/px-4 container above. Uses
+        // explicit margins on *both* sides (not the more common
+        // `left-1/2 -ml-[50vw]` trick) because CSS's over-constrained-box
+        // resolution discards and recomputes margin-left specifically under
+        // `direction: rtl` when only one margin is set explicitly — same
+        // class of physical-property RTL pitfall as HeroCarousel's
+        // translateX sign flip, different mechanism. Setting both margins to
+        // the same value leaves nothing for that resolution rule to touch.
+        <div className="w-screen ml-[calc(50%_-_50vw)] mr-[calc(50%_-_50vw)]">
+          <HeroCarousel slides={heroSlides} />
+        </div>
+      )}
 
       <section className="space-y-3">
         <h1
