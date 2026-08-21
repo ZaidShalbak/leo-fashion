@@ -48,3 +48,47 @@ export function LeoFashionLogo({
     </svg>
   );
 }
+
+/**
+ * A loading indicator built from the actual LEO mark rather than a
+ * generic spinner — the letter groups (L, the three-bar E, the O ring)
+ * pulse in sequence via the `leo-pulse` keyframe (globals.css), 150ms
+ * apart, so the effect reads as a wave sweeping left-to-right across the
+ * logo and repeating. The letterforms themselves are never reshaped or
+ * cropped, just faded — confirmed with the store owner via a rendered
+ * preview before wiring this into any real loading state.
+ */
+export function LeoLoadingMark({
+  className,
+  label = "Loading",
+}: {
+  className?: string;
+  /** Translated "Loading…"-type label — role="status" so screen readers
+   * announce it when the indicator appears, same as any other live
+   * loading region. Defaults to English for callers outside the
+   * bilingual storefront tree; pass a real translation when available. */
+  label?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 300 130"
+      className={className}
+      fill="currentColor"
+      role="status"
+      aria-label={label}
+    >
+      <g className="animate-leo-pulse">
+        <rect x="20" y="20" width="20" height="90" />
+        <rect x="20" y="92" width="62" height="18" />
+      </g>
+      <g className="animate-leo-pulse [animation-delay:150ms]">
+        <rect x="98" y="20" width="60" height="18" />
+        <rect x="98" y="56" width="60" height="18" />
+        <rect x="98" y="92" width="60" height="18" />
+      </g>
+      <g className="animate-leo-pulse [animation-delay:300ms]">
+        <circle cx="225" cy="65" r="46" fill="none" stroke="currentColor" strokeWidth="20" />
+      </g>
+    </svg>
+  );
+}

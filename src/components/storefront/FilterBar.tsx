@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { useTransition } from "react";
 import { XIcon } from "lucide-react";
 
 import { usePathname, useRouter } from "@/i18n/navigation";
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LeoLoadingMark } from "./Logo";
 
 const SORT_OPTIONS = ["newest", "price-asc", "price-desc"] as const;
 
@@ -34,6 +36,7 @@ export function FilterBar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -43,7 +46,9 @@ export function FilterBar({
       params.set(key, value);
     }
     const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    startTransition(() => {
+      router.push(query ? `${pathname}?${query}` : pathname);
+    });
   }
 
   const currentSize = searchParams.get("size") ?? "all";
@@ -58,7 +63,9 @@ export function FilterBar({
     params.delete("size");
     params.delete("color");
     const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    startTransition(() => {
+      router.push(query ? `${pathname}?${query}` : pathname);
+    });
   }
 
   return (
@@ -112,6 +119,12 @@ export function FilterBar({
           <XIcon className="size-4" />
           {t("clearFilters")}
         </Button>
+      )}
+
+      {isPending && (
+        <div className="bg-background/90 fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+          <LeoLoadingMark label={t("applying")} className="text-foreground h-16 w-auto sm:h-20" />
+        </div>
       )}
     </div>
   );
