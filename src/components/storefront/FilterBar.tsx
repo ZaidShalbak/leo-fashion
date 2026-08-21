@@ -2,8 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { XIcon } from "lucide-react";
 
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -47,6 +49,17 @@ export function FilterBar({
   const currentSize = searchParams.get("size") ?? "all";
   const currentColor = searchParams.get("color") ?? "all";
   const currentSort = searchParams.get("sort") ?? "newest";
+  // Only size/color count as "filters" to clear — sort is a display
+  // preference, not something narrowing the result set, so leave it as-is.
+  const hasActiveFilters = currentSize !== "all" || currentColor !== "all";
+
+  function clearFilters() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("size");
+    params.delete("color");
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-3" data-slot="filter-bar">
@@ -93,6 +106,13 @@ export function FilterBar({
           ))}
         </SelectContent>
       </Select>
+
+      {hasActiveFilters && (
+        <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+          <XIcon className="size-4" />
+          {t("clearFilters")}
+        </Button>
+      )}
     </div>
   );
 }
