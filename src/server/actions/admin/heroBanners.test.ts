@@ -1,11 +1,12 @@
 // @vitest-environment node
 //
-// Integration test against the real local dev database, focused on
-// reorderHeroBanners — the one action here with actual logic (turning a
-// dragged-into order into position writes) rather than a straight
-// validate-then-Prisma-call wrapper. create/update/delete/reorder's admin
-// gating and general CRUD shape mirror brands/collections/discount codes,
-// none of which have dedicated tests in this codebase — see CLAUDE.md.
+// Integration test against the real local dev database. reorderHeroBanners
+// is the one action here with real logic beyond validate-then-Prisma-call
+// (turning a dragged-into order into position writes); updateHeroBanner's
+// coverage below is a regression test for a real clear-doesn't-persist bug,
+// not general CRUD coverage — create/delete's admin gating and CRUD shape
+// still mirror brands/collections/discount codes, none of which have
+// dedicated tests in this codebase — see CLAUDE.md.
 import "dotenv/config";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -19,7 +20,7 @@ vi.mock("@/server/auth", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { db } = await import("@/server/db");
-const { reorderHeroBanners } = await import("./heroBanners");
+const { reorderHeroBanners, updateHeroBanner } = await import("./heroBanners");
 
 let admin: { id: string };
 let bannerAId: string;
@@ -79,5 +80,39 @@ describe("reorderHeroBanners", () => {
   it("rejects an empty list rather than wiping every position", async () => {
     const result = await reorderHeroBanners({ orderedIds: [] });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("updateHeroBanner", () => {
+  it("clears subtext/ctaLabel when the form submits them blank, instead of silently keeping the old value", async () => {
+    // Regression test: heroBannerFieldsSchema transforms a blank
+    // subtext/ctaLabel to `undefined` (not ""), and Prisma's update()
+    // treats an undefined field as "don't touch this column" rather than
+    // "set it to null" — so clearing either field in the edit form
+    // previously had no effect at all, which is exactly the "edit, save,
+    // reopen, changes aren't there" bug this covers.
+    const before = await db.heroBanner.update({
+      where: { id: bannerAId },
+      data: { subtext: "Original subtext", ctaLabel: "Original CTA" },
+    });
+    expect(before.subtext).toBe("Original subtext");
+    expect(before.ctaLabel).toBe("Original CTA");
+
+    const formData = new FormData();
+    formData.set("id", bannerAId);
+    formData.set("headline", before.headline);
+    formData.set("subtext", "");
+    formData.set("ctaLabel", "");
+    formData.set("ctaUrl", before.ctaUrl);
+    formData.set("isActive", String(before.isActive));
+    formData.set("startsAt", "");
+    formData.set("endsAt", "");
+
+    const result = await updateHeroBanner(formData);
+    expect(result.success).toBe(true);
+
+    const after = await db.heroBanner.findUnique({ where: { id: bannerAId } });
+    expect(after?.subtext).toBeNull();
+    expect(after?.ctaLabel).toBeNull();
   });
 });

@@ -126,12 +126,22 @@ export async function updateHeroBanner(formData: FormData): Promise<ActionResult
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid banner." };
   }
-  const { startsAt, endsAt, ...fields } = parsed.data;
+  const { startsAt, endsAt, subtext, ctaLabel, ...fields } = parsed.data;
 
   await db.heroBanner.update({
     where: { id },
     data: {
       ...fields,
+      // subtext/ctaLabel come out of the schema as `undefined` (not "")
+      // when cleared — Prisma's update() treats an undefined field as
+      // "don't touch this column", which would silently keep the old
+      // value instead of clearing it, unlike startsAt/endsAt below which
+      // already had this same undefined -> null fallback. Full-resend
+      // forms in this codebase are supposed to let a blank field clear a
+      // value (see the comment on this function) — this makes that true
+      // for subtext/ctaLabel too.
+      subtext: subtext ?? null,
+      ctaLabel: ctaLabel ?? null,
       imageAltText: fields.headline,
       ...(newImageUrl ? { imageUrl: newImageUrl } : {}),
       startsAt: startsAt ? startOfDayUtc(startsAt) : null,
