@@ -5,7 +5,7 @@ import { db } from "@/server/db";
 import { getCurrentCart } from "@/server/actions/cart";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localizedContent";
-import { CartLineItem } from "@/components/storefront/CartLineItem";
+import { CartItemList } from "@/components/storefront/CartItemList";
 import { PromoCodeForm } from "@/components/storefront/PromoCodeForm";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,10 +82,8 @@ export default async function CartPage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
 
-      <div className="divide-border mt-6 divide-y">
-        {localizedItems.map((item) => (
-          <CartLineItem key={item.id} item={item} />
-        ))}
+      <div className="mt-6">
+        <CartItemList items={localizedItems} />
       </div>
 
       <div className="border-border mt-6 space-y-4 border-t pt-6">

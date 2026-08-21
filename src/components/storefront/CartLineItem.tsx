@@ -10,7 +10,7 @@ import { updateCartItem, removeCartItem } from "@/server/actions/cart";
 import { effectivePriceCents } from "@/lib/cart-totals";
 import { formatPriceCents } from "./PriceDisplay";
 
-type CartLineItemData = {
+export type CartLineItemData = {
   id: string;
   quantity: number;
   product: {
