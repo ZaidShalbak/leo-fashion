@@ -242,7 +242,10 @@
     "fallbackTitle": "Product"
   },
   "ProductGallery": {
-    "showImage": "Show image {index} of {total}"
+    "showImage": "Show image {index} of {total}",
+    "zoomImage": "Zoom in on product image",
+    "zoomedTitle": "Zoomed image of {title}",
+    "closeZoom": "Close zoomed image"
   },
   "BrandsSection": {
     "shopByBrand": "Shop by brand",
