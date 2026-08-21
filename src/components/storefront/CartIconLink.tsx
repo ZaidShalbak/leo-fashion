@@ -28,7 +28,25 @@ export function CartIconLink({ itemCount }: { itemCount: number }) {
       aria-label={itemCount > 0 ? t("labelWithCount", { count: itemCount }) : t("label")}
       className="relative flex size-9 items-center justify-center text-white/70 transition hover:text-white"
     >
-      <ShoppingBagIcon className="size-5" />
+      <motion.span
+        // Keyed by count, same trick as the badge below — a plain keyed
+        // element replays its `animate` on every distinct value, so this
+        // bump/wiggle fires on every add, not just the first one. Explicit
+        // `initial` (matching the resting pose) is required here: without
+        // it, Motion treats a freshly-keyed element's `animate` values as
+        // its starting pose too and nothing actually plays.
+        key={itemCount}
+        initial={{ scale: 1, rotate: 0 }}
+        animate={
+          itemCount > 0
+            ? { scale: [1, 1.3, 0.9, 1.05, 1], rotate: [0, -12, 10, -4, 0] }
+            : { scale: 1, rotate: 0 }
+        }
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="flex"
+      >
+        <ShoppingBagIcon className="size-5" />
+      </motion.span>
       <AnimatePresence>
         {itemCount > 0 && (
           <motion.span
