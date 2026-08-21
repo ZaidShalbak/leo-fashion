@@ -8,7 +8,9 @@ import { Link } from "@/i18n/navigation";
 
 export type HeroSlide = {
   id: string;
-  title: string;
+  /** Optional — some banners bake their own stylized text into the image
+   * and don't want a second HTML text layer on top of it. */
+  title: string | null;
   description: string | null;
   imageUrl: string;
   imageAlt: string;
@@ -94,22 +96,32 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               sizes="100vw"
               className="object-cover"
             />
-            <div className="from-foreground/70 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 space-y-1 p-5 sm:p-8">
-              <h2 className="text-background text-xl font-semibold tracking-tight sm:text-3xl">
-                {slide.title}
-              </h2>
-              {slide.description && (
-                <p className="text-background/90 max-w-md text-sm sm:text-base">
-                  {slide.description}
-                </p>
-              )}
-              {slide.ctaLabel && (
-                <span className="bg-background text-foreground mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-medium sm:text-sm">
-                  {slide.ctaLabel}
-                </span>
-              )}
-            </div>
+            {(slide.title || slide.description || slide.ctaLabel) && (
+              <>
+                {/* Only rendered when there's actual text to protect —
+                    a pure-image banner (baked-in text, nothing set here)
+                    shows completely clean, no gradient darkening it for
+                    no reason. */}
+                <div className="from-foreground/70 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 space-y-1 p-5 sm:p-8">
+                  {slide.title && (
+                    <h2 className="text-background text-xl font-semibold tracking-tight sm:text-3xl">
+                      {slide.title}
+                    </h2>
+                  )}
+                  {slide.description && (
+                    <p className="text-background/90 max-w-md text-sm sm:text-base">
+                      {slide.description}
+                    </p>
+                  )}
+                  {slide.ctaLabel && (
+                    <span className="bg-background text-foreground mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-medium sm:text-sm">
+                      {slide.ctaLabel}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
           </Link>
         ))}
       </div>

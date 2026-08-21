@@ -84,23 +84,27 @@ describe("reorderHeroBanners", () => {
 });
 
 describe("updateHeroBanner", () => {
-  it("clears subtext/ctaLabel when the form submits them blank, instead of silently keeping the old value", async () => {
+  it("clears headline/subtext/ctaLabel when the form submits them blank, instead of silently keeping the old value", async () => {
     // Regression test: heroBannerFieldsSchema transforms a blank
-    // subtext/ctaLabel to `undefined` (not ""), and Prisma's update()
-    // treats an undefined field as "don't touch this column" rather than
-    // "set it to null" — so clearing either field in the edit form
-    // previously had no effect at all, which is exactly the "edit, save,
-    // reopen, changes aren't there" bug this covers.
+    // headline/subtext/ctaLabel to `undefined` (not ""), and Prisma's
+    // update() treats an undefined field as "don't touch this column"
+    // rather than "set it to null" — so clearing any of these fields in
+    // the edit form previously had no effect at all, which is exactly the
+    // "edit, save, reopen, changes aren't there" bug this covers. headline
+    // became nullable/optional later (a banner can rely on baked-in image
+    // text with no HTML overlay), so it gets the same clear-to-null
+    // treatment as subtext/ctaLabel always had.
     const before = await db.heroBanner.update({
       where: { id: bannerAId },
-      data: { subtext: "Original subtext", ctaLabel: "Original CTA" },
+      data: { headline: "Original headline", subtext: "Original subtext", ctaLabel: "Original CTA" },
     });
+    expect(before.headline).toBe("Original headline");
     expect(before.subtext).toBe("Original subtext");
     expect(before.ctaLabel).toBe("Original CTA");
 
     const formData = new FormData();
     formData.set("id", bannerAId);
-    formData.set("headline", before.headline);
+    formData.set("headline", "");
     formData.set("subtext", "");
     formData.set("ctaLabel", "");
     formData.set("ctaUrl", before.ctaUrl);
@@ -112,6 +116,7 @@ describe("updateHeroBanner", () => {
     expect(result.success).toBe(true);
 
     const after = await db.heroBanner.findUnique({ where: { id: bannerAId } });
+    expect(after?.headline).toBeNull();
     expect(after?.subtext).toBeNull();
     expect(after?.ctaLabel).toBeNull();
   });

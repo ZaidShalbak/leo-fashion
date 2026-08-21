@@ -12,7 +12,7 @@ import { HeroBannerPreview } from "./HeroBannerPreview";
 type HeroBanner = {
   id: string;
   imageUrl: string;
-  headline: string;
+  headline: string | null;
   subtext: string | null;
   ctaLabel: string | null;
   ctaUrl: string;
@@ -31,7 +31,7 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
   const [isPending, startTransition] = useTransition();
 
   const [previewUrl, setPreviewUrl] = useState(banner.imageUrl);
-  const [headline, setHeadline] = useState(banner.headline);
+  const [headline, setHeadline] = useState(banner.headline ?? "");
   const [subtext, setSubtext] = useState(banner.subtext ?? "");
   const [ctaLabel, setCtaLabel] = useState(banner.ctaLabel ?? "");
   const [isActive, setIsActive] = useState(banner.isActive);
@@ -79,14 +79,16 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
           <p className="text-muted-foreground text-xs">Leave empty to keep the current photo.</p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="headline">Headline</Label>
+          <Label htmlFor="headline">Headline (optional)</Label>
           <Input
             id="headline"
             name="headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            required
           />
+          <p className="text-muted-foreground text-xs">
+            Leave blank if the image already has its own text baked in.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="subtext">Subtext (optional)</Label>

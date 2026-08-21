@@ -235,8 +235,13 @@ model HeroBanner {
   // product images, different path prefix.
   imageUrl     String
   imageAltText String?
-  headline     String
-  subtext      String?
+  // Optional — a banner's headline/subtext/CTA are rendered as an HTML
+  // overlay (see HeroCarousel) on top of imageUrl. Some banners bake their
+  // own stylized text into the image itself (see the seasonal-sale
+  // banners) and don't want a second, redundant text layer on top of it,
+  // so this isn't required the way it was originally.
+  headline String?
+  subtext  String?
   // Both optional independently — a banner can be a plain photo + headline
   // with no button, or add a labeled CTA. ctaUrl is where the *whole*
   // slide links to either way (see HeroCarousel), so a banner without a
