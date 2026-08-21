@@ -12,6 +12,16 @@
     "instagramLink": "Follow us on Instagram",
     "facebookLink": "Follow us on Facebook"
   },
+  "SearchBox": {
+    "open": "Search",
+    "close": "Close search",
+    "placeholder": "Search products, brands, categories…",
+    "searching": "Searching…",
+    "noResults": "No results for \"{query}\".",
+    "brands": "Brands",
+    "categories": "Categories",
+    "products": "Products"
+  },
   "CartIcon": {
     "label": "Cart",
     "labelWithCount": "Cart, {count, plural, one {# item} other {# items}}"

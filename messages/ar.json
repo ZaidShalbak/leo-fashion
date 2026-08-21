@@ -12,6 +12,16 @@
     "instagramLink": "تابعونا على إنستغرام",
     "facebookLink": "تابعونا على فيسبوك"
   },
+  "SearchBox": {
+    "open": "بحث",
+    "close": "إغلاق البحث",
+    "placeholder": "ابحث عن منتجات أو ماركات أو فئات…",
+    "searching": "جارٍ البحث…",
+    "noResults": "لا توجد نتائج لـ \"{query}\".",
+    "brands": "الماركات",
+    "categories": "الفئات",
+    "products": "المنتجات"
+  },
   "CartIcon": {
     "label": "السلة",
     "labelWithCount": "السلة، {count, plural, zero {# عنصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}"
