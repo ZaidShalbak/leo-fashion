@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import { addToCart } from "@/server/actions/cart";
 import { formatPriceCents } from "./PriceDisplay";
 
@@ -71,6 +72,12 @@ export function VariantSelector({
     (v) => v.size === selectedSize && v.color === selectedColor
   );
   const isOutOfStock = !matched || matched.inventoryQuantity <= 0;
+  // Tied to the currently selected size+color, not the product as a whole
+  // — matches ProductCard's grid-level badge in spirit, but here there's
+  // an actual selected variant to be precise about, so no need to fall
+  // back to a summed/aggregate count.
+  const isLowStock =
+    !isOutOfStock && matched.inventoryQuantity <= LOW_STOCK_THRESHOLD;
   const priceCents = matched?.priceOverrideCents ?? basePriceCents;
 
   function variantFor(size: string, color: string) {
@@ -135,7 +142,14 @@ export function VariantSelector({
 
   return (
     <div className="space-y-5" data-slot="variant-selector">
-      <p className="text-xl font-medium">{formatPriceCents(priceCents)}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-xl font-medium">{formatPriceCents(priceCents)}</p>
+        {isLowStock && (
+          <span className="bg-destructive rounded-md px-2 py-1 text-xs font-medium text-white">
+            {t("lowStock", { count: matched?.inventoryQuantity ?? 0 })}
+          </span>
+        )}
+      </div>
 
       <div>
         <p className="mb-2 text-sm font-medium">{t("size")}</p>
