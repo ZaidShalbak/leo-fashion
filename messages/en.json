@@ -22,6 +22,9 @@
     "categories": "Categories",
     "products": "Products"
   },
+  "WhatsAppButton": {
+    "label": "Chat with us on WhatsApp"
+  },
   "CartIcon": {
     "label": "Cart",
     "labelWithCount": "Cart, {count, plural, one {# item} other {# items}}"
