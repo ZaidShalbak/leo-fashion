@@ -1,0 +1,50 @@
+import Image from "next/image";
+
+import { Link } from "@/i18n/navigation";
+
+export function CategoryTile({
+  href,
+  title,
+  description,
+  imageUrl,
+  imageAlt,
+  tall = false,
+}: {
+  href: string;
+  title: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  imageAlt?: string;
+  /** The lead tile in a 3-tile row runs a bit taller than its neighbors —
+   * only meaningful when there's more than one tile, so a lone tile isn't
+   * stretched for no reason. */
+  tall?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group bg-showcase-line relative block overflow-hidden ${tall ? "min-h-[440px]" : "min-h-[400px]"}`}
+    >
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={imageAlt ?? title}
+          fill
+          sizes="(min-width: 640px) 40vw, 100vw"
+          className="object-cover object-center opacity-90 grayscale-[35%] contrast-[1.08] transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : null}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+      <div className="absolute inset-x-4 bottom-4 start-4 end-4">
+        <div className="font-showcase-display text-showcase-paper text-[1.9rem] leading-none uppercase rtl:leading-normal rtl:normal-case">
+          {title}
+        </div>
+        {description && (
+          <span className="text-showcase-rivet mt-1 block text-[11px] font-semibold tracking-[0.1em] uppercase rtl:font-medium rtl:tracking-normal rtl:normal-case">
+            {description}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}

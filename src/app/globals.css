@@ -24,6 +24,28 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+
+  /* Homepage "showcase" bands only (Shop the range / Shop by brand / Best
+     sellers / New arrivals) — a deliberate, fixed ink/paper palette that
+     doesn't respond to .dark, since the alternation IS the design rather
+     than a themeable surface. Not used anywhere outside those sections. */
+  --showcase-ink: oklch(0.09 0 0);
+  --showcase-paper: oklch(0.94 0.015 85);
+  --showcase-paper-dim: oklch(0.6 0.02 75);
+  --showcase-rivet: oklch(0.55 0.13 45);
+  --showcase-line: oklch(0.2 0 0);
+  --showcase-line-paper: oklch(0.86 0.015 80);
+
+  /* Direction-aware font aliases for the showcase sections. Bebas Neue has
+     no Arabic glyphs, so Arabic gets Tajawal for both display and body
+     roles instead — swapped once here rather than per-component. */
+  --font-showcase-display: var(--font-bebas-neue), Impact, sans-serif;
+  --font-showcase-body: var(--font-archivo), sans-serif;
+}
+
+html[dir="rtl"] {
+  --font-showcase-display: var(--font-tajawal), sans-serif;
+  --font-showcase-body: var(--font-tajawal), sans-serif;
 }
 
 .dark {
@@ -74,6 +96,14 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-showcase-ink: var(--showcase-ink);
+  --color-showcase-paper: var(--showcase-paper);
+  --color-showcase-paper-dim: var(--showcase-paper-dim);
+  --color-showcase-rivet: var(--showcase-rivet);
+  --color-showcase-line: var(--showcase-line);
+  --color-showcase-line-paper: var(--showcase-line-paper);
+  --font-showcase-display: var(--font-showcase-display);
+  --font-showcase-body: var(--font-showcase-body);
   /* Used by LeoLoadingMark (src/components/storefront/Logo.tsx) — a
      staggered opacity pulse applied to each letter group with increasing
      animation-delay, so the wave sweeps left-to-right across L, E, O. */

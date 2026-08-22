@@ -2,51 +2,55 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
+import { SectionBand } from "./SectionBand";
 
 export type BrandSummary = {
   id: string;
   name: string;
   slug: string;
   logoUrl: string | null;
+  itemCount: number;
 };
 
 /**
  * Homepage brand grid — Leo Fashion carries multiple external brands (see
  * CLAUDE.md), so this highlights the vendor/partner lineup rather than a
- * single house logo. Plain responsive grid, not a carousel: with ~5 brands
- * a grid reads faster than something that auto-scrolls, and it degrades to
- * a simple 2-column layout on mobile without extra work.
+ * single house logo. A hairline-bordered "wall" of cells, not a carousel:
+ * with a handful of brands a grid reads faster than something that
+ * auto-scrolls, and it degrades to a single column on mobile without extra
+ * work. Logos render as solid black marks (brightness-0, no hover reveal)
+ * so a handful of differently-colored brand logos read as one disciplined
+ * band instead of a mismatched logo soup.
  */
 export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
   const t = useTranslations("BrandsSection");
   if (brands.length === 0) return null;
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{t("shopByBrand")}</h2>
-        <Link
-          href="/brands"
-          className="text-muted-foreground hover:text-foreground text-sm transition"
-        >
+    <SectionBand
+      tone="paper"
+      title={t("shopByBrand")}
+      subtitle={
+        <Link href="/brands" className="opacity-100 transition hover:opacity-70">
           {t("viewAll")}
         </Link>
-      </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      }
+    >
+      <div className="border-showcase-ink grid grid-cols-1 border-t-2 border-s-2 sm:grid-cols-2">
         {brands.map((brand) => (
           <Link
             key={brand.id}
             href={`/brands/${brand.slug}`}
-            className="border-border bg-card group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-lg border p-4 transition hover:shadow-sm"
+            className="border-showcase-ink group flex min-h-[110px] items-center justify-between gap-4 border-b-2 border-e-2 p-7 transition hover:bg-black/[0.03]"
           >
             {brand.logoUrl ? (
-              <div className="relative h-10 w-full">
+              <div className="relative h-8 w-full max-w-[65%]">
                 <Image
                   src={brand.logoUrl}
                   alt={brand.name}
                   fill
                   sizes="200px"
-                  className="object-contain grayscale transition group-hover:grayscale-0"
+                  className="object-contain object-start brightness-0 rtl:object-[right_center]"
                   // Brand logos can be any URL an admin pastes into the
                   // brand form (src/lib/validators/brand.ts just requires
                   // a well-formed URL) — unlike product photos, which only
@@ -59,11 +63,16 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
                 />
               </div>
             ) : (
-              <span className="text-sm font-medium">{brand.name}</span>
+              <span className="font-showcase-display text-2xl uppercase rtl:normal-case">
+                {brand.name}
+              </span>
             )}
+            <span className="text-showcase-paper-dim text-xs font-semibold whitespace-nowrap">
+              {t("itemCount", { count: brand.itemCount })}
+            </span>
           </Link>
         ))}
       </div>
-    </section>
+    </SectionBand>
   );
 }
