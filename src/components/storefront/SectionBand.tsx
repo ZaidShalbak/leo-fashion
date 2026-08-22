@@ -30,7 +30,9 @@ export function SectionBand({
   return (
     <section className={`${toneClasses} px-6 py-14 sm:px-10 sm:py-18 ${className ?? ""}`}>
       <div className="mb-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-current pb-4">
-        <h2 className="font-showcase-display text-[clamp(2.2rem,5.5vw,3.4rem)] leading-[0.9] uppercase rtl:leading-[1.1] rtl:normal-case">
+        {/* font-bold pins an exactly-loaded weight — Tajawal has no 400,
+            see HomeIntro.tsx for the full explanation. */}
+        <h2 className="font-showcase-display text-[clamp(2.2rem,5.5vw,3.4rem)] leading-[0.9] font-bold uppercase rtl:leading-[1.1] rtl:normal-case">
           {title}
         </h2>
         {subtitle && (

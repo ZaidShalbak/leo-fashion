@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
+import { HomeIntro } from "@/components/storefront/HomeIntro";
 import { CategorySection } from "@/components/storefront/CategorySection";
 import { BrandsSection } from "@/components/storefront/BrandsSection";
 import { BestSellersSection } from "@/components/storefront/BestSellersSection";
@@ -161,16 +162,8 @@ export default async function HomePage() {
           container's py-8/py-10. */}
       {heroSlides.length > 0 && <HeroCarousel slides={heroSlides} />}
 
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
-        <section className="space-y-3">
-          <h1
-            className="text-2xl font-semibold tracking-tight sm:text-3xl"
-            dir="ltr"
-          >
-            {t("title")}
-          </h1>
-          <p className="text-muted-foreground max-w-xl">{t("tagline")}</p>
-        </section>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+        <HomeIntro title={t("title")} tagline={t("tagline")} />
       </div>
 
       {/* Full-bleed "showcase" bands — outside the max-w-6xl container above,

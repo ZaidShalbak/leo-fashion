@@ -36,7 +36,9 @@ export function CategoryTile({
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
       <div className="absolute inset-x-4 bottom-4 start-4 end-4">
-        <div className="font-showcase-display text-showcase-paper text-[1.9rem] leading-none uppercase rtl:leading-normal rtl:normal-case">
+        {/* font-bold pins an exactly-loaded weight — Tajawal has no 400,
+            see HomeIntro.tsx for the full explanation. */}
+        <div className="font-showcase-display text-showcase-paper text-[1.9rem] leading-none font-bold uppercase rtl:leading-normal rtl:normal-case">
           {title}
         </div>
         {description && (

@@ -41,7 +41,7 @@ export function BestSellerItem({
           ) : null}
         </div>
         <div className="px-4 pt-4 pb-5">
-          <div className="text-showcase-rivet font-showcase-display text-sm tracking-[0.04em]" dir="ltr">
+          <div className="text-showcase-rivet font-showcase-display text-sm font-bold tracking-[0.04em]" dir="ltr">
             {rankLabel}
           </div>
           <h3 className="text-showcase-paper mt-2.5 mb-1 text-sm font-semibold">{product.title}</h3>

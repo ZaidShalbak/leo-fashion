@@ -63,7 +63,9 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
                 />
               </div>
             ) : (
-              <span className="font-showcase-display text-2xl uppercase rtl:normal-case">
+              // font-bold pins an exactly-loaded weight — Tajawal has no
+              // 400, see HomeIntro.tsx for the full explanation.
+              <span className="font-showcase-display text-2xl font-bold uppercase rtl:normal-case">
                 {brand.name}
               </span>
             )}
