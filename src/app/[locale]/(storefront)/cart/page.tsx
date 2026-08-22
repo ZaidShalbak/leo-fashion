@@ -6,6 +6,7 @@ import { getCurrentCart } from "@/server/actions/cart";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localizedContent";
 import { CartItemList } from "@/components/storefront/CartItemList";
+import { ProceedToCheckoutButton } from "@/components/storefront/ProceedToCheckoutButton";
 import { PromoCodeForm } from "@/components/storefront/PromoCodeForm";
 import { Button } from "@/components/ui/button";
 import {
@@ -112,9 +113,7 @@ export default async function CartPage() {
         </div>
 
         <p className="text-muted-foreground text-sm">{t("shippingNote")}</p>
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link href="/checkout">{t("proceedToCheckout")}</Link>
-        </Button>
+        <ProceedToCheckoutButton label={t("proceedToCheckout")} />
       </div>
     </div>
   );
