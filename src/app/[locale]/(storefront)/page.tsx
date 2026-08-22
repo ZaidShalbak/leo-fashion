@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
+import { applySaleToProduct } from "@/lib/sales";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
 import { HomeIntro } from "@/components/storefront/HomeIntro";
@@ -34,7 +35,12 @@ async function getBestSellers() {
 
   const products = await db.product.findMany({
     where: { id: { in: productIds }, status: "active" },
-    include: { images: true, variants: true, brand: true },
+    include: {
+      images: true,
+      variants: true,
+      brand: true,
+      collections: { select: { collectionId: true } },
+    },
   });
   const productById = new Map(products.map((product) => [product.id, product]));
   // groupBy's own ordering (by units sold) is what makes this "best
@@ -48,7 +54,7 @@ async function getBestSellers() {
 export default async function HomePage() {
   const t = await getTranslations("Home");
   const locale = await getLocale();
-  const [heroBanners, collectionsWithLeadRaw, productsRaw, bestSellersRaw, brandsRaw] =
+  const [heroBanners, collectionsWithLeadRaw, productsRaw, bestSellersRaw, brandsRaw, sales] =
     await Promise.all([
     // Admin-managed banners (see /admin/hero-banners) take priority over
     // the collection-derived fallback below. Fetching every *active* row
@@ -80,7 +86,12 @@ export default async function HomePage() {
     }),
     db.product.findMany({
       where: { status: "active" },
-      include: { images: true, variants: true, brand: true },
+      include: {
+        images: true,
+        variants: true,
+        brand: true,
+        collections: { select: { collectionId: true } },
+      },
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
@@ -89,7 +100,13 @@ export default async function HomePage() {
       orderBy: { name: "asc" },
       include: { _count: { select: { products: { where: { status: "active" } } } } },
     }),
+    // Every active Sale — scope/scheduling is resolved in memory via
+    // getBestSaleForProduct, same "one place decides is-this-live"
+    // reasoning as isHeroBannerLive above; there are only ever a handful
+    // of sales running at once, so this isn't a real cost.
+    db.sale.findMany({ where: { isActive: true } }),
   ]);
+  const now = new Date();
 
   // Catalog content (collection/product/brand names & descriptions) may
   // have an admin-entered Arabic override — localize once here, right
@@ -101,20 +118,24 @@ export default async function HomePage() {
     title: localize(collection.title, collection.titleAr, locale),
     description: localizeOptional(collection.description, collection.descriptionAr, locale),
   }));
-  const products = productsRaw.map((product) => ({
-    ...product,
-    title: localize(product.title, product.titleAr, locale),
-    brand: product.brand
-      ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
-      : product.brand,
-  }));
-  const bestSellers = bestSellersRaw.map((product) => ({
-    ...product,
-    title: localize(product.title, product.titleAr, locale),
-    brand: product.brand
-      ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
-      : product.brand,
-  }));
+  const products = productsRaw
+    .map((product) => ({
+      ...product,
+      title: localize(product.title, product.titleAr, locale),
+      brand: product.brand
+        ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+        : product.brand,
+    }))
+    .map((product) => applySaleToProduct(product, sales, now));
+  const bestSellers = bestSellersRaw
+    .map((product) => ({
+      ...product,
+      title: localize(product.title, product.titleAr, locale),
+      brand: product.brand
+        ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+        : product.brand,
+    }))
+    .map((product) => applySaleToProduct(product, sales, now));
   const brands = brandsRaw.map((brand) => ({
     ...brand,
     name: localize(brand.name, brand.nameAr, locale),

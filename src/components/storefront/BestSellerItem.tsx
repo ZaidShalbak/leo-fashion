@@ -45,7 +45,11 @@ export function BestSellerItem({
             {rankLabel}
           </div>
           <h3 className="text-showcase-paper mt-2.5 mb-1 text-sm font-semibold">{product.title}</h3>
-          <PriceDisplay cents={product.basePriceCents} className="text-showcase-paper-dim text-[13px]" />
+          <PriceDisplay
+            cents={product.basePriceCents}
+            compareAtCents={product.compareAtCents ?? undefined}
+            className="text-showcase-paper-dim text-[13px]"
+          />
         </div>
       </Link>
     </motion.div>

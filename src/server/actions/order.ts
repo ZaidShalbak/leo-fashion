@@ -9,6 +9,7 @@ import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
 import { placeOrderSchema, type PlaceOrderInput } from "@/lib/validators/order";
 import { calculateSubtotalCents, effectivePriceCents } from "@/lib/cart-totals";
+import { getBestSaleForProduct, getSaleAdjustedPriceCents } from "@/lib/sales";
 import { validateDiscountCode } from "@/lib/discount";
 
 export type PlaceOrderResult = { success: false; error: string };
@@ -108,7 +109,14 @@ export async function placeOrder(
 
   const cart = await db.cart.findUnique({
     where: { userId: user.id },
-    include: { items: { include: { product: true, variant: true } } },
+    include: {
+      items: {
+        include: {
+          product: { include: { collections: { select: { collectionId: true } } } },
+          variant: true,
+        },
+      },
+    },
   });
 
   if (!cart || cart.items.length === 0) {
@@ -119,6 +127,12 @@ export async function placeOrder(
   try {
     orderId = await db.$transaction(async (tx) => {
       const orderItemsData: Prisma.OrderItemCreateManyOrderInput[] = [];
+      // Read fresh inside the transaction, same "never trust anything
+      // computed before the transaction started" posture as the discount
+      // code and delivery zone re-reads below — there's no counter to
+      // race here, but staleness-tolerance stays consistent either way.
+      const now = new Date();
+      const sales = await tx.sale.findMany({ where: { isActive: true } });
 
       for (const item of cart.items) {
         if (item.product.status !== "active") {
@@ -141,16 +155,31 @@ export async function placeOrder(
           );
         }
 
+        const originalEffective = effectivePriceCents(
+          item.product.basePriceCents,
+          item.variant.priceOverrideCents
+        );
+        const bestSale = getBestSaleForProduct(
+          sales,
+          {
+            brandId: item.product.brandId,
+            collectionIds: item.product.collections.map((c) => c.collectionId),
+          },
+          now
+        );
+        const { priceCents, compareAtCents } = getSaleAdjustedPriceCents(
+          originalEffective,
+          bestSale
+        );
+
         orderItemsData.push({
           productId: item.productId,
           variantId: item.variantId,
           titleSnapshot: item.product.title,
           size: item.variant.size,
           color: item.variant.color,
-          priceCents: effectivePriceCents(
-            item.product.basePriceCents,
-            item.variant.priceOverrideCents
-          ),
+          priceCents,
+          compareAtPriceCentsSnapshot: compareAtCents,
           quantity: item.quantity,
         });
       }
@@ -173,7 +202,7 @@ export async function placeOrder(
         const discount = await tx.discountCode.findUnique({
           where: { code: cart.appliedDiscountCode },
         });
-        const result = validateDiscountCode(discount, subtotalCents, new Date());
+        const result = validateDiscountCode(discount, subtotalCents, now);
         if (!result.valid) {
           throw new OrderPlacementError(t("discountInvalid"));
         }

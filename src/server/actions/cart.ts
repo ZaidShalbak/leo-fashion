@@ -32,7 +32,12 @@ const cartWithItemsInclude = {
   items: {
     orderBy: { createdAt: "asc" as const },
     include: {
-      product: { include: { images: { orderBy: { position: "asc" as const }, take: 1 } } },
+      product: {
+        include: {
+          images: { orderBy: { position: "asc" as const }, take: 1 },
+          collections: { select: { collectionId: true } },
+        },
+      },
       variant: true,
     },
   },

@@ -266,6 +266,7 @@
   "ProductCard": {
     "outOfStock": "Out of stock",
     "lowStock": "Only {count} left",
+    "onSale": "Sale",
     "colorCount": "{count, plural, one {# color} other {# colors}}"
   },
   "HeroCarousel": {

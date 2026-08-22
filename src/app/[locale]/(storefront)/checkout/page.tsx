@@ -7,6 +7,7 @@ import { getCurrentCart } from "@/server/actions/cart";
 import { redirect } from "@/i18n/navigation";
 import { CheckoutClient } from "@/components/storefront/CheckoutClient";
 import { calculateSubtotalCents, effectivePriceCents } from "@/lib/cart-totals";
+import { getBestSaleForProduct, getSaleAdjustedPriceCents } from "@/lib/sales";
 import { validateDiscountCode } from "@/lib/discount";
 import { localize } from "@/lib/localizedContent";
 
@@ -40,14 +41,27 @@ export default async function CheckoutPage() {
     redirect({ href: "/cart", locale });
   }
 
+  const sales = await db.sale.findMany({ where: { isActive: true } });
+  const now = new Date();
+  // Same per-line sale-adjusted price computation as the cart page, reused
+  // for both the subtotal and each summary line so they can't disagree.
+  const pricedItems = items.map((item) => ({
+    item,
+    ...getSaleAdjustedPriceCents(
+      effectivePriceCents(item.product.basePriceCents, item.variant.priceOverrideCents),
+      getBestSaleForProduct(
+        sales,
+        {
+          brandId: item.product.brandId,
+          collectionIds: item.product.collections.map((c) => c.collectionId),
+        },
+        now
+      )
+    ),
+  }));
+
   const subtotalCents = calculateSubtotalCents(
-    items.map((item) => ({
-      quantity: item.quantity,
-      priceCents: effectivePriceCents(
-        item.product.basePriceCents,
-        item.variant.priceOverrideCents
-      ),
-    }))
+    pricedItems.map(({ item, priceCents }) => ({ quantity: item.quantity, priceCents }))
   );
 
   // Read-only preview here too — no input on this page, since the code is
@@ -79,16 +93,14 @@ export default async function CheckoutPage() {
             name: zone.name,
             feeCents: zone.feeCents,
           }))}
-          summaryItems={items.map((item) => ({
+          summaryItems={pricedItems.map(({ item, priceCents, compareAtCents }) => ({
             id: item.id,
             title: localize(item.product.title, item.product.titleAr, locale),
             size: item.variant.size,
             color: item.variant.color,
             quantity: item.quantity,
-            priceCents: effectivePriceCents(
-              item.product.basePriceCents,
-              item.variant.priceOverrideCents
-            ),
+            priceCents,
+            compareAtCents,
           }))}
           subtotalCents={subtotalCents}
           discountCents={discountCents}

@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { db } from "@/server/db";
 import type { AppLocale } from "@/i18n/routing";
 import { localize, localizeOptional } from "@/lib/localizedContent";
+import { applySaleToProduct } from "@/lib/sales";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { FilterBar } from "@/components/storefront/FilterBar";
 
@@ -62,31 +63,42 @@ export default async function CollectionPage({
         ? { basePriceCents: "desc" }
         : { createdAt: "desc" };
 
-  const productsRaw = await db.product.findMany({
-    where: {
-      status: "active",
-      collections: { some: { collectionId: collection.id } },
-      ...(size || color
-        ? {
-            variants: {
-              some: {
-                ...(size ? { size } : {}),
-                ...(color ? { color } : {}),
+  const [productsRaw, sales] = await Promise.all([
+    db.product.findMany({
+      where: {
+        status: "active",
+        collections: { some: { collectionId: collection.id } },
+        ...(size || color
+          ? {
+              variants: {
+                some: {
+                  ...(size ? { size } : {}),
+                  ...(color ? { color } : {}),
+                },
               },
-            },
-          }
-        : {}),
-    },
-    include: { images: true, variants: true, brand: true },
-    orderBy,
-  });
-  const products = productsRaw.map((product) => ({
-    ...product,
-    title: localize(product.title, product.titleAr, locale),
-    brand: product.brand
-      ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
-      : product.brand,
-  }));
+            }
+          : {}),
+      },
+      include: {
+        images: true,
+        variants: true,
+        brand: true,
+        collections: { select: { collectionId: true } },
+      },
+      orderBy,
+    }),
+    db.sale.findMany({ where: { isActive: true } }),
+  ]);
+  const now = new Date();
+  const products = productsRaw
+    .map((product) => ({
+      ...product,
+      title: localize(product.title, product.titleAr, locale),
+      brand: product.brand
+        ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+        : product.brand,
+    }))
+    .map((product) => applySaleToProduct(product, sales, now));
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">

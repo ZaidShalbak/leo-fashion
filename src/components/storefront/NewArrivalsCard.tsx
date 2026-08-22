@@ -37,7 +37,11 @@ export function NewArrivalsCard({ product }: { product: ProductCardData }) {
             </span>
           )}
           <h3 className="mt-1 mb-1 text-[13px] font-semibold">{product.title}</h3>
-          <PriceDisplay cents={product.basePriceCents} className="text-showcase-ink/70 text-[13px]" />
+          <PriceDisplay
+            cents={product.basePriceCents}
+            compareAtCents={product.compareAtCents ?? undefined}
+            className="text-showcase-ink/70 text-[13px]"
+          />
         </div>
       </Link>
     </motion.div>

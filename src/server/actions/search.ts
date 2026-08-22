@@ -4,6 +4,7 @@ import { getLocale } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { localize } from "@/lib/localizedContent";
+import { getBestSaleForProduct, getSaleAdjustedPriceCents } from "@/lib/sales";
 import { searchQuerySchema } from "@/lib/validators/search";
 
 export type SearchResults = {
@@ -14,6 +15,7 @@ export type SearchResults = {
     imageUrl: string | null;
     brandName: string | null;
     priceCents: number;
+    compareAtCents: number | null;
   }[];
   brands: { id: string; slug: string; name: string }[];
   collections: { id: string; handle: string; title: string }[];
@@ -47,7 +49,7 @@ export async function searchSite(rawQuery: string): Promise<SearchResults> {
 
   const textMatch = (field: string) => ({ [field]: { contains: q, mode: "insensitive" as const } });
 
-  const [productsRaw, brandsRaw, collectionsRaw] = await Promise.all([
+  const [productsRaw, brandsRaw, collectionsRaw, sales] = await Promise.all([
     db.product.findMany({
       where: {
         status: "active",
@@ -60,7 +62,11 @@ export async function searchSite(rawQuery: string): Promise<SearchResults> {
           { collections: { some: { collection: { OR: [textMatch("title"), textMatch("titleAr")] } } } },
         ],
       },
-      include: { images: { orderBy: { position: "asc" }, take: 1 }, brand: true },
+      include: {
+        images: { orderBy: { position: "asc" }, take: 1 },
+        brand: true,
+        collections: { select: { collectionId: true } },
+      },
       orderBy: { createdAt: "desc" },
       take: PRODUCT_LIMIT,
     }),
@@ -72,17 +78,31 @@ export async function searchSite(rawQuery: string): Promise<SearchResults> {
       where: { OR: [textMatch("title"), textMatch("titleAr")] },
       take: COLLECTION_LIMIT,
     }),
+    db.sale.findMany({ where: { isActive: true } }),
   ]);
+  const now = new Date();
 
   return {
-    products: productsRaw.map((product) => ({
-      id: product.id,
-      slug: product.slug,
-      title: localize(product.title, product.titleAr, locale),
-      imageUrl: product.images[0]?.url ?? null,
-      brandName: product.brand ? localize(product.brand.name, product.brand.nameAr, locale) : null,
-      priceCents: product.basePriceCents,
-    })),
+    products: productsRaw.map((product) => {
+      const bestSale = getBestSaleForProduct(
+        sales,
+        { brandId: product.brandId, collectionIds: product.collections.map((c) => c.collectionId) },
+        now
+      );
+      const { priceCents, compareAtCents } = getSaleAdjustedPriceCents(
+        product.basePriceCents,
+        bestSale
+      );
+      return {
+        id: product.id,
+        slug: product.slug,
+        title: localize(product.title, product.titleAr, locale),
+        imageUrl: product.images[0]?.url ?? null,
+        brandName: product.brand ? localize(product.brand.name, product.brand.nameAr, locale) : null,
+        priceCents,
+        compareAtCents,
+      };
+    }),
     brands: brandsRaw.map((brand) => ({
       id: brand.id,
       slug: brand.slug,
