@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { placeOrder } from "@/server/actions/order";
 import type { PlaceOrderInput } from "@/lib/validators/order";
 import { formatPriceCents } from "./PriceDisplay";
+import { RollingText } from "./RollingText";
 
 type SavedAddress = {
   id: string;
@@ -51,6 +52,7 @@ export function CheckoutForm({
   const [selected, setSelected] = useState<string>(defaultAddress?.id ?? "new");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isHovering, setIsHovering] = useState(false);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -230,8 +232,19 @@ export function CheckoutForm({
         </p>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={isPending}>
-        {isPending ? t("placingOrder") : t("placeOrder")}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={isPending}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        {isPending ? (
+          t("placingOrder")
+        ) : (
+          <RollingText active={isHovering}>{t("placeOrder")}</RollingText>
+        )}
       </Button>
     </form>
   );

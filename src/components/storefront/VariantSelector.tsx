@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import { addToCart } from "@/server/actions/cart";
 import { formatPriceCents } from "./PriceDisplay";
+import { RollingText } from "./RollingText";
 
 /** Start/end rects (viewport-relative) for one fly-to-cart animation run. */
 type FlyRun = { id: number; start: DOMRect; end: DOMRect };
@@ -88,6 +89,7 @@ export function VariantSelector({
   >(null);
   const [justAdded, setJustAdded] = useState(false);
   const [flyRun, setFlyRun] = useState<FlyRun | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
@@ -259,6 +261,8 @@ export function VariantSelector({
         size="lg"
         disabled={isOutOfStock || isPending}
         onClick={handleAddToCart}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
         className="w-full overflow-hidden sm:w-auto"
       >
         <motion.span
@@ -274,13 +278,20 @@ export function VariantSelector({
           className="flex items-center gap-1.5"
         >
           {justAdded && !isOutOfStock && !isPending && <CheckIcon className="size-4" />}
-          {isOutOfStock
-            ? t("outOfStock")
-            : isPending
-              ? t("adding")
-              : justAdded
-                ? t("added")
-                : t("addToCart")}
+          {isOutOfStock ? (
+            t("outOfStock")
+          ) : isPending ? (
+            t("adding")
+          ) : justAdded ? (
+            t("added")
+          ) : (
+            // Rolling-hover treatment only in the plain idle state — once
+            // pending/out-of-stock/just-added, the label itself is
+            // already communicating a state change via the crossfade
+            // above, and layering a second hover animation on top of that
+            // would compete with it rather than add anything.
+            <RollingText active={isHovering}>{t("addToCart")}</RollingText>
+          )}
         </motion.span>
       </Button>
 
