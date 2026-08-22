@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -43,7 +43,6 @@ const KEN_BURNS_SCALE = 1.08;
  */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const t = useTranslations("HeroCarousel");
-  const isRtl = useLocale() === "ar";
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const count = slides.length;
@@ -142,17 +141,18 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
       {count > 1 && (
         <>
-          {/* Positioned with logical start-/end- (not left-/right-) so they
-              swap sides in RTL, and the glyphs themselves flip too — a
-              "previous" arrow should point toward the reading-start side,
-              which is visually right-to-left in Arabic, not always "‹". */}
+          {/* Positioned with logical start-/end- (not left-/right-) so the
+              buttons still swap sides in RTL, but the glyphs themselves
+              deliberately don't flip — per explicit instruction, these
+              stay "‹ prev / next ›" in both locales rather than mirroring
+              to point toward the reading-start side. */}
           <button
             type="button"
             onClick={prev}
             aria-label={t("previousSlide")}
             className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 start-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
           >
-            {isRtl ? "›" : "‹"}
+            ‹
           </button>
           <button
             type="button"
@@ -160,7 +160,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             aria-label={t("nextSlide")}
             className="bg-background/80 text-foreground hover:bg-background absolute top-1/2 end-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/carousel:opacity-100 focus-visible:opacity-100 sm:size-9"
           >
-            {isRtl ? "‹" : "›"}
+            ›
           </button>
 
           <div className="absolute inset-x-0 bottom-2 flex justify-center gap-2 sm:bottom-3">
