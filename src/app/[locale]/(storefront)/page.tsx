@@ -3,10 +3,12 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
 import { localize, localizeOptional } from "@/lib/localizedContent";
-import { CollectionCard } from "@/components/storefront/CollectionCard";
-import { ProductCard } from "@/components/storefront/ProductCard";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
+import { HomeIntro } from "@/components/storefront/HomeIntro";
+import { CategorySection } from "@/components/storefront/CategorySection";
 import { BrandsSection } from "@/components/storefront/BrandsSection";
+import { BestSellersSection } from "@/components/storefront/BestSellersSection";
+import { NewArrivalsSection } from "@/components/storefront/NewArrivalsSection";
 
 // Ranks products by total units sold across every non-cancelled order,
 // then re-fetches the top N as full ProductCardData — groupBy only
@@ -60,7 +62,7 @@ export default async function HomePage() {
     // One representative (oldest-added) active product per collection, with
     // its primary image, so the hero carousel and category tiles can show a
     // real photo instead of a plain color block — see HeroCarousel/
-    // CollectionCard.
+    // CategorySection.
     db.collection.findMany({
       orderBy: { title: "asc" },
       include: {
@@ -83,7 +85,10 @@ export default async function HomePage() {
       take: 8,
     }),
     getBestSellers(),
-    db.brand.findMany({ orderBy: { name: "asc" } }),
+    db.brand.findMany({
+      orderBy: { name: "asc" },
+      include: { _count: { select: { products: { where: { status: "active" } } } } },
+    }),
   ]);
 
   // Catalog content (collection/product/brand names & descriptions) may
@@ -113,6 +118,7 @@ export default async function HomePage() {
   const brands = brandsRaw.map((brand) => ({
     ...brand,
     name: localize(brand.name, brand.nameAr, locale),
+    itemCount: brand._count.products,
   }));
 
   const liveBannerSlides: HeroSlide[] = heroBanners
@@ -156,62 +162,18 @@ export default async function HomePage() {
           container's py-8/py-10. */}
       {heroSlides.length > 0 && <HeroCarousel slides={heroSlides} />}
 
-      <div className="mx-auto max-w-6xl space-y-12 px-4 py-8 sm:space-y-16 sm:py-10">
-        <section className="space-y-3">
-          <h1
-            className="text-2xl font-semibold tracking-tight sm:text-3xl"
-            dir="ltr"
-          >
-            {t("title")}
-          </h1>
-          <p className="text-muted-foreground max-w-xl">{t("tagline")}</p>
-        </section>
-
-        {collectionsWithLead.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-lg font-medium">{t("shopByCategory")}</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {collectionsWithLead.map((collection) => {
-                const leadImage = collection.products[0]?.product.images[0];
-                return (
-                  <CollectionCard
-                    key={collection.id}
-                    collection={collection}
-                    imageUrl={leadImage?.url}
-                    imageAlt={leadImage?.altText ?? collection.title}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        <BrandsSection brands={brands} />
-
-        {bestSellers.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-lg font-medium">{t("bestSellers")}</h2>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-              {bestSellers.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section className="space-y-4">
-          <h2 className="text-lg font-medium">{t("newArrivals")}</h2>
-          {products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">{t("noProducts")}</p>
-          )}
-        </section>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+        <HomeIntro title={t("title")} tagline={t("tagline")} />
       </div>
+
+      {/* Full-bleed "showcase" bands — outside the max-w-6xl container above,
+          same reasoning as HeroCarousel: each section owns its own
+          full-width ink/paper background rather than sitting inside a
+          padded, width-capped column. */}
+      <CategorySection collections={collectionsWithLead} />
+      <BrandsSection brands={brands} />
+      <BestSellersSection products={bestSellers.slice(0, 6)} />
+      <NewArrivalsSection products={products} />
     </>
   );
 }

@@ -4,15 +4,33 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Bebas_Neue, Archivo, Tajawal } from "next/font/google";
 
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
 // Uses the `geist` package's bundled font files (next/font/local under the
-// hood) instead of next/font/google, since fonts.googleapis.com isn't
-// reachable from this sandbox's network allowlist. Same typeface, no
-// build-time network fetch. Swap back to next/font/google if/when that
-// domain is allowed and self-hosting isn't preferred.
+// hood) instead of next/font/google for the sitewide sans/mono, since
+// fonts.googleapis.com wasn't reachable from an earlier sandbox's network
+// allowlist. Same typeface, no build-time network fetch. The homepage
+// "showcase" bands below use real next/font/google fonts instead (Google
+// Fonts is reachable from this environment) — next/font/google self-hosts
+// into .next at build time either way, so the running app never has a
+// runtime dependency on fonts.googleapis.com regardless of which one is
+// used. These three are scoped to the showcase sections only (see
+// --font-showcase-display/--font-showcase-body in globals.css) and never
+// touch --font-sans, so the rest of the site stays on Geist.
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-bebas-neue",
+});
+const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo" });
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["500", "700", "800"],
+  variable: "--font-tajawal",
+});
 
 /**
  * Root layout for the storefront's locale branch. This is a *second*,
@@ -61,7 +79,7 @@ export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
     <html
       lang={locale}
       dir={dir}
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${bebasNeue.variable} ${archivo.variable} ${tajawal.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col overflow-x-hidden">
         <NextIntlClientProvider>{props.children}</NextIntlClientProvider>

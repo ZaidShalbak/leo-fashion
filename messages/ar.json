@@ -260,7 +260,8 @@
   },
   "BrandsSection": {
     "shopByBrand": "تسوّق حسب الماركة",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}"
   },
   "ProductCard": {
     "outOfStock": "غير متوفر",
@@ -274,11 +275,20 @@
   },
   "Home": {
     "title": "Leo Fashion",
-    "tagline": "أساسيات الخزانة، الملابس الخارجية، وقطع نهاية الأسبوع السهلة — اطلب أونلاين وادفع عند الاستلام أو عبر فاتورة.",
-    "shopByCategory": "تسوّق حسب الفئة",
-    "bestSellers": "الأكثر مبيعًا",
-    "newArrivals": "وصل حديثًا",
-    "noProducts": "لا توجد منتجات متاحة بعد — تحقق لاحقًا."
+    "tagline": "أساسيات الخزانة، الملابس الخارجية، وقطع نهاية الأسبوع السهلة — اطلب أونلاين وادفع عند الاستلام أو عبر فاتورة."
+  },
+  "CategorySection": {
+    "title": "تسوق التشكيلة",
+    "subtitle": "مرتبة حسب الفئة"
+  },
+  "BestSellersSection": {
+    "title": "الأكثر مبيعاً",
+    "subtitle": "مرتبة حسب المبيعات"
+  },
+  "NewArrivalsSection": {
+    "title": "وصل حديثاً",
+    "subtitle": "وصل للتو",
+    "noProducts": "لا توجد منتجات متاحة بعد — تحقق لاحقاً."
   },
   "MobileNav": {
     "openMenu": "فتح القائمة",
