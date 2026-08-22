@@ -7,12 +7,16 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { updateCartItem, removeCartItem } from "@/server/actions/cart";
-import { effectivePriceCents } from "@/lib/cart-totals";
-import { formatPriceCents } from "./PriceDisplay";
+import { PriceDisplay } from "./PriceDisplay";
 
 export type CartLineItemData = {
   id: string;
   quantity: number;
+  // Server-computed (base-or-override price, sale-adjusted if a Sale
+  // applies — see src/lib/sales.ts) rather than derived here, so the cart
+  // page's subtotal and this line's displayed price can never disagree.
+  priceCents: number;
+  compareAtCents: number | null;
   product: {
     slug: string;
     title: string;
@@ -31,10 +35,6 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
   const t = useTranslations("CartLineItem");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const priceCents = effectivePriceCents(
-    item.product.basePriceCents,
-    item.variant.priceOverrideCents
-  );
   const image = item.product.images[0];
   const maxQuantity = Math.min(item.variant.inventoryQuantity, 20);
 
@@ -85,9 +85,13 @@ export function CartLineItem({ item }: { item: CartLineItemData }) {
               {item.variant.size} / {item.variant.color}
             </p>
           </div>
-          <p className="text-sm font-medium">
-            {formatPriceCents(priceCents * item.quantity)}
-          </p>
+          <PriceDisplay
+            cents={item.priceCents * item.quantity}
+            compareAtCents={
+              item.compareAtCents != null ? item.compareAtCents * item.quantity : undefined
+            }
+            className="text-sm font-medium"
+          />
         </div>
 
         <div className="mt-2 flex items-center gap-3">

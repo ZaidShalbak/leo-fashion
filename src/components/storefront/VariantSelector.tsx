@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import { addToCart } from "@/server/actions/cart";
-import { formatPriceCents } from "./PriceDisplay";
+import { PriceDisplay } from "./PriceDisplay";
 import { RollingText } from "./RollingText";
 
 /** Start/end rects (viewport-relative) for one fly-to-cart animation run. */
@@ -55,12 +55,19 @@ function sortSizes(sizes: string[]): string[] {
 export function VariantSelector({
   productId,
   basePriceCents,
+  compareAtCents,
   variants,
   selectedColor,
   onColorChange,
 }: {
   productId: string;
   basePriceCents: number;
+  /** Pre-sale price, when a Sale applies to the product's base price —
+   * only shown when the selected variant has no priceOverrideCents of its
+   * own (see priceCents below): a variant override opts that variant out
+   * of the visible sale strike-through rather than producing a
+   * wrong-looking discount against a price the sale never touched. */
+  compareAtCents: number | null;
   variants: Variant[];
   // Color selection is lifted to the parent (ProductDetail) so the photo
   // gallery can react to it too — everything else about selection state
@@ -104,6 +111,7 @@ export function VariantSelector({
   const isLowStock =
     !isOutOfStock && matched.inventoryQuantity <= LOW_STOCK_THRESHOLD;
   const priceCents = matched?.priceOverrideCents ?? basePriceCents;
+  const hasVariantOverride = matched?.priceOverrideCents != null;
 
   function variantFor(size: string, color: string) {
     return variants.find((v) => v.size === size && v.color === color);
@@ -195,7 +203,11 @@ export function VariantSelector({
   return (
     <div className="space-y-5" data-slot="variant-selector">
       <div className="flex items-center gap-2">
-        <p className="text-xl font-medium">{formatPriceCents(priceCents)}</p>
+        <PriceDisplay
+          cents={priceCents}
+          compareAtCents={hasVariantOverride ? undefined : (compareAtCents ?? undefined)}
+          className="text-xl font-medium"
+        />
         {isLowStock && (
           <span className="bg-destructive rounded-md px-2 py-1 text-xs font-medium text-white">
             {t("lowStock", { count: matched?.inventoryQuantity ?? 0 })}

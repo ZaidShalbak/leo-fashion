@@ -25,6 +25,13 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   // product is running low everywhere," using stock summed across every
   // variant rather than any one combination.
   const isLowStock = !isOutOfStock && totalStock <= LOW_STOCK_THRESHOLD;
+  const isOnSale = product.compareAtCents != null;
+  // Derived from the two prices for display purposes only — the actual
+  // charged amount always comes straight from basePriceCents/
+  // compareAtCents, never re-derived from this rounded percentage.
+  const salePercentOff = isOnSale
+    ? Math.round((1 - product.basePriceCents / product.compareAtCents!) * 100)
+    : null;
 
   return (
     <motion.div
@@ -58,15 +65,33 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : null}
-          {isOutOfStock && (
+          {/* Only one badge shows at a time — out of stock (can't buy it)
+              takes priority over a sale, which in turn takes priority over
+              a low-stock count. */}
+          {isOutOfStock ? (
             <span className="bg-background/90 text-foreground absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium">
               {t("outOfStock")}
             </span>
-          )}
-          {isLowStock && (
-            <span className="bg-destructive absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium text-white">
-              {t("lowStock", { count: totalStock })}
+          ) : isOnSale ? (
+            // See BrandsSection's identical badge for why dir="ltr" lives
+            // on the inner span, not a logically-positioned (start-2)
+            // outer one — putting it on the same element would pin the
+            // badge to the physical left always, undoing the mirroring
+            // the other two badges here already get for free.
+            <span className="absolute top-2 start-2">
+              <span
+                dir="ltr"
+                className="bg-primary text-primary-foreground rounded-md px-2 py-1 text-xs font-medium"
+              >
+                {t("onSale", { percent: salePercentOff! })}
+              </span>
             </span>
+          ) : (
+            isLowStock && (
+              <span className="bg-destructive absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium text-white">
+                {t("lowStock", { count: totalStock })}
+              </span>
+            )
           )}
         </div>
         <div className="mt-3 space-y-1">
@@ -77,7 +102,10 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           )}
           <h3 className="text-sm font-medium">{product.title}</h3>
           <div className="text-muted-foreground flex items-center justify-between text-sm">
-            <PriceDisplay cents={product.basePriceCents} />
+            <PriceDisplay
+              cents={product.basePriceCents}
+              compareAtCents={product.compareAtCents ?? undefined}
+            />
             {colorCount > 1 && <span>{t("colorCount", { count: colorCount })}</span>}
           </div>
         </div>

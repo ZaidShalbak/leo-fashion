@@ -4,7 +4,7 @@ import { calculateTotalCents } from "@/lib/cart-totals";
 import { getTranslator } from "@/i18n/getTranslator";
 import type { AppLocale } from "@/i18n/routing";
 import { OrderStatusBadge } from "./OrderStatusBadge";
-import { formatPriceCents } from "./PriceDisplay";
+import { formatPriceCents, PriceDisplay } from "./PriceDisplay";
 
 type OrderWithItems = Order & { items: OrderItem[] };
 
@@ -69,9 +69,15 @@ export function OrderDetail({
                   {item.size} / {item.color} × {item.quantity}
                 </span>
               </span>
-              <span className="shrink-0">
-                {formatPriceCents(item.priceCents * item.quantity)}
-              </span>
+              <PriceDisplay
+                cents={item.priceCents * item.quantity}
+                compareAtCents={
+                  item.compareAtPriceCentsSnapshot != null
+                    ? item.compareAtPriceCentsSnapshot * item.quantity
+                    : undefined
+                }
+                className="shrink-0"
+              />
             </li>
           ))}
         </ul>

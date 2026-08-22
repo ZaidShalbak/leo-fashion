@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 
 import type { ProductCardData } from "@/types/product";
@@ -14,8 +15,16 @@ export function BestSellerItem({
   product: ProductCardData;
   rank: number;
 }) {
+  const t = useTranslations("BestSellersSection");
   const primaryImage = [...product.images].sort((a, b) => a.position - b.position)[0];
   const rankLabel = String(rank).padStart(2, "0");
+  const isOnSale = product.compareAtCents != null;
+  // Display-only, derived from the two prices — never re-derived into the
+  // actual charged amount, which always comes straight from
+  // basePriceCents/compareAtCents (see ProductCard's identical comment).
+  const salePercentOff = isOnSale
+    ? Math.round((1 - product.basePriceCents / product.compareAtCents!) * 100)
+    : null;
 
   return (
     <motion.div
@@ -39,13 +48,31 @@ export function BestSellerItem({
               className="object-cover opacity-90 grayscale-[40%] contrast-[1.05] brightness-90 transition-transform duration-500 group-hover:scale-105"
             />
           ) : null}
+          {isOnSale && (
+            // Outer span carries the logical start-3 position so it mirrors
+            // with the page direction; dir="ltr" lives on the inner span
+            // only — see ProductCard's identical badge for why putting it
+            // on the positioned element itself would break the mirroring.
+            <span className="absolute top-3 start-3">
+              <span
+                dir="ltr"
+                className="bg-showcase-rivet text-showcase-paper rounded-sm px-2 py-1 text-[10px] font-semibold tracking-[0.06em] uppercase"
+              >
+                {t("onSale", { percent: salePercentOff! })}
+              </span>
+            </span>
+          )}
         </div>
         <div className="px-4 pt-4 pb-5">
           <div className="text-showcase-rivet font-showcase-display text-sm font-bold tracking-[0.04em]" dir="ltr">
             {rankLabel}
           </div>
           <h3 className="text-showcase-paper mt-2.5 mb-1 text-sm font-semibold">{product.title}</h3>
-          <PriceDisplay cents={product.basePriceCents} className="text-showcase-paper-dim text-[13px]" />
+          <PriceDisplay
+            cents={product.basePriceCents}
+            compareAtCents={product.compareAtCents ?? undefined}
+            className="text-showcase-paper-dim text-[13px]"
+          />
         </div>
       </Link>
     </motion.div>

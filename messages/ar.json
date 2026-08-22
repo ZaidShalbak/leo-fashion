@@ -261,11 +261,13 @@
   "BrandsSection": {
     "shopByBrand": "تسوّق حسب الماركة",
     "viewAll": "عرض الكل",
-    "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}"
+    "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}",
+    "onSale": "Sale −{percent}%"
   },
   "ProductCard": {
     "outOfStock": "غير متوفر",
     "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",
+    "onSale": "Sale −{percent}%",
     "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}"
   },
   "HeroCarousel": {
@@ -279,15 +281,18 @@
   },
   "CategorySection": {
     "title": "تسوق التشكيلة",
-    "subtitle": "مرتبة حسب الفئة"
+    "subtitle": "مرتبة حسب الفئة",
+    "onSale": "Sale −{percent}%"
   },
   "BestSellersSection": {
     "title": "الأكثر مبيعاً",
-    "subtitle": "مرتبة حسب المبيعات"
+    "subtitle": "مرتبة حسب المبيعات",
+    "onSale": "Sale −{percent}%"
   },
   "NewArrivalsSection": {
     "title": "وصل حديثاً",
     "subtitle": "وصل للتو",
+    "onSale": "Sale −{percent}%",
     "noProducts": "لا توجد منتجات متاحة بعد — تحقق لاحقاً."
   },
   "MobileNav": {

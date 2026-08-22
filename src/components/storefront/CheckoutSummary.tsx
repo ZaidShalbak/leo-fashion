@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { calculateTotalCents } from "@/lib/cart-totals";
-import { formatPriceCents } from "./PriceDisplay";
+import { formatPriceCents, PriceDisplay } from "./PriceDisplay";
 import type { DeliveryZoneOption } from "./CheckoutForm";
 
 type SummaryLine = {
@@ -14,6 +14,7 @@ type SummaryLine = {
   color: string;
   quantity: number;
   priceCents: number;
+  compareAtCents: number | null;
 };
 
 /**
@@ -61,9 +62,13 @@ export function CheckoutSummary({
                 quantity: item.quantity,
               })}
             </span>
-            <span className="text-foreground shrink-0">
-              {formatPriceCents(item.priceCents * item.quantity)}
-            </span>
+            <PriceDisplay
+              cents={item.priceCents * item.quantity}
+              compareAtCents={
+                item.compareAtCents != null ? item.compareAtCents * item.quantity : undefined
+              }
+              className="text-foreground shrink-0"
+            />
           </li>
         ))}
       </ul>

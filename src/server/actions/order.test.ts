@@ -72,6 +72,21 @@ let discountLimitReachedId: string; // maxRedemptions 1, already at 1
 let discountMinSubtotalId: string; // requires a huge minimum
 let discountCodeSuffix: number; // uniqueness suffix shared by all the codes above
 
+// A separate product (own brand + collection, price 1000) so Sale tests
+// never risk affecting the shared productId's variants/subtotal
+// assertions above — a SITE_WIDE-equivalent scenario is exercised via a
+// brand sale that outranks a collection sale, both matching this one
+// product, rather than a real site-wide sale that would otherwise have
+// to stay active for the whole file and pollute every other test's
+// expected subtotal.
+let salesProductId: string;
+let salesVariantId: string; // stock 5, basePriceCents 1000
+let salesBrandId: string;
+let salesCollectionId: string;
+let saleCollectionId: string; // COLLECTION scope, 20% off
+let saleBrandHighId: string; // BRAND scope, 30% off (higher than the collection sale)
+let saleExpiredId: string; // COLLECTION scope, 50% off, but endsAt is in the past
+
 const validNewAddress = {
   fullName: "Jane Doe",
   line1: "123 Main St",
@@ -87,10 +102,15 @@ async function ensureCart(userId: string) {
   );
 }
 
-async function setCartItem(userId: string, variantId: string, quantity: number) {
+async function setCartItem(
+  userId: string,
+  variantId: string,
+  quantity: number,
+  forProductId: string = productId
+) {
   const cart = await ensureCart(userId);
   await db.cartItem.create({
-    data: { cartId: cart.id, productId, variantId, quantity },
+    data: { cartId: cart.id, productId: forProductId, variantId, quantity },
   });
 }
 
@@ -205,6 +225,53 @@ beforeAll(async () => {
     data: { code: `TESTMINSUB${suffix}`, percentOff: 10, minSubtotalCents: 1_000_000 },
   });
   discountMinSubtotalId = minSubtotalCode.id;
+
+  const salesBrand = await db.brand.create({
+    data: { name: `TEST_SALES_BRAND_${suffix}`, slug: `test-sales-brand-${suffix}` },
+  });
+  salesBrandId = salesBrand.id;
+  const salesCollection = await db.collection.create({
+    data: { title: `TEST_SALES_COLLECTION_${suffix}`, handle: `test-sales-collection-${suffix}` },
+  });
+  salesCollectionId = salesCollection.id;
+
+  const salesProduct = await db.product.create({
+    data: {
+      title: "Test Product (order.test.ts, sales)",
+      slug: `test-product-order-sales-${suffix}`,
+      basePriceCents: 1000,
+      status: "active",
+      brandId: salesBrandId,
+      collections: { create: [{ collectionId: salesCollectionId }] },
+      variants: { create: [{ sku: `TEST-ORD-SALE-${suffix}`, size: "M", color: "Black", inventoryQuantity: 5 }] },
+    },
+    include: { variants: true },
+  });
+  salesProductId = salesProduct.id;
+  salesVariantId = salesProduct.variants[0]!.id;
+
+  // All created inactive — each test explicitly sets the isActive states
+  // it needs at its own start, rather than relying on residual state left
+  // by a previous test.
+  const saleCollection = await db.sale.create({
+    data: { title: "TEST collection sale", scope: "COLLECTION", collectionId: salesCollectionId, percentOff: 20, isActive: false },
+  });
+  saleCollectionId = saleCollection.id;
+  const saleBrandHigh = await db.sale.create({
+    data: { title: "TEST brand sale", scope: "BRAND", brandId: salesBrandId, percentOff: 30, isActive: false },
+  });
+  saleBrandHighId = saleBrandHigh.id;
+  const saleExpired = await db.sale.create({
+    data: {
+      title: "TEST expired sale",
+      scope: "COLLECTION",
+      collectionId: salesCollectionId,
+      percentOff: 50,
+      isActive: true,
+      endsAt: new Date("2020-01-01T00:00:00.000Z"),
+    },
+  });
+  saleExpiredId = saleExpired.id;
 });
 
 afterEach(async () => {
@@ -236,9 +303,15 @@ afterAll(async () => {
       },
     })
     .catch(() => {});
+  await db.sale
+    .deleteMany({ where: { id: { in: [saleCollectionId, saleBrandHighId, saleExpiredId] } } })
+    .catch(() => {});
   await db.user.delete({ where: { id: userA.id } }).catch(() => {});
   await db.user.delete({ where: { id: userB.id } }).catch(() => {});
   await db.product.delete({ where: { id: productId } }).catch(() => {});
+  await db.product.delete({ where: { id: salesProductId } }).catch(() => {});
+  await db.collection.delete({ where: { id: salesCollectionId } }).catch(() => {});
+  await db.brand.delete({ where: { id: salesBrandId } }).catch(() => {});
   await db.deliveryZone
     .deleteMany({ where: { id: { in: [deliveryZoneId, inactiveDeliveryZoneId] } } })
     .catch(() => {});
@@ -548,5 +621,105 @@ describe("placeOrder", () => {
     expect(order!.deliveryZoneId).toBe(deliveryZoneId);
     expect(order!.deliveryZoneNameSnapshot).toBe("TEST_ZONE_ORDER");
     expect(order!.deliveryFeeCents).toBe(1500);
+  });
+
+  it("applies a collection-scoped sale to a matching product, leaving a non-matching product unaffected", async () => {
+    await db.sale.update({ where: { id: saleCollectionId }, data: { isActive: true } });
+    await db.sale.update({ where: { id: saleBrandHighId }, data: { isActive: false } });
+
+    mockGetCurrentUser.mockResolvedValue(userA);
+    await setCartItem(userA.id, salesVariantId, 1, salesProductId); // 1000, in the sale's collection
+    await setCartItem(userA.id, variantHappyId, 1); // 2000, no brand/collection — never matches
+
+    await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [
+        { variantId: salesVariantId, quantity: 1 },
+        { variantId: variantHappyId, quantity: 1 },
+      ],
+      deliveryZoneId,
+    });
+
+    const [redirectUrl] = mockRedirect.mock.calls.at(-1)!;
+    const orderId = redirectUrl.replace("/order-confirmation/", "");
+    const order = await db.order.findUnique({ where: { id: orderId }, include: { items: true } });
+    const saleItem = order!.items.find((i) => i.variantId === salesVariantId)!;
+    const otherItem = order!.items.find((i) => i.variantId === variantHappyId)!;
+
+    expect(saleItem.priceCents).toBe(800); // 1000 - 20%
+    expect(saleItem.compareAtPriceCentsSnapshot).toBe(1000);
+    expect(otherItem.priceCents).toBe(2000);
+    expect(otherItem.compareAtPriceCentsSnapshot).toBeNull();
+    expect(order!.subtotalCents).toBe(800 + 2000);
+  });
+
+  it("when a collection sale and a higher brand sale both match, the highest percentOff wins", async () => {
+    await db.sale.update({ where: { id: saleCollectionId }, data: { isActive: true } }); // 20%
+    await db.sale.update({ where: { id: saleBrandHighId }, data: { isActive: true } }); // 30%
+
+    mockGetCurrentUser.mockResolvedValue(userA);
+    await setCartItem(userA.id, salesVariantId, 1, salesProductId);
+
+    await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [{ variantId: salesVariantId, quantity: 1 }],
+      deliveryZoneId,
+    });
+
+    const [redirectUrl] = mockRedirect.mock.calls.at(-1)!;
+    const orderId = redirectUrl.replace("/order-confirmation/", "");
+    const order = await db.order.findUnique({ where: { id: orderId }, include: { items: true } });
+
+    expect(order!.items[0]!.priceCents).toBe(700); // 1000 - 30% (brand beats collection)
+    expect(order!.items[0]!.compareAtPriceCentsSnapshot).toBe(1000);
+  });
+
+  it("ignores an inactive sale and an expired sale, even though the expired one is flagged isActive", async () => {
+    await db.sale.update({ where: { id: saleCollectionId }, data: { isActive: false } });
+    await db.sale.update({ where: { id: saleBrandHighId }, data: { isActive: false } });
+    // saleExpiredId stays isActive: true with endsAt in the past — it
+    // should still be ignored, confirming isSaleLive's date check runs
+    // even when the flag alone would say "active".
+
+    mockGetCurrentUser.mockResolvedValue(userA);
+    await setCartItem(userA.id, salesVariantId, 1, salesProductId);
+
+    await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [{ variantId: salesVariantId, quantity: 1 }],
+      deliveryZoneId,
+    });
+
+    const [redirectUrl] = mockRedirect.mock.calls.at(-1)!;
+    const orderId = redirectUrl.replace("/order-confirmation/", "");
+    const order = await db.order.findUnique({ where: { id: orderId }, include: { items: true } });
+
+    expect(order!.items[0]!.priceCents).toBe(1000);
+    expect(order!.items[0]!.compareAtPriceCentsSnapshot).toBeNull();
+  });
+
+  it("stacks a discount code on top of an already sale-reduced subtotal", async () => {
+    await db.sale.update({ where: { id: saleCollectionId }, data: { isActive: true } }); // 20%
+    await db.sale.update({ where: { id: saleBrandHighId }, data: { isActive: false } });
+
+    // userB, not userA — TESTVALID is only usable once per customer and
+    // userA already redeemed it in an earlier test.
+    mockGetCurrentUser.mockResolvedValue(userB);
+    await setCartItem(userB.id, salesVariantId, 1, salesProductId);
+    await applyDiscountToCart(userB.id, `TESTVALID${discountCodeSuffix}`);
+
+    await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [{ variantId: salesVariantId, quantity: 1 }],
+      deliveryZoneId,
+    });
+
+    const [redirectUrl] = mockRedirect.mock.calls.at(-1)!;
+    const orderId = redirectUrl.replace("/order-confirmation/", "");
+    const order = await db.order.findUnique({ where: { id: orderId }, include: { items: true } });
+
+    expect(order!.items[0]!.priceCents).toBe(800); // 1000 - 20% sale
+    expect(order!.subtotalCents).toBe(800);
+    expect(order!.discountCents).toBe(80); // 10% of the *sale-reduced* 800, not of 1000
   });
 });

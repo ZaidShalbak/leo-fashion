@@ -26,6 +26,16 @@ enum ProductStatus {
   archived
 }
 
+// Exactly one scope per Sale — which of collectionId/brandId (if either)
+// is populated is enforced in src/lib/validators/sales.ts, not a DB
+// constraint (validation shapes live in src/lib/validators only, see
+// CLAUDE.md).
+enum SaleScope {
+  SITE_WIDE
+  COLLECTION
+  BRAND
+}
+
 // Only forward transitions (or -> cancelled from pending/processing) are
 // valid. Enforce that in the server action, not just here — see CLAUDE.md.
 enum OrderStatus {
@@ -97,6 +107,7 @@ model Collection {
   updatedAt   DateTime @updatedAt
 
   products ProductCollection[]
+  sales    Sale[]
 }
 
 // Added when the store became a multi-brand marketplace (not just the
@@ -117,6 +128,7 @@ model Brand {
   updatedAt   DateTime @updatedAt
 
   products Product[]
+  sales    Sale[]
 }
 
 model Product {
@@ -423,6 +435,41 @@ model DeliveryZone {
   @@index([isActive])
 }
 
+// An automatic percentage markdown — unlike DiscountCode (below), this
+// needs no code entered at checkout: it applies directly to whatever
+// matches its scope (see src/lib/sales.ts's getBestSaleForProduct) and
+// shows as a struck-through original price on the storefront
+// (PriceDisplay's compareAtCents). Scheduling mirrors HeroBanner's
+// startsAt/endsAt window (see isSaleLive), not DiscountCode's single
+// expiresAt — a Sale, like a banner campaign, plausibly wants both a
+// start and an end date. collectionId/brandId are onDelete: Cascade,
+// not SetNull like Order's discount/delivery-zone snapshots — a Sale is
+// a live targeting rule with no historical-record purpose, so it should
+// disappear along with the Collection/Brand it targets rather than
+// become a silently-dead orphaned row in /admin/sales.
+model Sale {
+  id         String    @id @default(cuid())
+  title      String
+  scope      SaleScope
+  percentOff Int
+  isActive   Boolean   @default(true)
+
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  brandId      String?
+  brand        Brand?      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([collectionId])
+  @@index([brandId])
+}
+
 // A store-wide percentage-off promo code. Redemption accounting
 // (redemptionCount, and the one-per-customer constraint on Order above)
 // only ever advances inside placeOrder's transaction — applying a code to
@@ -473,6 +520,13 @@ model OrderItem {
   size          String
   color         String
   priceCents    Int
+  // The pre-sale price, snapshotted at order time — null when no Sale
+  // applied to this line. Same "snapshot, never re-derive" philosophy as
+  // discountCodeSnapshot/deliveryZoneNameSnapshot on Order: a later Sale
+  // edit/deactivation/deletion must never change what a past order shows
+  // or was charged. Rendered via PriceDisplay's compareAtCents, same as
+  // every live sale-price display on the storefront.
+  compareAtPriceCentsSnapshot Int?
   quantity      Int
 
   @@index([orderId])

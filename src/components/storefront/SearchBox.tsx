@@ -222,7 +222,11 @@ export function SearchBox() {
                     )}
                     <span className="block truncate">{product.title}</span>
                   </span>
-                  <PriceDisplay cents={product.priceCents} className="shrink-0 text-xs" />
+                  <PriceDisplay
+                    cents={product.priceCents}
+                    compareAtCents={product.compareAtCents ?? undefined}
+                    className="shrink-0 text-xs"
+                  />
                 </Link>
               ))}
             </div>

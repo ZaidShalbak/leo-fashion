@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { localize, localizeOptional } from "@/lib/localizedContent";
+import { applySaleToProduct } from "@/lib/sales";
 import { ProductDetail } from "@/components/storefront/ProductDetail";
 import { ProductCard } from "@/components/storefront/ProductCard";
 
@@ -50,7 +51,12 @@ async function getSimilarProducts(
         ...(brandId ? [{ brandId }] : []),
       ],
     },
-    include: { images: true, variants: true, brand: true },
+    include: {
+      images: true,
+      variants: true,
+      brand: true,
+      collections: { select: { collectionId: true } },
+    },
     orderBy: { createdAt: "desc" },
     take: 4,
   });
@@ -75,20 +81,32 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product || product.status !== "active") notFound();
 
-  const similarProductsRaw = await getSimilarProducts(
-    product.id,
-    product.brandId,
-    product.collections.map((c) => c.collectionId)
-  );
+  const [similarProductsRaw, sales] = await Promise.all([
+    getSimilarProducts(product.id, product.brandId, product.collections.map((c) => c.collectionId)),
+    db.sale.findMany({ where: { isActive: true } }),
+  ]);
+  const now = new Date();
   // Localized the same way the homepage/collection grids do — see
   // src/lib/localizedContent.ts.
-  const similarProducts = similarProductsRaw.map((p) => ({
-    ...p,
-    title: localize(p.title, p.titleAr, locale),
-    brand: p.brand
-      ? { ...p.brand, name: localize(p.brand.name, p.brand.nameAr, locale) }
-      : p.brand,
-  }));
+  const similarProducts = similarProductsRaw
+    .map((p) => ({
+      ...p,
+      title: localize(p.title, p.titleAr, locale),
+      brand: p.brand
+        ? { ...p.brand, name: localize(p.brand.name, p.brand.nameAr, locale) }
+        : p.brand,
+    }))
+    .map((p) => applySaleToProduct(p, sales, now));
+
+  const { basePriceCents, compareAtCents } = applySaleToProduct(
+    {
+      basePriceCents: product.basePriceCents,
+      brandId: product.brandId,
+      collections: product.collections,
+    },
+    sales,
+    now
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -102,7 +120,8 @@ export default async function ProductPage({ params }: Props) {
               : product.brand
           }
           description={localizeOptional(product.description, product.descriptionAr, locale)}
-          basePriceCents={product.basePriceCents}
+          basePriceCents={basePriceCents}
+          compareAtCents={compareAtCents}
           images={product.images}
           variants={product.variants}
         />

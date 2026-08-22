@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 
 import type { ProductCardData } from "@/types/product";
@@ -8,7 +9,15 @@ import { Link } from "@/i18n/navigation";
 import { PriceDisplay } from "./PriceDisplay";
 
 export function NewArrivalsCard({ product }: { product: ProductCardData }) {
+  const t = useTranslations("NewArrivalsSection");
   const primaryImage = [...product.images].sort((a, b) => a.position - b.position)[0];
+  const isOnSale = product.compareAtCents != null;
+  // Display-only, derived from the two prices — see ProductCard's
+  // identical comment for why this is never re-derived into the actual
+  // charged amount.
+  const salePercentOff = isOnSale
+    ? Math.round((1 - product.basePriceCents / product.compareAtCents!) * 100)
+    : null;
 
   return (
     <motion.div
@@ -29,6 +38,19 @@ export function NewArrivalsCard({ product }: { product: ProductCardData }) {
               className="object-cover grayscale-[30%] transition-transform duration-500 group-hover:scale-105"
             />
           ) : null}
+          {isOnSale && (
+            // Same two-layer positioning pattern as ProductCard's badge —
+            // see its comment for why dir="ltr" can't live on the
+            // logically-positioned (start-2) outer span.
+            <span className="absolute top-2 start-2">
+              <span
+                dir="ltr"
+                className="bg-showcase-rivet text-showcase-paper rounded-sm px-2 py-1 text-[10px] font-semibold tracking-[0.06em] uppercase"
+              >
+                {t("onSale", { percent: salePercentOff! })}
+              </span>
+            </span>
+          )}
         </div>
         <div className="pt-3.5">
           {product.brand && (
@@ -37,7 +59,11 @@ export function NewArrivalsCard({ product }: { product: ProductCardData }) {
             </span>
           )}
           <h3 className="mt-1 mb-1 text-[13px] font-semibold">{product.title}</h3>
-          <PriceDisplay cents={product.basePriceCents} className="text-showcase-ink/70 text-[13px]" />
+          <PriceDisplay
+            cents={product.basePriceCents}
+            compareAtCents={product.compareAtCents ?? undefined}
+            className="text-showcase-ink/70 text-[13px]"
+          />
         </div>
       </Link>
     </motion.div>

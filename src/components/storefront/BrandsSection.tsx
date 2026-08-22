@@ -10,6 +10,9 @@ export type BrandSummary = {
   slug: string;
   logoUrl: string | null;
   itemCount: number;
+  /** The best currently-live Sale's percentOff for this brand's products
+   * (src/lib/sales.ts), if any — computed once in page.tsx. */
+  salePercentOff: number | null;
 };
 
 /**
@@ -41,8 +44,25 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
           <Link
             key={brand.id}
             href={`/brands/${brand.slug}`}
-            className="border-showcase-ink group flex min-h-[110px] items-center justify-between gap-4 border-b-2 border-e-2 p-7 transition hover:bg-black/[0.03]"
+            className="border-showcase-ink group relative flex min-h-[110px] items-center justify-between gap-4 border-b-2 border-e-2 p-7 transition hover:bg-black/[0.03]"
           >
+            {brand.salePercentOff != null && (
+              // The outer span carries the logical end-3 position (so it
+              // mirrors sides correctly with the page direction); dir="ltr"
+              // has to live on the inner span instead of this one — CSS
+              // logical properties resolve against the element's *own*
+              // direction, so putting dir="ltr" directly on an
+              // end-3-positioned element would pin it to the physical
+              // right always, undoing the mirroring.
+              <span className="absolute top-3 end-3">
+                <span
+                  dir="ltr"
+                  className="bg-showcase-rivet text-showcase-paper rounded-sm px-2 py-1 text-[10px] font-semibold tracking-[0.06em] uppercase"
+                >
+                  {t("onSale", { percent: brand.salePercentOff })}
+                </span>
+              </span>
+            )}
             {brand.logoUrl ? (
               <div className="relative h-8 w-full max-w-[65%]">
                 <Image

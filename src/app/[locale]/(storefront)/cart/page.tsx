@@ -14,6 +14,7 @@ import {
   calculateTotalCents,
   effectivePriceCents,
 } from "@/lib/cart-totals";
+import { getBestSaleForProduct, getSaleAdjustedPriceCents } from "@/lib/sales";
 import { validateDiscountCode } from "@/lib/discount";
 import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 
@@ -30,12 +31,6 @@ export default async function CartPage() {
   const locale = await getLocale();
   const cart = await getCurrentCart();
   const items = cart?.items ?? [];
-  // Only the display copy (product.title) needs a localized version — the
-  // money math below reads priceCents off the same items either way.
-  const localizedItems = items.map((item) => ({
-    ...item,
-    product: { ...item.product, title: localize(item.product.title, item.product.titleAr, locale) },
-  }));
 
   if (items.length === 0) {
     return (
@@ -49,15 +44,34 @@ export default async function CartPage() {
     );
   }
 
-  const subtotalCents = calculateSubtotalCents(
-    items.map((item) => ({
-      quantity: item.quantity,
-      priceCents: effectivePriceCents(
-        item.product.basePriceCents,
-        item.variant.priceOverrideCents
-      ),
-    }))
-  );
+  const sales = await db.sale.findMany({ where: { isActive: true } });
+  const now = new Date();
+  // Only the display copy (product.title) needs a localized version. The
+  // per-line price is computed once here — base-or-override
+  // (effectivePriceCents), then sale-adjusted if a live Sale matches —
+  // and reused for both the subtotal below and what CartLineItem
+  // displays, so the two can never disagree.
+  const localizedItems = items.map((item) => {
+    const { priceCents, compareAtCents } = getSaleAdjustedPriceCents(
+      effectivePriceCents(item.product.basePriceCents, item.variant.priceOverrideCents),
+      getBestSaleForProduct(
+        sales,
+        {
+          brandId: item.product.brandId,
+          collectionIds: item.product.collections.map((c) => c.collectionId),
+        },
+        now
+      )
+    );
+    return {
+      ...item,
+      priceCents,
+      compareAtCents,
+      product: { ...item.product, title: localize(item.product.title, item.product.titleAr, locale) },
+    };
+  });
+
+  const subtotalCents = calculateSubtotalCents(localizedItems);
 
   // Preview only, same as applyDiscountCode's own re-check — the code
   // stored on the cart can go stale between visits (expired, deactivated,

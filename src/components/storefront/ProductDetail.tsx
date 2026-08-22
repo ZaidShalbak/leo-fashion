@@ -37,6 +37,7 @@ export function ProductDetail({
   brand,
   description,
   basePriceCents,
+  compareAtCents,
   images,
   variants,
 }: {
@@ -45,6 +46,8 @@ export function ProductDetail({
   brand: { name: string; slug: string } | null;
   description: string | null;
   basePriceCents: number;
+  /** Pre-sale price, when a Sale (src/lib/sales.ts) applies — null otherwise. */
+  compareAtCents: number | null;
   images: ProductImage[];
   variants: Variant[];
 }) {
@@ -83,6 +86,7 @@ export function ProductDetail({
         <VariantSelector
           productId={productId}
           basePriceCents={basePriceCents}
+          compareAtCents={compareAtCents}
           variants={variants}
           selectedColor={selectedColor}
           onColorChange={setSelectedColor}
