@@ -261,7 +261,8 @@
   "BrandsSection": {
     "shopByBrand": "تسوّق حسب الماركة",
     "viewAll": "عرض الكل",
-    "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}"
+    "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}",
+    "onSale": "تخفيض"
   },
   "ProductCard": {
     "outOfStock": "غير متوفر",
@@ -280,7 +281,8 @@
   },
   "CategorySection": {
     "title": "تسوق التشكيلة",
-    "subtitle": "مرتبة حسب الفئة"
+    "subtitle": "مرتبة حسب الفئة",
+    "onSale": "تخفيض"
   },
   "BestSellersSection": {
     "title": "الأكثر مبيعاً",

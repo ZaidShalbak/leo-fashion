@@ -261,7 +261,8 @@
   "BrandsSection": {
     "shopByBrand": "Shop by brand",
     "viewAll": "View all",
-    "itemCount": "{count, plural, one {# item} other {# items}}"
+    "itemCount": "{count, plural, one {# item} other {# items}}",
+    "onSale": "Sale"
   },
   "ProductCard": {
     "outOfStock": "Out of stock",
@@ -280,7 +281,8 @@
   },
   "CategorySection": {
     "title": "Shop the range",
-    "subtitle": "Curated by category"
+    "subtitle": "Curated by category",
+    "onSale": "Sale"
   },
   "BestSellersSection": {
     "title": "Best sellers",

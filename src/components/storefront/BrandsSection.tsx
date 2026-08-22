@@ -10,6 +10,9 @@ export type BrandSummary = {
   slug: string;
   logoUrl: string | null;
   itemCount: number;
+  /** Whether any currently-live Sale (src/lib/sales.ts) would discount
+   * this brand's products — computed once in page.tsx. */
+  hasActiveSale: boolean;
 };
 
 /**
@@ -41,8 +44,13 @@ export function BrandsSection({ brands }: { brands: BrandSummary[] }) {
           <Link
             key={brand.id}
             href={`/brands/${brand.slug}`}
-            className="border-showcase-ink group flex min-h-[110px] items-center justify-between gap-4 border-b-2 border-e-2 p-7 transition hover:bg-black/[0.03]"
+            className="border-showcase-ink group relative flex min-h-[110px] items-center justify-between gap-4 border-b-2 border-e-2 p-7 transition hover:bg-black/[0.03]"
           >
+            {brand.hasActiveSale && (
+              <span className="bg-showcase-rivet text-showcase-paper absolute top-3 end-3 rounded-sm px-2 py-1 text-[10px] font-semibold tracking-[0.06em] uppercase rtl:tracking-normal rtl:normal-case">
+                {t("onSale")}
+              </span>
+            )}
             {brand.logoUrl ? (
               <div className="relative h-8 w-full max-w-[65%]">
                 <Image

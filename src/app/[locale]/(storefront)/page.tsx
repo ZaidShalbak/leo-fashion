@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
-import { applySaleToProduct } from "@/lib/sales";
+import { applySaleToProduct, getBestSaleForProduct } from "@/lib/sales";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
 import { HomeIntro } from "@/components/storefront/HomeIntro";
@@ -117,6 +117,15 @@ export default async function HomePage() {
     ...collection,
     title: localize(collection.title, collection.titleAr, locale),
     description: localizeOptional(collection.description, collection.descriptionAr, locale),
+    // Whether *any* currently-live sale would discount this category's
+    // products — a site-wide sale counts (it touches every category), a
+    // sale scoped to this exact collection counts, a brand-scoped sale
+    // does not (it wouldn't necessarily cover every product here). Reuses
+    // the same product-scope-matching function with an empty brandId
+    // rather than a separate category-level helper.
+    hasActiveSale:
+      getBestSaleForProduct(sales, { brandId: null, collectionIds: [collection.id] }, now) !==
+      null,
   }));
   const products = productsRaw
     .map((product) => ({
@@ -140,6 +149,10 @@ export default async function HomePage() {
     ...brand,
     name: localize(brand.name, brand.nameAr, locale),
     itemCount: brand._count.products,
+    // Same reasoning as collectionsWithLead's hasActiveSale above, mirrored
+    // for brand scope: a site-wide sale or one scoped to this exact brand.
+    hasActiveSale:
+      getBestSaleForProduct(sales, { brandId: brand.id, collectionIds: [] }, now) !== null,
   }));
 
   const liveBannerSlides: HeroSlide[] = heroBanners

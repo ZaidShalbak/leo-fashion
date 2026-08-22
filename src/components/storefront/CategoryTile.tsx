@@ -9,6 +9,8 @@ export function CategoryTile({
   imageUrl,
   imageAlt,
   tall = false,
+  onSale = false,
+  onSaleLabel,
 }: {
   href: string;
   title: string;
@@ -19,6 +21,11 @@ export function CategoryTile({
    * only meaningful when there's more than one tile, so a lone tile isn't
    * stretched for no reason. */
   tall?: boolean;
+  /** Whether any currently-live Sale (src/lib/sales.ts) would discount
+   * this category's products — computed once in page.tsx, not derived
+   * here. */
+  onSale?: boolean;
+  onSaleLabel?: string;
 }) {
   return (
     <Link
@@ -35,6 +42,11 @@ export function CategoryTile({
         />
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+      {onSale && (
+        <span className="bg-showcase-rivet text-showcase-paper absolute top-4 start-4 rounded-sm px-2 py-1 text-[11px] font-semibold tracking-[0.06em] uppercase rtl:tracking-normal rtl:normal-case">
+          {onSaleLabel}
+        </span>
+      )}
       <div className="absolute inset-x-4 bottom-4 start-4 end-4">
         {/* font-bold pins an exactly-loaded weight — Tajawal has no 400,
             see HomeIntro.tsx for the full explanation. */}
