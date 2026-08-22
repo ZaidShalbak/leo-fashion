@@ -8,7 +8,7 @@ type CategorySectionCollection = {
   handle: string;
   title: string;
   description: string | null;
-  hasActiveSale: boolean;
+  salePercentOff: number | null;
   products: { product: { images: { url: string; altText: string | null }[] } }[];
 };
 
@@ -46,8 +46,11 @@ export function CategorySection({
               imageUrl={leadImage?.url}
               imageAlt={leadImage?.altText ?? collection.title}
               tall={index === 0 && tiles.length > 1}
-              onSale={collection.hasActiveSale}
-              onSaleLabel={t("onSale")}
+              onSaleLabel={
+                collection.salePercentOff != null
+                  ? t("onSale", { percent: collection.salePercentOff })
+                  : undefined
+              }
             />
           );
         })}

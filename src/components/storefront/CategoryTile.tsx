@@ -9,7 +9,6 @@ export function CategoryTile({
   imageUrl,
   imageAlt,
   tall = false,
-  onSale = false,
   onSaleLabel,
 }: {
   href: string;
@@ -21,10 +20,9 @@ export function CategoryTile({
    * only meaningful when there's more than one tile, so a lone tile isn't
    * stretched for no reason. */
   tall?: boolean;
-  /** Whether any currently-live Sale (src/lib/sales.ts) would discount
-   * this category's products — computed once in page.tsx, not derived
-   * here. */
-  onSale?: boolean;
+  /** Pre-formatted "Sale −N%" label (see CategorySection), already
+   * localized — undefined when no currently-live Sale (src/lib/sales.ts)
+   * discounts this category's products. */
   onSaleLabel?: string;
 }) {
   return (
@@ -42,9 +40,16 @@ export function CategoryTile({
         />
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-      {onSale && (
-        <span className="bg-showcase-rivet text-showcase-paper absolute top-4 start-4 rounded-sm px-2 py-1 text-[11px] font-semibold tracking-[0.06em] uppercase rtl:tracking-normal rtl:normal-case">
-          {onSaleLabel}
+      {onSaleLabel && (
+        // See BrandsSection's identical badge for why dir="ltr" lives on
+        // the inner span, not this logically-positioned outer one.
+        <span className="absolute top-4 start-4">
+          <span
+            dir="ltr"
+            className="bg-showcase-rivet text-showcase-paper rounded-sm px-2 py-1 text-[11px] font-semibold tracking-[0.06em] uppercase"
+          >
+            {onSaleLabel}
+          </span>
         </span>
       )}
       <div className="absolute inset-x-4 bottom-4 start-4 end-4">

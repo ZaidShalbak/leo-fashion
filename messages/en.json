@@ -262,12 +262,12 @@
     "shopByBrand": "Shop by brand",
     "viewAll": "View all",
     "itemCount": "{count, plural, one {# item} other {# items}}",
-    "onSale": "Sale"
+    "onSale": "Sale −{percent}%"
   },
   "ProductCard": {
     "outOfStock": "Out of stock",
     "lowStock": "Only {count} left",
-    "onSale": "Sale",
+    "onSale": "Sale −{percent}%",
     "colorCount": "{count, plural, one {# color} other {# colors}}"
   },
   "HeroCarousel": {
@@ -282,15 +282,17 @@
   "CategorySection": {
     "title": "Shop the range",
     "subtitle": "Curated by category",
-    "onSale": "Sale"
+    "onSale": "Sale −{percent}%"
   },
   "BestSellersSection": {
     "title": "Best sellers",
-    "subtitle": "Ranked by units sold"
+    "subtitle": "Ranked by units sold",
+    "onSale": "Sale −{percent}%"
   },
   "NewArrivalsSection": {
     "title": "New arrivals",
     "subtitle": "Just landed",
+    "onSale": "Sale −{percent}%",
     "noProducts": "No products are available yet — check back soon."
   },
   "MobileNav": {

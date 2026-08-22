@@ -26,6 +26,12 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   // variant rather than any one combination.
   const isLowStock = !isOutOfStock && totalStock <= LOW_STOCK_THRESHOLD;
   const isOnSale = product.compareAtCents != null;
+  // Derived from the two prices for display purposes only — the actual
+  // charged amount always comes straight from basePriceCents/
+  // compareAtCents, never re-derived from this rounded percentage.
+  const salePercentOff = isOnSale
+    ? Math.round((1 - product.basePriceCents / product.compareAtCents!) * 100)
+    : null;
 
   return (
     <motion.div
@@ -67,8 +73,18 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               {t("outOfStock")}
             </span>
           ) : isOnSale ? (
-            <span className="bg-primary text-primary-foreground absolute top-2 start-2 rounded-md px-2 py-1 text-xs font-medium">
-              {t("onSale")}
+            // See BrandsSection's identical badge for why dir="ltr" lives
+            // on the inner span, not a logically-positioned (start-2)
+            // outer one — putting it on the same element would pin the
+            // badge to the physical left always, undoing the mirroring
+            // the other two badges here already get for free.
+            <span className="absolute top-2 start-2">
+              <span
+                dir="ltr"
+                className="bg-primary text-primary-foreground rounded-md px-2 py-1 text-xs font-medium"
+              >
+                {t("onSale", { percent: salePercentOff! })}
+              </span>
             </span>
           ) : (
             isLowStock && (
