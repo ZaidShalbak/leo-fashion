@@ -268,11 +268,7 @@
     "outOfStock": "Out of stock",
     "lowStock": "Only {count} left",
     "onSale": "Sale −{percent}%",
-    "colorCount": "{count, plural, one {# color} other {# colors}}",
-    "colorAria": "Select color: {color}",
-    "sizeAria": "Select size: {size}",
-    "adding": "Adding…",
-    "added": "Added"
+    "colorCount": "{count, plural, one {# color} other {# colors}}"
   },
   "HeroCarousel": {
     "previousSlide": "Previous slide",
@@ -322,5 +318,16 @@
     "greeting": "Hi {name},",
     "trackingNumber": "Tracking number: {number}",
     "thanks": "Thank you for shopping with Leo Fashion."
+  },
+  "OrderStatusTimeline": {
+    "heading": "Order status",
+    "upcoming": "Not yet reached"
+  },
+  "QuickAddPanel": {
+    "colorAria": "Select color: {color}",
+    "sizeAria": "Select size: {size}",
+    "adding": "Adding…",
+    "added": "Added",
+    "addToCart": "Add to cart"
   }
 }

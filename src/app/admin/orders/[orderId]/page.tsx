@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 
 import { db } from "@/server/db";
 import { OrderDetail } from "@/components/storefront/OrderDetail";
+import { OrderStatusTimeline } from "@/components/storefront/OrderStatusTimeline";
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
+import { MarkOrderViewed } from "@/components/admin/MarkOrderViewed";
 
 export const metadata: Metadata = { title: "Order — Admin" };
 
@@ -23,11 +25,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
 
   return (
     <div className="grid max-w-4xl gap-10 lg:grid-cols-[1fr_320px]">
+      <MarkOrderViewed orderId={order.id} alreadyViewed={order.viewedByAdminAt !== null} />
       <div>
         <p className="text-muted-foreground mb-4 text-sm">
           Customer: {order.user.name ?? "—"} · {order.user.email}
         </p>
-        <OrderDetail order={order} />
+        <OrderStatusTimeline order={order} />
+        <div className="mt-8">
+          <OrderDetail order={order} />
+        </div>
       </div>
 
       <OrderStatusControl

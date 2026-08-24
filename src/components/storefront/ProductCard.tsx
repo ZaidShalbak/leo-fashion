@@ -2,63 +2,32 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 
 import type { ProductCardData } from "@/types/product";
 import { Link } from "@/i18n/navigation";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import { imagesForColor } from "@/lib/images";
-import { colorSwatchValue } from "@/lib/colorSwatch";
-import { cn } from "@/lib/utils";
-import { addToCart } from "@/server/actions/cart";
+import { useQuickAdd } from "@/hooks/useQuickAdd";
+import { CartFlyAnimation } from "./CartFlyAnimation";
 import { PriceDisplay } from "./PriceDisplay";
-import { CartFlyAnimation, findVisibleCartIcon, type FlyRun } from "./CartFlyAnimation";
-
-// Same canonical size order VariantSelector uses — small enough to
-// duplicate rather than couple two unrelated components through a shared
-// file (same call this codebase already made for the date-helper
-// duplication between src/lib/discount.ts and src/lib/heroBanners.ts).
-const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL"];
-function sortSizes(sizes: string[]): string[] {
-  return [...sizes].sort((a, b) => {
-    const ai = SIZE_ORDER.indexOf(a);
-    const bi = SIZE_ORDER.indexOf(b);
-    if (ai === -1 && bi === -1) return a.localeCompare(b);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
-}
-
-type QuickAddStage =
-  | { stage: "idle" }
-  | { stage: "sizes"; color: string; sizes: string[] }
-  | { stage: "adding" }
-  | { stage: "added" }
-  | { stage: "error"; message: string };
+import { QuickAddPanel } from "./QuickAddPanel";
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const t = useTranslations("ProductCard");
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [quickAdd, setQuickAdd] = useState<QuickAddStage>({ stage: "idle" });
-  const [previewColor, setPreviewColor] = useState<string | null>(null);
-  const [flyRun, setFlyRun] = useState<FlyRun | null>(null);
+  const quickAdd = useQuickAdd(product);
 
   const primaryImage = [...product.images].sort(
     (a, b) => a.position - b.position
   )[0];
-  const previewImage = previewColor
-    ? (imagesForColor(product.images, previewColor)[0] ?? primaryImage)
+  // Hover preview wins over a real click selection, which wins over the
+  // product's default photo.
+  const activeColor = quickAdd.previewColor ?? quickAdd.selectedColor;
+  const previewImage = activeColor
+    ? (imagesForColor(product.images, activeColor)[0] ?? primaryImage)
     : primaryImage;
 
-  const colors = useMemo(
-    () => [...new Set(product.variants.map((v) => v.color))],
-    [product.variants]
-  );
-  const colorCount = colors.length;
+  const colorCount = quickAdd.colors.length;
   const totalStock = product.variants.reduce(
     (sum, v) => sum + Math.max(v.inventoryQuantity, 0),
     0
@@ -76,67 +45,6 @@ export function ProductCard({ product }: { product: ProductCardData }) {
   const salePercentOff = isOnSale
     ? Math.round((1 - product.basePriceCents / product.compareAtCents!) * 100)
     : null;
-
-  function colorHasAnyStock(color: string) {
-    return product.variants.some((v) => v.color === color && v.inventoryQuantity > 0);
-  }
-
-  function resetAfter(delayMs: number) {
-    setTimeout(() => setQuickAdd({ stage: "idle" }), delayMs);
-  }
-
-  function handleQuickAdd(variantId: string, startRect: DOMRect | null) {
-    setQuickAdd({ stage: "adding" });
-    const endEl = findVisibleCartIcon();
-
-    startTransition(async () => {
-      const result = await addToCart({ productId: product.id, variantId, quantity: 1 });
-      if (result.success) {
-        // Same reasoning as VariantSelector's handleAddToCart: the
-        // header's cart count is a server-computed prop, so an explicit
-        // refresh is needed for the badge to reflect the new count.
-        router.refresh();
-        setQuickAdd({ stage: "added" });
-        resetAfter(1600);
-        if (startRect && endEl) {
-          setFlyRun({ id: Date.now(), start: startRect, end: endEl.getBoundingClientRect() });
-        }
-      } else {
-        setQuickAdd({ stage: "error", message: result.error });
-        resetAfter(2200);
-      }
-    });
-  }
-
-  function handleSelectColor(color: string, startRect: DOMRect) {
-    const inStockSizes = sortSizes(
-      product.variants
-        .filter((v) => v.color === color && v.inventoryQuantity > 0)
-        .map((v) => v.size)
-    );
-    if (inStockSizes.length === 1) {
-      const variant = product.variants.find(
-        (v) => v.color === color && v.size === inStockSizes[0]
-      )!;
-      handleQuickAdd(variant.id, startRect);
-    } else if (inStockSizes.length > 1) {
-      setQuickAdd({ stage: "sizes", color, sizes: inStockSizes });
-    }
-  }
-
-  function handleSelectSize(color: string, size: string, startRect: DOMRect) {
-    const variant = product.variants.find((v) => v.color === color && v.size === size);
-    if (!variant) return;
-    handleQuickAdd(variant.id, startRect);
-  }
-
-  function handlePointerLeaveCard() {
-    setPreviewColor(null);
-    // Only the swatch->size micro-flow resets on leave — adding/added/
-    // error already self-time-out, and resetting mid-flight there would
-    // cut the feedback (or the fly animation's start rect) short.
-    if (quickAdd.stage === "sizes") setQuickAdd({ stage: "idle" });
-  }
 
   return (
     <motion.div
@@ -158,7 +66,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       <div
         className="group relative"
         data-slot="product-card"
-        onMouseLeave={handlePointerLeaveCard}
+        onMouseLeave={quickAdd.clearPreview}
       >
         <Link href={`/products/${product.slug}`} className="block">
           <div className="bg-muted relative aspect-[4/5] overflow-hidden rounded-lg">
@@ -224,75 +132,22 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             aspect-[4/5]/inset-x-0/top-0 combination, so it visually sits
             over the photo without touching the title/price text below.
             pointer-events-none on this sizing wrapper lets clicks on the
-            photo itself fall through to the Link underneath; the inner
-            row re-enables pointer-events for its own buttons. Visible
-            without hovering below `sm` (no hover on touch), fades in on
-            hover at `sm` and up — same opacity-0/group-hover idiom
-            HeroCarousel's arrow buttons already use, just breakpoint-
-            gated. */}
+            photo itself fall through to the Link underneath; QuickAddPanel
+            re-enables pointer-events for its own buttons. Visible without
+            hovering below `sm` (no hover on touch), fades in on hover at
+            `sm` and up — same opacity-0/group-hover idiom HeroCarousel's
+            arrow buttons already use, just breakpoint-gated. */}
         {!isOutOfStock && colorCount > 0 && (
           <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[4/5]">
-            <div
-              className={cn(
-                "pointer-events-auto absolute inset-x-2 bottom-2 rounded-md bg-white/95 p-2 opacity-100 shadow-md backdrop-blur-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 dark:bg-black/85"
-              )}
-            >
-              {quickAdd.stage === "added" ? (
-                <p className="text-center text-xs font-medium">{t("added")}</p>
-              ) : quickAdd.stage === "adding" || isPending ? (
-                <p className="text-muted-foreground text-center text-xs">{t("adding")}</p>
-              ) : quickAdd.stage === "error" ? (
-                <p className="text-destructive text-center text-xs">{quickAdd.message}</p>
-              ) : quickAdd.stage === "sizes" ? (
-                <div className="flex flex-wrap justify-center gap-1">
-                  {quickAdd.sizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      aria-label={t("sizeAria", { size })}
-                      onClick={(e) => handleSelectSize(quickAdd.color, size, e.currentTarget.getBoundingClientRect())}
-                      className="border-input hover:border-primary min-w-8 rounded border bg-white px-2 py-1 text-xs transition dark:bg-black"
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-wrap justify-center gap-1.5">
-                  {colors.map((color) => {
-                    const disabled = !colorHasAnyStock(color);
-                    const swatch = colorSwatchValue(color);
-                    return (
-                      <button
-                        key={color}
-                        type="button"
-                        disabled={disabled}
-                        aria-label={t("colorAria", { color })}
-                        onMouseEnter={() => setPreviewColor(color)}
-                        onClick={(e) => handleSelectColor(color, e.currentTarget.getBoundingClientRect())}
-                        className={cn(
-                          "size-6 rounded-full border shadow-sm transition",
-                          disabled
-                            ? "cursor-not-allowed opacity-30"
-                            : "hover:scale-110 hover:ring-2 hover:ring-primary/50"
-                        )}
-                        style={swatch ? { backgroundColor: swatch } : undefined}
-                        title={color}
-                      >
-                        {!swatch && (
-                          <span className="sr-only">{color}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <QuickAddPanel
+              quickAdd={quickAdd}
+              className="absolute inset-x-2 bottom-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            />
           </div>
         )}
       </div>
 
-      <CartFlyAnimation flyRun={flyRun} onComplete={() => setFlyRun(null)} />
+      <CartFlyAnimation flyRun={quickAdd.flyRun} onComplete={quickAdd.clearFlyRun} />
     </motion.div>
   );
 }

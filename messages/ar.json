@@ -268,11 +268,7 @@
     "outOfStock": "غير متوفر",
     "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",
     "onSale": "Sale −{percent}%",
-    "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}",
-    "colorAria": "اختر اللون: {color}",
-    "sizeAria": "اختر المقاس: {size}",
-    "adding": "جارٍ الإضافة…",
-    "added": "تمت الإضافة"
+    "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}"
   },
   "HeroCarousel": {
     "previousSlide": "الشريحة السابقة",
@@ -322,5 +318,16 @@
     "greeting": "مرحباً {name}،",
     "trackingNumber": "رقم التتبع: {number}",
     "thanks": "شكراً لتسوقك من Leo Fashion."
+  },
+  "OrderStatusTimeline": {
+    "heading": "حالة الطلب",
+    "upcoming": "لم تصل بعد"
+  },
+  "QuickAddPanel": {
+    "colorAria": "اختر اللون: {color}",
+    "sizeAria": "اختر المقاس: {size}",
+    "adding": "جارٍ الإضافة…",
+    "added": "تمت الإضافة",
+    "addToCart": "أضف إلى السلة"
   }
 }

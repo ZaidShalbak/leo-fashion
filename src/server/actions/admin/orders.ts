@@ -8,6 +8,7 @@ import { logAudit } from "@/server/audit";
 import { sendCustomerOrderStatusEmail } from "@/server/email";
 import {
   updateOrderStatusSchema,
+  markOrderViewedSchema,
   ORDER_STATUS_TRANSITIONS,
   type UpdateOrderStatusInput,
 } from "@/lib/validators/order";
@@ -92,5 +93,39 @@ export async function updateOrderStatus(
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/account/orders");
   revalidatePath(`/account/orders/${orderId}`);
+  return { success: true };
+}
+
+/**
+ * Marks an order as viewed by an admin — drives the admin nav's unread
+ * count badge and the orders list's per-row "New" pill. Called from a
+ * small client-side mount effect (src/components/admin/MarkOrderViewed.tsx)
+ * on the order detail page, not directly from that page's render: Next.js
+ * only supports calling revalidatePath from a Server Function or Route
+ * Handler, not during a Server Component's render (confirmed against
+ * node_modules/next/dist/docs/01-app/03-api-reference/04-functions/revalidatePath.md).
+ */
+export async function markOrderViewed(
+  orderId: string
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = markOrderViewedSchema.safeParse({ orderId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
+  }
+
+  // Conditional updateMany, not read-then-write — same idempotent-write
+  // idiom as inventory/discount-redemption decrements elsewhere in this
+  // codebase. A second call for an already-viewed order is a safe no-op;
+  // viewedByAdminAt only ever moves from null to a timestamp, never back.
+  await db.order.updateMany({
+    where: { id: parsed.data.orderId, viewedByAdminAt: null },
+    data: { viewedByAdminAt: new Date() },
+  });
+
+  // Revalidates the whole /admin layout segment (the nav badge lives in
+  // admin/layout.tsx), which cascades to every nested admin page including
+  // the orders list and this same detail page — one call covers all three.
+  revalidatePath("/admin", "layout");
   return { success: true };
 }

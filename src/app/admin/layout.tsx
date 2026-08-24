@@ -4,7 +4,9 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 
 import { requireAdmin } from "@/server/auth";
+import { db } from "@/server/db";
 import { SignOutButton } from "@/components/storefront/SignOutButton";
+import { AdminOrdersNavBadge } from "@/components/admin/AdminOrdersNavBadge";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -36,6 +38,7 @@ export default async function AdminLayout({
   // boundary, per CLAUDE.md. Every admin page (and every admin server
   // action) checks this independently too.
   const admin = await requireAdmin();
+  const newOrderCount = await db.order.count({ where: { viewedByAdminAt: null } });
 
   return (
     <html
@@ -78,9 +81,10 @@ export default async function AdminLayout({
                   </Link>
                   <Link
                     href="/admin/orders"
-                    className="text-muted-foreground hover:text-foreground transition"
+                    className="text-muted-foreground hover:text-foreground relative transition"
                   >
                     Orders
+                    <AdminOrdersNavBadge count={newOrderCount} />
                   </Link>
                   <Link
                     href="/admin/discount-codes"

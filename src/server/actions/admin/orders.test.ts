@@ -56,7 +56,7 @@ vi.mock("@/server/email", () => ({
 }));
 
 const { db } = await import("@/server/db");
-const { updateOrderStatus } = await import("./orders");
+const { updateOrderStatus, markOrderViewed } = await import("./orders");
 const { adjustInventory } = await import("./inventory");
 
 function actAs(user: { supabaseId: string } | null) {
@@ -174,10 +174,41 @@ describe("requireAdmin gating on admin server actions", () => {
     ).rejects.toMatchObject({ url: "/" });
   });
 
+  it("also gates markOrderViewed the same way", async () => {
+    actAs(customerUser);
+    await expect(markOrderViewed(pendingOrderId)).rejects.toMatchObject({ url: "/" });
+  });
+
   it("lets an admin through", async () => {
     actAs(adminUser);
     const result = await updateOrderStatus({ orderId: pendingOrderId, status: "processing" });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("markOrderViewed", () => {
+  it("sets viewedByAdminAt on a fresh order", async () => {
+    actAs(adminUser);
+    const before = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(before!.viewedByAdminAt).toBeNull();
+
+    const result = await markOrderViewed(pendingOrderId);
+    expect(result.success).toBe(true);
+
+    const after = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(after!.viewedByAdminAt).not.toBeNull();
+  });
+
+  it("is a safe no-op when called again on an already-viewed order", async () => {
+    actAs(adminUser);
+    await markOrderViewed(pendingOrderId);
+    const firstView = await db.order.findUnique({ where: { id: pendingOrderId } });
+
+    const result = await markOrderViewed(pendingOrderId);
+    expect(result.success).toBe(true);
+
+    const secondView = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(secondView!.viewedByAdminAt).toEqual(firstView!.viewedByAdminAt);
   });
 });
 

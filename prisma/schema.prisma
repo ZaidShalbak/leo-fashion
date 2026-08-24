@@ -398,6 +398,13 @@ model Order {
   // field existed; display code treats null as "en".
   localeSnapshot String?
 
+  // Set once an admin has opened this order's detail page (see
+  // markOrderViewed in src/server/actions/admin/orders.ts). Null means
+  // "new, not yet looked at" — drives the admin nav badge count and the
+  // orders list's per-row "New" pill. Never reset back to null; there's no
+  // "mark unread" feature.
+  viewedByAdminAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
