@@ -268,7 +268,11 @@
     "outOfStock": "غير متوفر",
     "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",
     "onSale": "Sale −{percent}%",
-    "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}"
+    "colorCount": "{count, plural, zero {# لون} one {لون واحد} two {لونان} few {# ألوان} many {# لونًا} other {# لون}}",
+    "colorAria": "اختر اللون: {color}",
+    "sizeAria": "اختر المقاس: {size}",
+    "adding": "جارٍ الإضافة…",
+    "added": "تمت الإضافة"
   },
   "HeroCarousel": {
     "previousSlide": "الشريحة السابقة",
@@ -304,5 +308,19 @@
     "signIn": "تسجيل الدخول",
     "signOut": "تسجيل الخروج",
     "signingOut": "جارٍ تسجيل الخروج…"
+  },
+  "CustomerOrderStatusEmail": {
+    "subjectShipped": "تم شحن طلبك رقم {id}",
+    "subjectDelivered": "تم تسليم طلبك رقم {id}",
+    "subjectCancelled": "تم إلغاء طلبك رقم {id}",
+    "headingShipped": "طلبك في الطريق إليك!",
+    "headingDelivered": "لقد وصل طلبك!",
+    "headingCancelled": "تم إلغاء طلبك",
+    "bodyShipped": "أخبار سارة — تم شحن طلبك وهو في طريقه إليك.",
+    "bodyDelivered": "تم تسليم طلبك. نتمنى أن ينال إعجابك!",
+    "bodyCancelled": "تم إلغاء طلبك. إذا كان لديك أي استفسار، لا تتردد بالتواصل معنا.",
+    "greeting": "مرحباً {name}،",
+    "trackingNumber": "رقم التتبع: {number}",
+    "thanks": "شكراً لتسوقك من Leo Fashion."
   }
 }

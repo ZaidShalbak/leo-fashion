@@ -3,9 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import { CheckIcon, ShirtIcon } from "lucide-react";
+import { CheckIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,21 +12,7 @@ import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import { addToCart } from "@/server/actions/cart";
 import { PriceDisplay } from "./PriceDisplay";
 import { RollingText } from "./RollingText";
-
-/** Start/end rects (viewport-relative) for one fly-to-cart animation run. */
-type FlyRun = { id: number; start: DOMRect; end: DOMRect };
-
-/**
- * Picks whichever cart-icon instance is actually visible at the current
- * viewport width — CartIconLink renders once in the desktop nav and once
- * in the mobile top bar (see its own comment), and exactly one of the two
- * has a real, non-zero layout box at any given time since they're mutually
- * exclusive via Tailwind breakpoints.
- */
-function findVisibleCartIcon(): Element | null {
-  const candidates = document.querySelectorAll("[data-cart-icon-target]");
-  return Array.from(candidates).find((el) => el.getClientRects().length > 0) ?? null;
-}
+import { CartFlyAnimation, findVisibleCartIcon, type FlyRun } from "./CartFlyAnimation";
 
 type Variant = {
   id: string;
@@ -319,50 +304,7 @@ export function VariantSelector({
         </p>
       )}
 
-      {/* Fly-to-cart flourish — a small shirt icon (a clothing-store-
-          appropriate stand-in for "the item," since actually cloning the
-          product photo would need extra prop plumbing this component
-          doesn't otherwise need) travels from the button to whichever
-          cart icon is currently visible (see findVisibleCartIcon above)
-          and shrinks away as it arrives, roughly timed to land alongside
-          the badge's own pop-in (see CartIconLink). Portaled to
-          document.body (not rendered in place) since it needs to be
-          `position: fixed` relative to the viewport and fly across
-          unrelated parts of the page — the header it's flying toward
-          isn't a descendant of this component. z-[70]: above the header/
-          footer's z-50 and the WhatsApp button's z-[60] (see that
-          button's comment) so it stays visible the entire flight,
-          including over the header itself. */}
-      {flyRun &&
-        createPortal(
-          <motion.div
-            key={flyRun.id}
-            className="bg-foreground text-background pointer-events-none fixed z-[70] flex size-8 items-center justify-center rounded-full shadow-lg"
-            style={{
-              left: flyRun.start.left + flyRun.start.width / 2 - 16,
-              top: flyRun.start.top + flyRun.start.height / 2 - 16,
-            }}
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
-            animate={{
-              x:
-                flyRun.end.left +
-                flyRun.end.width / 2 -
-                (flyRun.start.left + flyRun.start.width / 2),
-              y:
-                flyRun.end.top +
-                flyRun.end.height / 2 -
-                (flyRun.start.top + flyRun.start.height / 2),
-              scale: 0.4,
-              opacity: 0,
-              rotate: 15,
-            }}
-            transition={{ duration: 1.7, ease: [0.2, 0.7, 0.2, 1] }}
-            onAnimationComplete={() => setFlyRun(null)}
-          >
-            <ShirtIcon className="size-4" />
-          </motion.div>,
-          document.body
-        )}
+      <CartFlyAnimation flyRun={flyRun} onComplete={() => setFlyRun(null)} />
     </div>
   );
 }

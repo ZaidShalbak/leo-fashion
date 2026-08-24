@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { Link } from "@/i18n/navigation";
+import { imagesForColor } from "@/lib/images";
 import { ProductGallery } from "./ProductGallery";
 import { VariantSelector } from "./VariantSelector";
 
@@ -14,22 +15,6 @@ type Variant = {
   priceOverrideCents: number | null;
   inventoryQuantity: number;
 };
-
-/**
- * Picks which photos to show for a color: exact color matches first, then
- * general (untagged) photos as a fallback, then — for a product that
- * hasn't had any photos tagged at all yet — every photo, so the gallery
- * behaves exactly as it did before this feature existed rather than going
- * blank. See ProductImage.color's comment in schema.prisma.
- */
-function imagesForColor(images: ProductImage[], color: string | undefined): ProductImage[] {
-  if (color) {
-    const matches = images.filter((image) => image.color === color);
-    if (matches.length > 0) return matches;
-  }
-  const general = images.filter((image) => image.color === null);
-  return general.length > 0 ? general : images;
-}
 
 export function ProductDetail({
   productId,
