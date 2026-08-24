@@ -29,6 +29,11 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+const mockSendAdminNewOrderEmail = vi.fn().mockResolvedValue(undefined);
+vi.mock("@/server/email", () => ({
+  sendAdminNewOrderEmail: (...args: unknown[]) => mockSendAdminNewOrderEmail(...args),
+}));
+
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("use-intl/core");
   const en = (await import("../../../messages/en.json")).default;
@@ -58,9 +63,11 @@ let variantDiscountBId: string; // stock 5, for discount tests
 let variantDiscountCId: string; // stock 5, for discount tests
 let variantDiscountDId: string; // stock 5, for discount tests
 let variantDiscountEId: string; // stock 5, for discount tests
+let variantEmailId: string; // stock 10, for admin-email-notification tests
 
-let userA: { id: string };
-let userB: { id: string };
+let userA: { id: string; email: string };
+let userB: { id: string; email: string };
+let adminUser: { id: string; email: string };
 let savedAddressId: string;
 let deliveryZoneId: string;
 let inactiveDeliveryZoneId: string;
@@ -137,6 +144,7 @@ beforeAll(async () => {
           { sku: `TEST-ORD-DISCC-${Date.now()}`, size: "XS", color: "Blue", inventoryQuantity: 5 },
           { sku: `TEST-ORD-DISCD-${Date.now()}`, size: "XS", color: "White", inventoryQuantity: 5 },
           { sku: `TEST-ORD-DISCE-${Date.now()}`, size: "XS", color: "Grey", inventoryQuantity: 5 },
+          { sku: `TEST-ORD-EMAIL-${Date.now()}`, size: "XL", color: "Black", inventoryQuantity: 10 },
         ],
       },
     },
@@ -152,6 +160,7 @@ beforeAll(async () => {
   variantDiscountCId = product.variants.find((v) => v.color === "Blue" && v.size === "XS")!.id;
   variantDiscountDId = product.variants.find((v) => v.color === "White")!.id;
   variantDiscountEId = product.variants.find((v) => v.color === "Grey")!.id;
+  variantEmailId = product.variants.find((v) => v.size === "XL")!.id;
 
   userA = await db.user.create({
     data: {
@@ -165,6 +174,14 @@ beforeAll(async () => {
       supabaseId: `test-order-user-b-${Date.now()}`,
       email: `order-test-b-${Date.now()}@example.com`,
       name: "User B",
+    },
+  });
+  adminUser = await db.user.create({
+    data: {
+      supabaseId: `test-order-admin-${Date.now()}`,
+      email: `order-test-admin-${Date.now()}@example.com`,
+      name: "Admin",
+      role: "admin",
     },
   });
 
@@ -308,6 +325,7 @@ afterAll(async () => {
     .catch(() => {});
   await db.user.delete({ where: { id: userA.id } }).catch(() => {});
   await db.user.delete({ where: { id: userB.id } }).catch(() => {});
+  await db.user.delete({ where: { id: adminUser.id } }).catch(() => {});
   await db.product.delete({ where: { id: productId } }).catch(() => {});
   await db.product.delete({ where: { id: salesProductId } }).catch(() => {});
   await db.collection.delete({ where: { id: salesCollectionId } }).catch(() => {});
@@ -427,6 +445,8 @@ describe("placeOrder", () => {
 
     const items = await db.orderItem.findMany({ where: { variantId: variantInsufficientId } });
     expect(items).toHaveLength(0); // nothing committed for this variant
+
+    expect(mockSendAdminNewOrderEmail).not.toHaveBeenCalled();
   });
 
   it("does not oversell when two users check out the last unit of the same variant concurrently", async () => {
@@ -721,5 +741,48 @@ describe("placeOrder", () => {
     expect(order!.items[0]!.priceCents).toBe(800); // 1000 - 20% sale
     expect(order!.subtotalCents).toBe(800);
     expect(order!.discountCents).toBe(80); // 10% of the *sale-reduced* 800, not of 1000
+  });
+
+  it("emails every admin user on a successful order", async () => {
+    mockGetCurrentUser.mockResolvedValue(userA);
+    await setCartItem(userA.id, variantEmailId, 1);
+
+    await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [{ variantId: variantEmailId, quantity: 1 }],
+      deliveryZoneId,
+    });
+
+    expect(mockRedirect).toHaveBeenCalledTimes(1);
+    expect(mockSendAdminNewOrderEmail).toHaveBeenCalledTimes(1);
+    const call = mockSendAdminNewOrderEmail.mock.calls[0]![0];
+    // toContain, not toEqual([adminUser.email]) — the local dev database
+    // can carry other leftover admin-role rows from unrelated test runs,
+    // and every admin should be emailed, not just this fixture's own.
+    expect(call.adminEmails).toContain(adminUser.email);
+    expect(call.customerEmail).toBe(userA.email);
+    expect(call.order.items.some((item: { variantId: string | null }) => item.variantId === variantEmailId)).toBe(true);
+  });
+
+  it("still redirects and completes the order even when the admin email send rejects", async () => {
+    mockSendAdminNewOrderEmail.mockRejectedValueOnce(new Error("Resend is down"));
+    mockGetCurrentUser.mockResolvedValue(userA);
+    await setCartItem(userA.id, variantEmailId, 1);
+
+    await placeOrder({
+      address: { newAddress: validNewAddress },
+      items: [{ variantId: variantEmailId, quantity: 1 }],
+      deliveryZoneId,
+    });
+
+    // placeOrder wraps the email-send block in its own try/catch (see
+    // src/server/actions/order.ts) as defense in depth, on top of
+    // sendEmailSafely already never throwing in the real implementation —
+    // a rejected send must never block the redirect or the already-placed
+    // order.
+    expect(mockRedirect).toHaveBeenCalledTimes(1);
+
+    const variant = await db.productVariant.findUnique({ where: { id: variantEmailId } });
+    expect(variant!.inventoryQuantity).toBe(8); // 10 - 1 (previous test) - 1 (this one) — order still committed
   });
 });

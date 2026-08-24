@@ -71,3 +71,8 @@ export const updateOrderStatusSchema = z.object({
   trackingNumber: z.string().trim().max(100).optional(),
 });
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+
+export const markOrderViewedSchema = z.object({
+  orderId: z.string().cuid(),
+});
+export type MarkOrderViewedInput = z.infer<typeof markOrderViewedSchema>;

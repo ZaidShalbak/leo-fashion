@@ -304,5 +304,30 @@
     "signIn": "Sign in",
     "signOut": "Sign out",
     "signingOut": "Signing out…"
+  },
+  "CustomerOrderStatusEmail": {
+    "subjectShipped": "Your order #{id} has shipped",
+    "subjectDelivered": "Your order #{id} has been delivered",
+    "subjectCancelled": "Your order #{id} was cancelled",
+    "headingShipped": "Your order is on its way!",
+    "headingDelivered": "Your order has arrived!",
+    "headingCancelled": "Your order was cancelled",
+    "bodyShipped": "Good news — your order has shipped and is on its way to you.",
+    "bodyDelivered": "Your order has been delivered. We hope you love it!",
+    "bodyCancelled": "Your order has been cancelled. If you have any questions, please get in touch.",
+    "greeting": "Hi {name},",
+    "trackingNumber": "Tracking number: {number}",
+    "thanks": "Thank you for shopping with Leo Fashion."
+  },
+  "OrderStatusTimeline": {
+    "heading": "Order status",
+    "upcoming": "Not yet reached"
+  },
+  "QuickAddPanel": {
+    "colorAria": "Select color: {color}",
+    "sizeAria": "Select size: {size}",
+    "adding": "Adding…",
+    "added": "Added",
+    "addToCart": "Add to cart"
   }
 }

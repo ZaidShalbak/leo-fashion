@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { Link } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
 import { OrderDetail } from "@/components/storefront/OrderDetail";
+import { OrderStatusTimeline } from "@/components/storefront/OrderStatusTimeline";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -38,7 +39,10 @@ export default async function OrderConfirmationPage({ params }: Props) {
         <p className="text-muted-foreground mt-2 text-sm">{t("subheading")}</p>
       </div>
 
-      <OrderDetail order={order} locale={locale} />
+      <OrderStatusTimeline order={order} locale={locale} />
+      <div className="mt-8">
+        <OrderDetail order={order} locale={locale} />
+      </div>
 
       <div className="mt-8 flex justify-center gap-3">
         <Button asChild variant="outline">

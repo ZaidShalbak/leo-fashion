@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { Link } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
 import { OrderDetail } from "@/components/storefront/OrderDetail";
+import { OrderStatusTimeline } from "@/components/storefront/OrderStatusTimeline";
 
 type Props = {
   params: Promise<{ orderId: string; locale: AppLocale }>;
@@ -41,7 +42,10 @@ export default async function AccountOrderDetailPage({ params }: Props) {
         {locale === "ar" ? "→" : "←"} {t("allOrders")}
       </Link>
       <div className="mt-6">
-        <OrderDetail order={order} locale={locale} />
+        <OrderStatusTimeline order={order} locale={locale} />
+        <div className="mt-8">
+          <OrderDetail order={order} locale={locale} />
+        </div>
       </div>
     </div>
   );

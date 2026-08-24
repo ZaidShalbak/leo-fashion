@@ -11,7 +11,7 @@
 // getCurrentUser's real implementation then does a REAL db lookup by that
 // id, same as production.
 import "dotenv/config";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -50,16 +50,21 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+const mockSendCustomerOrderStatusEmail = vi.fn().mockResolvedValue(undefined);
+vi.mock("@/server/email", () => ({
+  sendCustomerOrderStatusEmail: (...args: unknown[]) => mockSendCustomerOrderStatusEmail(...args),
+}));
+
 const { db } = await import("@/server/db");
-const { updateOrderStatus } = await import("./orders");
+const { updateOrderStatus, markOrderViewed } = await import("./orders");
 const { adjustInventory } = await import("./inventory");
 
 function actAs(user: { supabaseId: string } | null) {
   authState.supabaseId = user?.supabaseId ?? null;
 }
 
-let adminUser: { id: string; supabaseId: string };
-let customerUser: { id: string; supabaseId: string };
+let adminUser: { id: string; supabaseId: string; email: string };
+let customerUser: { id: string; supabaseId: string; email: string };
 let productId: string;
 let variantId: string;
 let pendingOrderId: string;
@@ -127,8 +132,20 @@ beforeAll(async () => {
   pendingOrderId = order.id;
 });
 
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
 afterAll(async () => {
   await db.order.deleteMany({ where: { userId: { in: [adminUser.id, customerUser.id] } } });
+  // updateOrderStatus writes an AuditLog row (actorUserId: adminUser.id) on
+  // every call in this file — AuditLog.actorUserId has no onDelete (see
+  // schema.prisma), so it defaults to Restrict. Without deleting these
+  // first, db.user.delete below always throws P2003, gets silently
+  // swallowed by .catch(() => {}), and adminUser is never actually
+  // removed — the same bug CLAUDE.md documents fixing in prisma/seed.ts,
+  // just recurring here on every test run instead of once.
+  await db.auditLog.deleteMany({ where: { actorUserId: adminUser.id } });
   await db.user.delete({ where: { id: adminUser.id } }).catch(() => {});
   await db.user.delete({ where: { id: customerUser.id } }).catch(() => {});
   await db.product.delete({ where: { id: productId } }).catch(() => {});
@@ -157,10 +174,41 @@ describe("requireAdmin gating on admin server actions", () => {
     ).rejects.toMatchObject({ url: "/" });
   });
 
+  it("also gates markOrderViewed the same way", async () => {
+    actAs(customerUser);
+    await expect(markOrderViewed(pendingOrderId)).rejects.toMatchObject({ url: "/" });
+  });
+
   it("lets an admin through", async () => {
     actAs(adminUser);
     const result = await updateOrderStatus({ orderId: pendingOrderId, status: "processing" });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("markOrderViewed", () => {
+  it("sets viewedByAdminAt on a fresh order", async () => {
+    actAs(adminUser);
+    const before = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(before!.viewedByAdminAt).toBeNull();
+
+    const result = await markOrderViewed(pendingOrderId);
+    expect(result.success).toBe(true);
+
+    const after = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(after!.viewedByAdminAt).not.toBeNull();
+  });
+
+  it("is a safe no-op when called again on an already-viewed order", async () => {
+    actAs(adminUser);
+    await markOrderViewed(pendingOrderId);
+    const firstView = await db.order.findUnique({ where: { id: pendingOrderId } });
+
+    const result = await markOrderViewed(pendingOrderId);
+    expect(result.success).toBe(true);
+
+    const secondView = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(secondView!.viewedByAdminAt).toEqual(firstView!.viewedByAdminAt);
   });
 });
 
@@ -215,5 +263,58 @@ describe("order status transitions", () => {
 
     const order = await db.order.findUnique({ where: { id: pendingOrderId } });
     expect(order!.trackingNumber).toBe("1Z999AA10123456784");
+  });
+});
+
+describe("customer order-status email notifications", () => {
+  it("does not email the customer for a pending -> processing transition", async () => {
+    actAs(adminUser);
+    await db.order.update({ where: { id: pendingOrderId }, data: { status: "pending" } });
+
+    const result = await updateOrderStatus({ orderId: pendingOrderId, status: "processing" });
+    expect(result.success).toBe(true);
+    expect(mockSendCustomerOrderStatusEmail).not.toHaveBeenCalled();
+  });
+
+  it("emails the customer when a transition lands on shipped", async () => {
+    actAs(adminUser);
+    await db.order.update({ where: { id: pendingOrderId }, data: { status: "processing" } });
+
+    const result = await updateOrderStatus({ orderId: pendingOrderId, status: "shipped" });
+    expect(result.success).toBe(true);
+    expect(mockSendCustomerOrderStatusEmail).toHaveBeenCalledTimes(1);
+    const call = mockSendCustomerOrderStatusEmail.mock.calls[0]![0];
+    expect(call.customerEmail).toBe(customerUser.email);
+    expect(call.order.status).toBe("shipped");
+    expect(call.locale).toBe("en"); // no localeSnapshot on this fixture order — falls back to "en"
+  });
+
+  it("does not re-send when resubmitting the same status to attach a tracking number", async () => {
+    actAs(adminUser);
+    await db.order.update({ where: { id: pendingOrderId }, data: { status: "shipped" } });
+
+    const result = await updateOrderStatus({
+      orderId: pendingOrderId,
+      status: "shipped",
+      trackingNumber: "1Z999AA10123456999",
+    });
+    expect(result.success).toBe(true);
+    expect(mockSendCustomerOrderStatusEmail).not.toHaveBeenCalled();
+  });
+
+  it("still completes the status update even when the customer email send rejects", async () => {
+    mockSendCustomerOrderStatusEmail.mockRejectedValueOnce(new Error("Resend is down"));
+    actAs(adminUser);
+    await db.order.update({ where: { id: pendingOrderId }, data: { status: "processing" } });
+
+    const result = await updateOrderStatus({ orderId: pendingOrderId, status: "shipped" });
+    // updateOrderStatus wraps the send in its own try/catch as defense in
+    // depth (on top of sendEmailSafely never throwing in the real
+    // implementation) — a rejected send must never block the status
+    // update from completing.
+    expect(result).toEqual({ success: true });
+
+    const order = await db.order.findUnique({ where: { id: pendingOrderId } });
+    expect(order!.status).toBe("shipped"); // status write already committed before the send
   });
 });

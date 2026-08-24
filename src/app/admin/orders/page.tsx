@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/storefront/OrderStatusBadge";
 import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 import { OrderStatusFilter } from "@/components/admin/OrderStatusFilter";
@@ -59,6 +60,11 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 <Link href={`/admin/orders/${order.id}`} className="hover:underline">
                   #{order.id.slice(-8).toUpperCase()}
                 </Link>
+                {order.viewedByAdminAt === null && (
+                  <Badge variant="destructive" className="ms-2 animate-pulse">
+                    New
+                  </Badge>
+                )}
               </TableCell>
               <TableCell>{order.user.name ?? order.user.email}</TableCell>
               <TableCell>

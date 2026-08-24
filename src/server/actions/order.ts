@@ -2,15 +2,17 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
+import { sendAdminNewOrderEmail } from "@/server/email";
 import { placeOrderSchema, type PlaceOrderInput } from "@/lib/validators/order";
 import { calculateSubtotalCents, effectivePriceCents } from "@/lib/cart-totals";
 import { getBestSaleForProduct, getSaleAdjustedPriceCents } from "@/lib/sales";
 import { validateDiscountCode } from "@/lib/discount";
+import type { AppLocale } from "@/i18n/routing";
 
 export type PlaceOrderResult = { success: false; error: string };
 
@@ -40,6 +42,7 @@ export async function placeOrder(
   input: PlaceOrderInput
 ): Promise<PlaceOrderResult> {
   const t = await getTranslations("PlaceOrder");
+  const locale = (await getLocale()) as AppLocale;
 
   const user = await getCurrentUser();
   if (!user) {
@@ -263,6 +266,7 @@ export async function placeOrder(
             deliveryZoneId: deliveryZone.id,
             deliveryZoneNameSnapshot: deliveryZone.name,
             deliveryFeeCents: deliveryZone.feeCents,
+            localeSnapshot: locale,
             notes: parsed.data.notes ?? null,
             ...shipping,
             items: { createMany: { data: orderItemsData } },
@@ -297,6 +301,31 @@ export async function placeOrder(
       return { success: false, error: error.message };
     }
     throw error;
+  }
+
+  // Fired after the transaction has committed — re-fetched fresh rather
+  // than threading transaction-local consts back out. sendEmailSafely
+  // (src/server/email.ts) already never throws, but this is wrapped in its
+  // own try/catch too, as defense in depth: nothing about this block may
+  // ever roll back the already-placed order or block the redirect below.
+  try {
+    const createdOrder = await db.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+    const adminEmails = (
+      await db.user.findMany({ where: { role: "admin" }, select: { email: true } })
+    ).map((admin) => admin.email);
+    if (createdOrder) {
+      await sendAdminNewOrderEmail({
+        order: createdOrder,
+        adminEmails,
+        customerName: user.name ?? user.email,
+        customerEmail: user.email,
+      });
+    }
+  } catch (error) {
+    console.error("[order] Failed to send admin new-order email:", error);
   }
 
   revalidatePath("/cart");
