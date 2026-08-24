@@ -138,6 +138,14 @@ afterEach(() => {
 
 afterAll(async () => {
   await db.order.deleteMany({ where: { userId: { in: [adminUser.id, customerUser.id] } } });
+  // updateOrderStatus writes an AuditLog row (actorUserId: adminUser.id) on
+  // every call in this file — AuditLog.actorUserId has no onDelete (see
+  // schema.prisma), so it defaults to Restrict. Without deleting these
+  // first, db.user.delete below always throws P2003, gets silently
+  // swallowed by .catch(() => {}), and adminUser is never actually
+  // removed — the same bug CLAUDE.md documents fixing in prisma/seed.ts,
+  // just recurring here on every test run instead of once.
+  await db.auditLog.deleteMany({ where: { actorUserId: adminUser.id } });
   await db.user.delete({ where: { id: adminUser.id } }).catch(() => {});
   await db.user.delete({ where: { id: customerUser.id } }).catch(() => {});
   await db.product.delete({ where: { id: productId } }).catch(() => {});

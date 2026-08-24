@@ -57,6 +57,14 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.heroBanner.deleteMany({ where: { id: { in: [bannerAId, bannerBId, bannerCId] } } });
+  // The hero-banner actions under test each write an AuditLog row
+  // (actorUserId: admin.id) — AuditLog.actorUserId has no onDelete (see
+  // schema.prisma), so it defaults to Restrict. Without deleting these
+  // first, db.user.delete below always throws P2003, gets silently
+  // swallowed by .catch(() => {}), and admin is never actually removed —
+  // the same bug CLAUDE.md documents fixing in prisma/seed.ts, just
+  // recurring here on every test run instead of once.
+  await db.auditLog.deleteMany({ where: { actorUserId: admin.id } });
   await db.user.delete({ where: { id: admin.id } }).catch(() => {});
   await db.$disconnect();
 });
