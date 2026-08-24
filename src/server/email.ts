@@ -11,7 +11,11 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 // Sandbox default only ever delivers to the Resend account's own verified
 // address — real customer/admin delivery needs a verified sending domain in
 // EMAIL_FROM (see .env.example). Local dev keeps using the sandbox address.
-const FROM = process.env.EMAIL_FROM ?? "Leo Fashion <onboarding@resend.dev>";
+// `|| `, not `??` — an EMAIL_FROM= line left blank in .env (the documented
+// "no domain yet" setup) reads as an empty string, not undefined, and `??`
+// only falls back on null/undefined. An empty string reached Resend as a
+// literal `from: ""` and got rejected with "The domain is invalid".
+const FROM = process.env.EMAIL_FROM || "Leo Fashion <onboarding@resend.dev>";
 
 export type OrderWithItems = Order & { items: OrderItem[] };
 
@@ -49,11 +53,17 @@ export async function sendAdminNewOrderEmail(input: {
   const { order, adminEmails, customerName, customerEmail } = input;
   if (adminEmails.length === 0) return;
 
-  await sendEmailSafely({
-    to: adminEmails,
-    subject: `New order #${order.id.slice(-8).toUpperCase()} — ${customerName}`,
-    react: AdminNewOrderEmail({ order, customerName, customerEmail }),
-  });
+  const subject = `New order #${order.id.slice(-8).toUpperCase()} — ${customerName}`;
+  const react = AdminNewOrderEmail({ order, customerName, customerEmail });
+
+  // One send per admin, not one send with every admin in `to` — Resend
+  // validates every recipient in a single call and rejects the whole send
+  // if even one address is malformed/unroutable, which would otherwise
+  // mean a single stale admin address (e.g. a leftover placeholder) silently
+  // blocks the notification for every other admin too. sendEmailSafely
+  // already isolates failures per call, so one bad address here only ever
+  // costs that one admin their email, never the rest.
+  await Promise.all(adminEmails.map((to) => sendEmailSafely({ to: [to], subject, react })));
 }
 
 export async function sendCustomerOrderStatusEmail(input: {

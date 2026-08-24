@@ -92,4 +92,27 @@ describe("sendEmailSafely (via sendAdminNewOrderEmail)", () => {
     ).resolves.toBeUndefined();
     expect(mockSend).not.toHaveBeenCalled();
   });
+
+  it("sends to every admin independently, so one bad address doesn't block the others", async () => {
+    // Discovered via real Resend testing: a single call with every admin
+    // crammed into one `to` array gets the *entire* send rejected by
+    // Resend if even one address is malformed — meaning admins with a
+    // perfectly valid address would silently get nothing too. Fixed by
+    // sending one call per admin; this test locks that in.
+    mockSend
+      .mockResolvedValueOnce({ data: null, error: { message: "The domain is invalid" } })
+      .mockResolvedValueOnce({ data: { id: "abc123" }, error: null });
+    const { sendAdminNewOrderEmail } = await import("./email");
+
+    await sendAdminNewOrderEmail({
+      order,
+      adminEmails: ["stale-admin@clothing-store.test", "real-admin@example.com"],
+      customerName: "Jane",
+      customerEmail: "jane@example.com",
+    });
+
+    expect(mockSend).toHaveBeenCalledTimes(2);
+    const recipients = mockSend.mock.calls.map((call) => call[0].to);
+    expect(recipients).toEqual([["stale-admin@clothing-store.test"], ["real-admin@example.com"]]);
+  });
 });
