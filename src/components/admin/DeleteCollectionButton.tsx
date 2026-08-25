@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { deleteCollection } from "@/server/actions/admin/collections";
+import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 
 export function DeleteCollectionButton({
   collectionId,
@@ -16,17 +17,24 @@ export function DeleteCollectionButton({
   productCount: number;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleDelete() {
-    const warning =
+  async function handleDelete() {
+    const description =
       productCount > 0
-        ? `Delete "${collectionTitle}"? ${productCount} product${
+        ? `${productCount} product${
             productCount === 1 ? "" : "s"
           } will lose this category (they won't be deleted).`
-        : `Delete "${collectionTitle}"? This can't be undone.`;
-    if (!window.confirm(warning)) return;
+        : "This can't be undone.";
+    const confirmed = await confirm({
+      title: `Delete "${collectionTitle}"?`,
+      description,
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setError(null);
     startTransition(async () => {

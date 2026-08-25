@@ -56,7 +56,10 @@
     "notes": "Order notes (optional)",
     "notesPlaceholder": "Delivery instructions, preferred contact time, etc.",
     "placingOrder": "Placing order…",
-    "placeOrder": "Place order"
+    "placeOrder": "Place order",
+    "confirmPlaceOrderTitle": "Place this order?",
+    "confirmPlaceOrderDescription": "No payment is collected now — this places the order for invoice/pay-on-delivery fulfillment.",
+    "cancel": "Cancel"
   },
   "Checkout": {
     "title": "Checkout",
@@ -199,7 +202,8 @@
     "proceedToCheckout": "Proceed to checkout",
     "clearCart": "Clear cart",
     "clearingCart": "Clearing…",
-    "clearCartConfirm": "Remove all items from your cart?"
+    "clearCartConfirm": "Remove all items from your cart?",
+    "cancel": "Cancel"
   },
   "OrderConfirmation": {
     "metaTitle": "Order confirmed",

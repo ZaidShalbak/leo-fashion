@@ -13,6 +13,7 @@ import { SocialLinks } from "@/components/storefront/SocialLinks";
 import { SearchBox } from "@/components/storefront/SearchBox";
 import { LeoFashionLogo } from "@/components/storefront/Logo";
 import { WhatsAppButton } from "@/components/storefront/WhatsAppButton";
+import { ConfirmDialogProvider } from "@/components/providers/ConfirmDialogProvider";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -63,6 +64,7 @@ export default async function StorefrontLayout({
   }));
 
   return (
+    <ConfirmDialogProvider>
     <div className="flex min-h-full flex-col">
       <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
@@ -125,5 +127,6 @@ export default async function StorefrontLayout({
       </footer>
       <WhatsAppButton />
     </div>
+    </ConfirmDialogProvider>
   );
 }

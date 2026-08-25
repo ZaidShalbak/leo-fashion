@@ -7,6 +7,7 @@ import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { reorderHeroBanners, deleteHeroBanner } from "@/server/actions/admin/heroBanners";
+import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 
 type HeroBannerRow = {
   id: string;
@@ -35,6 +36,7 @@ function sameOrder(a: HeroBannerRow[], b: HeroBannerRow[]): boolean {
  * from it.
  */
 export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] }) {
+  const confirm = useConfirm();
   const [items, setItems] = useState(banners);
   const [savedItems, setSavedItems] = useState(banners);
   const [error, setError] = useState<string | null>(null);
@@ -82,8 +84,14 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
     setItems(savedItems);
   }
 
-  function handleDelete(id: string, headline: string | null) {
-    if (!window.confirm(`Delete "${headline ?? "this banner"}"? This can't be undone.`)) return;
+  async function handleDelete(id: string, headline: string | null) {
+    const confirmed = await confirm({
+      title: `Delete "${headline ?? "this banner"}"?`,
+      description: "This can't be undone.",
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteHeroBanner({ id });

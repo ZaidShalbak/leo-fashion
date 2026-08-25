@@ -19,6 +19,7 @@ import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 import { ProductStatusToggle } from "@/components/admin/ProductStatusToggle";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { duplicateProduct, deleteProduct } from "@/server/actions/admin/products";
+import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 
 const STATUS_VARIANT = {
   draft: "outline",
@@ -36,6 +37,7 @@ type ProductRow = Product & { variants: ProductVariant[] };
  */
 export function AdminProductsTable({ products }: { products: ProductRow[] }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -56,8 +58,15 @@ export function AdminProductsTable({ products }: { products: ProductRow[] }) {
     });
   }
 
-  function handleBulkDuplicate() {
+  async function handleBulkDuplicate() {
     const ids = [...selectedIds];
+    const confirmed = await confirm({
+      title: `Duplicate ${ids.length} product${ids.length === 1 ? "" : "s"}?`,
+      description: "Each copy starts as a draft with 0 stock — restock and publish them once ready.",
+      confirmLabel: "Duplicate",
+    });
+    if (!confirmed) return;
+
     setError(null);
     startTransition(async () => {
       const results = await Promise.all(
@@ -72,9 +81,15 @@ export function AdminProductsTable({ products }: { products: ProductRow[] }) {
     });
   }
 
-  function handleBulkDelete() {
+  async function handleBulkDelete() {
     const ids = [...selectedIds];
-    if (!window.confirm(`Delete ${ids.length} product(s)? This can't be undone.`)) return;
+    const confirmed = await confirm({
+      title: `Delete ${ids.length} product${ids.length === 1 ? "" : "s"}?`,
+      description: "This can't be undone.",
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setError(null);
     startTransition(async () => {
