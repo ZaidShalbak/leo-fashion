@@ -54,7 +54,7 @@ vi.mock("next-intl/server", async () => {
 });
 
 const { db } = await import("@/server/db");
-const { addToCart, updateCartItem, removeCartItem, getCurrentCart } =
+const { addToCart, updateCartItem, removeCartItem, clearCart, getCurrentCart } =
   await import("./cart");
 
 let productId: string;
@@ -190,5 +190,24 @@ describe("updateCartItem / removeCartItem", () => {
 
     const remaining = await db.cartItem.findUnique({ where: { id: item.id } });
     expect(remaining).toBeNull();
+  });
+});
+
+describe("clearCart", () => {
+  it("removes every item from the caller's cart", async () => {
+    await addToCart({ productId, variantId: inStockVariantId, quantity: 1 });
+    const cart = await getCurrentCart();
+    expect(cart!.items.length).toBeGreaterThan(0);
+
+    const result = await clearCart();
+    expect(result.success).toBe(true);
+
+    const cleared = await getCurrentCart();
+    expect(cleared!.items).toHaveLength(0);
+  });
+
+  it("is a safe no-op when the cart is already empty", async () => {
+    const result = await clearCart();
+    expect(result.success).toBe(true);
   });
 });

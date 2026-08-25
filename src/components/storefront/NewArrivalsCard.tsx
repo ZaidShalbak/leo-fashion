@@ -12,9 +12,16 @@ import { CartFlyAnimation } from "./CartFlyAnimation";
 import { PriceDisplay } from "./PriceDisplay";
 import { QuickAddPanel } from "./QuickAddPanel";
 
-export function NewArrivalsCard({ product }: { product: ProductCardData }) {
+export function NewArrivalsCard({
+  product,
+  cartQuantityByVariant,
+}: {
+  product: ProductCardData;
+  /** Variant id -> quantity already in the cart — see useQuickAdd. */
+  cartQuantityByVariant?: Record<string, number>;
+}) {
   const t = useTranslations("NewArrivalsSection");
-  const quickAdd = useQuickAdd(product);
+  const quickAdd = useQuickAdd(product, cartQuantityByVariant);
 
   const primaryImage = [...product.images].sort((a, b) => a.position - b.position)[0];
   const activeColor = quickAdd.previewColor ?? quickAdd.selectedColor;

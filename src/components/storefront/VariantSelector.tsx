@@ -44,6 +44,7 @@ export function VariantSelector({
   variants,
   selectedColor,
   onColorChange,
+  cartQuantityByVariant = {},
 }: {
   productId: string;
   basePriceCents: number;
@@ -60,6 +61,12 @@ export function VariantSelector({
   // component, since only color affects which photos show.
   selectedColor: string;
   onColorChange: (color: string) => void;
+  /** Variant id -> quantity already in the cart (src/server/actions/cart.ts's
+   * getCartQuantityByVariant) — lets the Add to cart button disable itself
+   * with a clear reason once the cart already holds all available stock
+   * for the selected variant, instead of letting another click silently
+   * no-op. */
+  cartQuantityByVariant?: Record<string, number>;
 }) {
   const t = useTranslations("VariantSelector");
   const sizes = useMemo(
@@ -89,6 +96,12 @@ export function VariantSelector({
     (v) => v.size === selectedSize && v.color === selectedColor
   );
   const isOutOfStock = !matched || matched.inventoryQuantity <= 0;
+  // Distinct from isOutOfStock: real stock exists, but the cart already
+  // holds all of it — a further click would either no-op or (once the
+  // cart page's own cap kicks in) silently add nothing.
+  const inCartQuantity = matched ? (cartQuantityByVariant[matched.id] ?? 0) : 0;
+  const isMaxInCart =
+    !isOutOfStock && !!matched && matched.inventoryQuantity - inCartQuantity <= 0;
   // Tied to the currently selected size+color, not the product as a whole
   // — matches ProductCard's grid-level badge in spirit, but here there's
   // an actual selected variant to be precise about, so no need to fall
@@ -256,7 +269,7 @@ export function VariantSelector({
         ref={addButtonRef}
         type="button"
         size="lg"
-        disabled={isOutOfStock || isPending}
+        disabled={isOutOfStock || isMaxInCart || isPending}
         onClick={handleAddToCart}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
@@ -268,7 +281,17 @@ export function VariantSelector({
           // change, without needing AnimatePresence's coordinated exit-
           // then-enter sequencing (mode="wait"), which is unnecessary
           // complexity for a single-line label swap like this one.
-          key={isOutOfStock ? "out" : isPending ? "adding" : justAdded ? "added" : "idle"}
+          key={
+            isOutOfStock
+              ? "out"
+              : isMaxInCart
+                ? "max"
+                : isPending
+                  ? "adding"
+                  : justAdded
+                    ? "added"
+                    : "idle"
+          }
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15 }}
@@ -277,6 +300,8 @@ export function VariantSelector({
           {justAdded && !isOutOfStock && !isPending && <CheckIcon className="size-4" />}
           {isOutOfStock ? (
             t("outOfStock")
+          ) : isMaxInCart ? (
+            t("maxInCart")
           ) : isPending ? (
             t("adding")
           ) : justAdded ? (

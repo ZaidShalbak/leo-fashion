@@ -13,9 +13,16 @@ import { CartFlyAnimation } from "./CartFlyAnimation";
 import { PriceDisplay } from "./PriceDisplay";
 import { QuickAddPanel } from "./QuickAddPanel";
 
-export function ProductCard({ product }: { product: ProductCardData }) {
+export function ProductCard({
+  product,
+  cartQuantityByVariant,
+}: {
+  product: ProductCardData;
+  /** Variant id -> quantity already in the cart — see useQuickAdd. */
+  cartQuantityByVariant?: Record<string, number>;
+}) {
   const t = useTranslations("ProductCard");
-  const quickAdd = useQuickAdd(product);
+  const quickAdd = useQuickAdd(product, cartQuantityByVariant);
 
   const primaryImage = [...product.images].sort(
     (a, b) => a.position - b.position

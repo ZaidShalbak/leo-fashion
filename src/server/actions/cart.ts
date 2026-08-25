@@ -108,6 +108,19 @@ async function getOrCreateCart(): Promise<Cart> {
 }
 
 /**
+ * Variant id -> quantity already sitting in the caller's cart. Used by
+ * product-listing pages to tell quick-add UIs (useQuickAdd, VariantSelector)
+ * how much headroom is left before hitting stock, so "Add to cart" can be
+ * disabled with a clear reason instead of silently no-op-ing when the cart
+ * already holds the maximum available quantity for that variant.
+ */
+export async function getCartQuantityByVariant(): Promise<Record<string, number>> {
+  const cart = await getCurrentCart();
+  if (!cart) return {};
+  return Object.fromEntries(cart.items.map((item) => [item.variantId, item.quantity]));
+}
+
+/**
  * Adds a quantity of a product variant to the current cart. Re-reads the
  * variant (status, stock) from the database rather than trusting anything
  * about it from the client beyond which variant was picked — the request
@@ -206,6 +219,17 @@ export async function updateCartItem(
     where: { id: item.id },
     data: { quantity: cappedQuantity },
   });
+
+  revalidatePath("/cart");
+  return { success: true };
+}
+
+/** Empties the caller's entire cart in one action — used by the "Clear cart" button. */
+export async function clearCart(): Promise<CartMutationResult> {
+  const cart = await getCurrentCart();
+  if (!cart) return { success: true }; // nothing to clear
+
+  await db.cartItem.deleteMany({ where: { cartId: cart.id } });
 
   revalidatePath("/cart");
   return { success: true };

@@ -19,7 +19,13 @@ import { Link } from "@/i18n/navigation";
  * scheme entirely (see src/i18n/routing.ts), so prefixing it with the
  * current locale would produce a broken /en/admin or /ar/admin URL.
  */
-export function UserMenu({ isAdmin = false }: { isAdmin?: boolean }) {
+export function UserMenu({
+  isAdmin = false,
+  newOrderCount = 0,
+}: {
+  isAdmin?: boolean;
+  newOrderCount?: number;
+}) {
   const t = useTranslations("UserMenu");
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -57,10 +63,19 @@ export function UserMenu({ isAdmin = false }: { isAdmin?: boolean }) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={t("accountMenu")}
-        className="flex size-9 items-center justify-center text-white/70 transition hover:text-white"
+        aria-label={
+          isAdmin && newOrderCount > 0
+            ? t("accountMenuWithNewOrders", { count: newOrderCount })
+            : t("accountMenu")
+        }
+        className="relative flex size-9 items-center justify-center text-white/70 transition hover:text-white"
       >
         <UserIcon className="size-5" />
+        {isAdmin && newOrderCount > 0 && (
+          <span className="bg-destructive absolute top-1 end-1 flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium text-white">
+            {newOrderCount > 9 ? "9+" : newOrderCount}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -82,10 +97,17 @@ export function UserMenu({ isAdmin = false }: { isAdmin?: boolean }) {
               href="/admin"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="hover:bg-muted flex items-center gap-2 px-3 py-2 transition"
+              className="hover:bg-muted flex items-center justify-between gap-2 px-3 py-2 transition"
             >
-              <ShieldIcon className="size-4" />
-              {t("admin")}
+              <span className="flex items-center gap-2">
+                <ShieldIcon className="size-4" />
+                {t("admin")}
+              </span>
+              {newOrderCount > 0 && (
+                <span className="bg-destructive flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium text-white">
+                  {newOrderCount > 9 ? "9+" : newOrderCount}
+                </span>
+              )}
             </NextLink>
           )}
           <button

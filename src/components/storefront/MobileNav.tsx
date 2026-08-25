@@ -23,10 +23,12 @@ export function MobileNav({
   collections,
   isSignedIn,
   isAdmin = false,
+  newOrderCount = 0,
 }: {
   collections: Collection[];
   isSignedIn: boolean;
   isAdmin?: boolean;
+  newOrderCount?: number;
 }) {
   const t = useTranslations("MobileNav");
   const [open, setOpen] = useState(false);
@@ -84,9 +86,14 @@ export function MobileNav({
                 <NextLink
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  className="text-muted-foreground hover:text-foreground py-2 transition"
+                  className="text-muted-foreground hover:text-foreground flex items-center justify-between py-2 transition"
                 >
                   {t("admin")}
+                  {newOrderCount > 0 && (
+                    <span className="bg-destructive flex size-4 items-center justify-center rounded-full text-[10px] leading-none font-medium text-white">
+                      {newOrderCount > 9 ? "9+" : newOrderCount}
+                    </span>
+                  )}
                 </NextLink>
               )}
               <div className="py-2">

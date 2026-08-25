@@ -23,6 +23,19 @@ const STATUS_ICON: Record<OrderStatus, typeof ClipboardCheckIcon> = {
   cancelled: XCircleIcon,
 };
 
+// A distinct color per status, not just "reached vs. not" — makes the
+// stage itself recognizable at a glance (e.g. amber = processing, blue =
+// shipped) rather than only communicating progress.
+const STATUS_DOT_COLOR: Record<OrderStatus, string> = {
+  pending: "bg-slate-400",
+  processing: "bg-amber-500",
+  shipped: "bg-blue-500",
+  delivered: "bg-emerald-500",
+  cancelled: "bg-red-500",
+};
+
+type TimelineNode = { status: OrderStatus; reached: boolean; at: Date | null };
+
 /**
  * A visual milestone timeline of an order's status history — shared
  * between the admin order detail page (English default) and the
@@ -48,38 +61,76 @@ export async function OrderStatusTimeline({
   const dateLocale = locale === "ar" ? "ar" : "en-US";
   const isCancelled = order.status === "cancelled";
 
-  // The happy-path stages actually reached, in order — everything up to
-  // (but not including) a cancellation, since updateOrderStatus already
-  // guarantees entries is a valid prefix of HAPPY_PATH or that prefix
-  // ending in "cancelled".
   const reachedHappyPath = entries.filter((e) => e.status !== "cancelled");
   const cancelledEntry = entries.find((e) => e.status === "cancelled");
+
+  // One flat list of nodes to render, so the "line between this node and
+  // the next" and "which single node is current" logic each only need to
+  // run once, over one array, instead of being duplicated across two
+  // separate render blocks (happy path vs. the cancelled branch).
+  const nodes: TimelineNode[] = [];
+  for (const stage of HAPPY_PATH) {
+    const reachedEntry = reachedHappyPath.find((e) => e.status === stage);
+    // Once cancelled, only render stages actually reached before the
+    // cancellation — entries is guaranteed a valid prefix of HAPPY_PATH
+    // (or that prefix ending in cancelled), so "not reached" here always
+    // means "after the cancellation point," never a gap.
+    if (!reachedEntry && isCancelled) continue;
+    nodes.push({ status: stage, reached: !!reachedEntry, at: reachedEntry?.at ?? null });
+  }
+  if (cancelledEntry) {
+    nodes.push({ status: "cancelled", reached: true, at: cancelledEntry.at });
+  }
+  const currentIndex = nodes.reduce(
+    (last, node, i) => (node.reached ? i : last),
+    -1
+  );
 
   return (
     <div>
       <p className="mb-4 text-sm font-medium">{t("heading")}</p>
-      <ol className="space-y-4">
-        {HAPPY_PATH.map((stage) => {
-          const reached = reachedHappyPath.find((e) => e.status === stage);
-          // Once cancelled, don't render happy-path stages that were never
-          // reached at all — only the ones actually hit before cancellation.
-          if (!reached && isCancelled) return null;
-          const Icon = STATUS_ICON[stage];
+      <ol>
+        {nodes.map((node, i) => {
+          const Icon = STATUS_ICON[node.status];
+          const isCurrent = i === currentIndex;
+          const isLast = i === nodes.length - 1;
           return (
-            <li key={stage} className="flex items-start gap-3">
-              <Icon
-                className={cn(
-                  "size-5 shrink-0",
-                  reached ? "text-foreground" : "text-muted-foreground opacity-50"
-                )}
-              />
-              <div>
-                <p className={cn("text-sm", !reached && "text-muted-foreground")}>
-                  {tStatus(stage)}
+            <li key={node.status} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <span className="relative flex size-8 shrink-0 items-center justify-center">
+                  {isCurrent && (
+                    <span
+                      className={cn(
+                        "absolute inline-flex size-8 animate-ping rounded-full opacity-60",
+                        STATUS_DOT_COLOR[node.status]
+                      )}
+                    />
+                  )}
+                  <span
+                    className={cn(
+                      "relative flex size-8 items-center justify-center rounded-full",
+                      node.reached
+                        ? [STATUS_DOT_COLOR[node.status], "text-white"]
+                        : "bg-muted border-border text-muted-foreground border"
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </span>
+                </span>
+                {/* Connecting line to the next node — omitted after the
+                    last one. A plain neutral color regardless of status,
+                    since the dots themselves already carry the per-status
+                    color; a colored line risked looking like a gradient
+                    error between two different hues. */}
+                {!isLast && <span className="bg-border mt-1 w-px flex-1" />}
+              </div>
+              <div className={cn("pb-6", isLast && "pb-0")}>
+                <p className={cn("text-sm", !node.reached && "text-muted-foreground")}>
+                  {tStatus(node.status)}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {reached
-                    ? reached.at.toLocaleDateString(dateLocale, {
+                  {node.at
+                    ? node.at.toLocaleDateString(dateLocale, {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -90,21 +141,6 @@ export async function OrderStatusTimeline({
             </li>
           );
         })}
-        {cancelledEntry && (
-          <li className="flex items-start gap-3">
-            <XCircleIcon className="text-destructive size-5 shrink-0" />
-            <div>
-              <p className="text-destructive text-sm">{tStatus("cancelled")}</p>
-              <p className="text-muted-foreground text-xs">
-                {cancelledEntry.at.toLocaleDateString(dateLocale, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          </li>
-        )}
       </ol>
     </div>
   );

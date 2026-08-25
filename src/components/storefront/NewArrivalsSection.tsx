@@ -4,7 +4,13 @@ import type { ProductCardData } from "@/types/product";
 import { SectionBand } from "./SectionBand";
 import { NewArrivalsCard } from "./NewArrivalsCard";
 
-export function NewArrivalsSection({ products }: { products: ProductCardData[] }) {
+export function NewArrivalsSection({
+  products,
+  cartQuantityByVariant,
+}: {
+  products: ProductCardData[];
+  cartQuantityByVariant?: Record<string, number>;
+}) {
   const t = useTranslations("NewArrivalsSection");
 
   return (
@@ -12,7 +18,11 @@ export function NewArrivalsSection({ products }: { products: ProductCardData[] }
       {products.length > 0 ? (
         <div className="bg-showcase-line-paper grid grid-cols-2 gap-px sm:grid-cols-4">
           {products.map((product) => (
-            <NewArrivalsCard key={product.id} product={product} />
+            <NewArrivalsCard
+              key={product.id}
+              product={product}
+              cartQuantityByVariant={cartQuantityByVariant}
+            />
           ))}
         </div>
       ) : (

@@ -29,7 +29,14 @@ export type QuickAddPhase = "idle" | "adding" | "added" | "error";
  * to that button; only the ephemeral hover preview clears on leave (see
  * clearPreview).
  */
-export function useQuickAdd(product: { id: string; variants: QuickAddVariant[] }) {
+export function useQuickAdd(
+  product: { id: string; variants: QuickAddVariant[] },
+  /** Variant id -> quantity already in the cart (see
+   * src/server/actions/cart.ts's getCartQuantityByVariant) — used to
+   * disable "Add to cart" with a clear reason once the cart already holds
+   * all available stock for the selected variant. */
+  cartQuantityByVariant: Record<string, number> = {}
+) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -47,7 +54,12 @@ export function useQuickAdd(product: { id: string; variants: QuickAddVariant[] }
     selectedColor && selectedSize
       ? findVariant(product.variants, selectedColor, selectedSize)
       : undefined;
-  const canAddToCart = matched != null && matched.inventoryQuantity > 0;
+  const inCartQuantity = matched ? (cartQuantityByVariant[matched.id] ?? 0) : 0;
+  const remainingStock = matched ? matched.inventoryQuantity - inCartQuantity : 0;
+  const canAddToCart = matched != null && remainingStock > 0;
+  // Distinct from "no combination picked yet" — a real, in-stock variant
+  // is selected, but the cart already holds all of it.
+  const maxStockReached = matched != null && remainingStock <= 0;
 
   function selectColor(color: string) {
     setSelectedColor(color);
@@ -105,6 +117,7 @@ export function useQuickAdd(product: { id: string; variants: QuickAddVariant[] }
     phase: isPending ? ("adding" as const) : phase,
     errorMessage,
     canAddToCart,
+    maxStockReached,
     flyRun,
     colorHasStock: (color: string) => colorHasStock(product.variants, color),
     selectColor,

@@ -32,7 +32,7 @@ export default async function AccountOrderDetailPage({ params }: Props) {
   if (!order || order.userId !== user.id) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10">
       <Link
         href="/account/orders"
         className="text-muted-foreground text-sm underline"
@@ -41,11 +41,9 @@ export default async function AccountOrderDetailPage({ params }: Props) {
             way for a reading-start-ward link once the page is RTL. */}
         {locale === "ar" ? "→" : "←"} {t("allOrders")}
       </Link>
-      <div className="mt-6">
+      <div className="mt-6 grid gap-10 md:grid-cols-[1fr_260px]">
+        <OrderDetail order={order} locale={locale} />
         <OrderStatusTimeline order={order} locale={locale} />
-        <div className="mt-8">
-          <OrderDetail order={order} locale={locale} />
-        </div>
       </div>
     </div>
   );

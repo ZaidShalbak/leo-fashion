@@ -37,7 +37,8 @@
     "orders": "الطلبات",
     "admin": "لوحة التحكم",
     "signOut": "تسجيل الخروج",
-    "signingOut": "جارٍ تسجيل الخروج…"
+    "signingOut": "جارٍ تسجيل الخروج…",
+    "accountMenuWithNewOrders": "قائمة الحساب ({count} طلبات جديدة)"
   },
   "CheckoutForm": {
     "shippingAddress": "عنوان الشحن",
@@ -132,7 +133,11 @@
     "password": "كلمة المرور",
     "passwordHint": "8 أحرف على الأقل.",
     "creatingAccount": "جارٍ إنشاء الحساب…",
-    "createAccount": "إنشاء حساب"
+    "createAccount": "إنشاء حساب",
+    "nameRequired": "الرجاء إدخال اسمك.",
+    "emailInvalid": "أدخل بريدًا إلكترونيًا صحيحًا.",
+    "passwordTooShort": "يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.",
+    "passwordInvalid": "أدخل كلمة مرور."
   },
   "AuthActions": {
     "nameRequired": "الاسم مطلوب.",
@@ -191,7 +196,10 @@
     "discount": "الخصم",
     "total": "الإجمالي",
     "shippingNote": "يتم احتساب الشحن والإجمالي عند الدفع. لا حاجة لدفع أي مبلغ الآن — يتم تسجيل الطلبات وتنفيذها مباشرة.",
-    "proceedToCheckout": "المتابعة إلى الدفع"
+    "proceedToCheckout": "المتابعة إلى الدفع",
+    "clearCart": "إفراغ السلة",
+    "clearingCart": "جارٍ الإفراغ…",
+    "clearCartConfirm": "إزالة جميع المنتجات من سلتك؟"
   },
   "OrderConfirmation": {
     "metaTitle": "تم تأكيد الطلب",
@@ -238,7 +246,8 @@
     "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",
     "adding": "جارٍ الإضافة…",
     "added": "أُضيف",
-    "addToCart": "أضف إلى السلة"
+    "addToCart": "أضف إلى السلة",
+    "maxInCart": "لا يوجد المزيد"
   },
   "CartActions": {
     "invalidRequest": "طلب غير صالح.",
@@ -328,6 +337,7 @@
     "sizeAria": "اختر المقاس: {size}",
     "adding": "جارٍ الإضافة…",
     "added": "تمت الإضافة",
-    "addToCart": "أضف إلى السلة"
+    "addToCart": "أضف إلى السلة",
+    "maxStockReached": "لا يوجد المزيد لإضافته."
   }
 }

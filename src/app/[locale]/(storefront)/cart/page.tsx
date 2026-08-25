@@ -8,6 +8,7 @@ import { localize } from "@/lib/localizedContent";
 import { CartItemList } from "@/components/storefront/CartItemList";
 import { ProceedToCheckoutButton } from "@/components/storefront/ProceedToCheckoutButton";
 import { PromoCodeForm } from "@/components/storefront/PromoCodeForm";
+import { ClearCartButton } from "@/components/storefront/ClearCartButton";
 import { Button } from "@/components/ui/button";
 import {
   calculateSubtotalCents,
@@ -95,7 +96,10 @@ export default async function CartPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
+        <ClearCartButton />
+      </div>
 
       <div className="mt-6">
         <CartItemList items={localizedItems} />

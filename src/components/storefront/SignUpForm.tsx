@@ -6,12 +6,31 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { signUpSchema } from "@/lib/validators/auth";
 import { signUp } from "@/server/actions/auth";
+
+type FieldErrors = { name?: string; email?: string; password?: string };
 
 export function SignUpForm({ redirectTo }: { redirectTo: string }) {
   const t = useTranslations("SignUpForm");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isPending, startTransition] = useTransition();
+
+  // Translated per-field messages, kept separate from signUpSchema's own
+  // (English-only) zod messages — this form is bilingual, so the raw
+  // schema message can't be shown directly.
+  function fieldErrorMessage(field: keyof FieldErrors, code: string): string {
+    if (field === "name") return t("nameRequired");
+    if (field === "email") return t("emailInvalid");
+    // password
+    return code === "too_small" ? t("passwordTooShort") : t("passwordInvalid");
+  }
+
+  function clearFieldError(field: keyof FieldErrors) {
+    setFieldErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,18 +40,45 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
+    const parsed = signUpSchema.safeParse({ name, email, password });
+    if (!parsed.success) {
+      const nextErrors: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0] as keyof FieldErrors;
+        if (field && !nextErrors[field]) {
+          nextErrors[field] = fieldErrorMessage(field, issue.code);
+        }
+      }
+      setFieldErrors(nextErrors);
+      return;
+    }
+    setFieldErrors({});
+
     startTransition(async () => {
-      const result = await signUp({ name, email, password }, redirectTo);
+      const result = await signUp(parsed.data, redirectTo);
       // On success the action redirects and never resolves here.
       if (!result.success) setError(result.error);
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="name">{t("name")}</Label>
-        <Input id="name" name="name" type="text" autoComplete="name" required />
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          autoComplete="name"
+          aria-invalid={!!fieldErrors.name}
+          onChange={() => clearFieldError("name")}
+          className={cn(fieldErrors.name && "border-destructive")}
+        />
+        {fieldErrors.name && (
+          <p role="alert" className="text-destructive text-xs">
+            {fieldErrors.name}
+          </p>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="email">{t("email")}</Label>
@@ -42,8 +88,15 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
           type="email"
           autoComplete="email"
           dir="ltr"
-          required
+          aria-invalid={!!fieldErrors.email}
+          onChange={() => clearFieldError("email")}
+          className={cn(fieldErrors.email && "border-destructive")}
         />
+        {fieldErrors.email && (
+          <p role="alert" className="text-destructive text-xs">
+            {fieldErrors.email}
+          </p>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">{t("password")}</Label>
@@ -53,10 +106,17 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
           type="password"
           autoComplete="new-password"
           dir="ltr"
-          minLength={8}
-          required
+          aria-invalid={!!fieldErrors.password}
+          onChange={() => clearFieldError("password")}
+          className={cn(fieldErrors.password && "border-destructive")}
         />
-        <p className="text-muted-foreground text-xs">{t("passwordHint")}</p>
+        {fieldErrors.password ? (
+          <p role="alert" className="text-destructive text-xs">
+            {fieldErrors.password}
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-xs">{t("passwordHint")}</p>
+        )}
       </div>
 
       {error && (
