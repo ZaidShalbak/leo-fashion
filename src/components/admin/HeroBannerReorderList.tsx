@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+
+import { Link } from "@/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +38,7 @@ function sameOrder(a: HeroBannerRow[], b: HeroBannerRow[]): boolean {
  * from it.
  */
 export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] }) {
+  const t = useTranslations("AdminHeroBanners");
   const confirm = useConfirm();
   const [items, setItems] = useState(banners);
   const [savedItems, setSavedItems] = useState(banners);
@@ -86,9 +89,10 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
 
   async function handleDelete(id: string, headline: string | null) {
     const confirmed = await confirm({
-      title: `Delete "${headline ?? "this banner"}"?`,
-      description: "This can't be undone.",
-      confirmLabel: "Delete",
+      title: t("deleteConfirmTitle", { headline: headline ?? t("untitledBanner") }),
+      description: t("deleteConfirmDescription"),
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -108,21 +112,21 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
   }
 
   if (items.length === 0) {
-    return <p className="text-muted-foreground text-sm">No hero banners yet.</p>;
+    return <p className="text-muted-foreground text-sm">{t("noBanners")}</p>;
   }
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-xs">Drag a banner to change its order on the homepage.</p>
+        <p className="text-muted-foreground text-xs">{t("dragHint")}</p>
         {isDirty && (
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs">Unsaved order</span>
+            <span className="text-muted-foreground text-xs">{t("unsavedOrder")}</span>
             <Button type="button" size="sm" variant="outline" disabled={isPending} onClick={handleDiscardOrder}>
-              Discard
+              {t("discard")}
             </Button>
             <Button type="button" size="sm" disabled={isPending} onClick={handleSaveOrder}>
-              {isPending ? "Saving…" : "Save order"}
+              {isPending ? t("savingOrder") : t("saveOrder")}
             </Button>
           </div>
         )}
@@ -148,13 +152,13 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
                 href={`/admin/hero-banners/${banner.id}/edit`}
                 className="block truncate text-sm font-medium hover:underline"
               >
-                {banner.headline ?? <span className="text-muted-foreground italic">No headline (image text only)</span>}
+                {banner.headline ?? <span className="text-muted-foreground italic">{t("noHeadline")}</span>}
               </Link>
             </div>
-            {banner.status === "live" && <Badge>Live</Badge>}
-            {banner.status === "scheduled" && <Badge variant="secondary">Scheduled</Badge>}
-            {banner.status === "expired" && <Badge variant="secondary">Expired</Badge>}
-            {banner.status === "inactive" && <Badge variant="secondary">Inactive</Badge>}
+            {banner.status === "live" && <Badge>{t("statusLive")}</Badge>}
+            {banner.status === "scheduled" && <Badge variant="secondary">{t("statusScheduled")}</Badge>}
+            {banner.status === "expired" && <Badge variant="secondary">{t("statusExpired")}</Badge>}
+            {banner.status === "inactive" && <Badge variant="secondary">{t("statusInactive")}</Badge>}
             <Button
               type="button"
               size="sm"
@@ -163,7 +167,7 @@ export function HeroBannerReorderList({ banners }: { banners: HeroBannerRow[] })
               onClick={() => handleDelete(banner.id, banner.headline)}
               className="text-destructive hover:text-destructive"
             >
-              Delete
+              {t("delete")}
             </Button>
           </li>
         ))}

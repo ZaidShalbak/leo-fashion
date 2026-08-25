@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { createBrand } from "@/server/actions/admin/brands";
 
 export function NewBrandForm() {
+  const t = useTranslations("AdminBrands");
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -37,19 +39,19 @@ export function NewBrandForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t("nameLabel")}</Label>
         <Input id="name" name="name" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="slug">Slug</Label>
+        <Label htmlFor="slug">{t("slugLabel")}</Label>
         <Input id="slug" name="slug" placeholder="northline-apparel" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="logoUrl">Logo URL</Label>
+        <Label htmlFor="logoUrl">{t("logoUrlLabel")}</Label>
         <Input id="logoUrl" name="logoUrl" placeholder="https://…" />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("descriptionLabel")}</Label>
         <textarea
           id="description"
           name="description"
@@ -58,17 +60,13 @@ export function NewBrandForm() {
         />
       </div>
       <div className="border-border space-y-4 border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          Optional — shown on the storefront when a shopper is browsing in
-          Arabic. Leave blank to keep showing the name/description above.
-          The brand&apos;s wordmark/logo is unaffected either way.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("arabicSectionHelp")}</p>
         <div className="space-y-1.5">
-          <Label htmlFor="nameAr">Name (Arabic)</Label>
+          <Label htmlFor="nameAr">{t("nameArLabel")}</Label>
           <Input id="nameAr" name="nameAr" dir="rtl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <Label htmlFor="descriptionAr">{t("descriptionArLabel")}</Label>
           <textarea
             id="descriptionAr"
             name="descriptionAr"
@@ -86,7 +84,7 @@ export function NewBrandForm() {
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Adding…" : "Add brand"}
+        {isPending ? t("adding") : t("addBrand")}
       </Button>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ export function ImageManager({
   /** The product's actual variant colors — the only values a photo can be tagged with. */
   colors: string[];
 }) {
+  const t = useTranslations("AdminProducts");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadColor, setUploadColor] = useState(GENERAL_VALUE);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +70,7 @@ export function ImageManager({
   return (
     <div className="space-y-3">
       {colors.length > 0 && (
-        <p className="text-muted-foreground text-xs">
-          Tag each photo with a color so shoppers see the right picture when they pick a color
-          on the product page. Untagged photos show for every color.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("colorTaggingNote")}</p>
       )}
 
       <div className="flex flex-wrap gap-3">
@@ -89,9 +88,9 @@ export function ImageManager({
                 type="button"
                 disabled={isPending}
                 onClick={() => handleRemove(image.id)}
-                className="bg-background/90 text-foreground absolute top-1 right-1 rounded px-1.5 py-0.5 text-xs opacity-0 transition group-hover:opacity-100"
+                className="bg-background/90 text-foreground absolute top-1 end-1 rounded px-1.5 py-0.5 text-xs opacity-0 transition group-hover:opacity-100"
               >
-                Remove
+                {t("remove")}
               </button>
             </div>
             {colors.length > 0 && (
@@ -100,9 +99,9 @@ export function ImageManager({
                 disabled={isPending}
                 onChange={(e) => handleRecolor(image.id, e.target.value)}
                 className="border-input w-24 rounded-md border bg-transparent px-1 py-0.5 text-xs"
-                aria-label={`Color for this photo of ${image.altText ?? "product"}`}
+                aria-label={t("colorForPhotoOf", { name: image.altText ?? t("productFallback") })}
               >
-                <option value={GENERAL_VALUE}>General</option>
+                <option value={GENERAL_VALUE}>{t("generalColor")}</option>
                 {colors.map((color) => (
                   <option key={color} value={color}>
                     {color}
@@ -126,9 +125,9 @@ export function ImageManager({
             value={uploadColor}
             onChange={(e) => setUploadColor(e.target.value)}
             className="border-input rounded-md border bg-transparent px-2 py-1 text-sm"
-            aria-label="Color this new photo shows"
+            aria-label={t("newPhotoColorLabel")}
           >
-            <option value={GENERAL_VALUE}>General (all colors)</option>
+            <option value={GENERAL_VALUE}>{t("generalAllColors")}</option>
             {colors.map((color) => (
               <option key={color} value={color}>
                 {color}
@@ -137,7 +136,7 @@ export function ImageManager({
           </select>
         )}
         <Button type="button" size="sm" disabled={isPending} onClick={handleUpload}>
-          {isPending ? "Uploading…" : "Upload image"}
+          {isPending ? t("uploading") : t("uploadImage")}
         </Button>
       </div>
       {error && (

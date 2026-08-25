@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { deleteDeliveryZone } from "@/server/actions/admin/deliveryZones";
@@ -16,6 +17,7 @@ export function DeleteDeliveryZoneButton({
   name: string;
   orderCount: number;
 }) {
+  const t = useTranslations("AdminDeliveryZones");
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
@@ -24,14 +26,13 @@ export function DeleteDeliveryZoneButton({
   async function handleDelete() {
     const description =
       orderCount > 0
-        ? `${orderCount} past order${
-            orderCount === 1 ? "" : "s"
-          } used it — their totals are unaffected, they'll just lose the live link to this area.`
-        : "This can't be undone.";
+        ? t("deleteWarningWithOrders", { count: orderCount })
+        : t("deleteWarningNoOrders");
     const confirmed = await confirm({
-      title: `Delete "${name}"?`,
+      title: t("deleteConfirmTitle", { name }),
       description,
-      confirmLabel: "Delete",
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -62,7 +63,7 @@ export function DeleteDeliveryZoneButton({
         onClick={handleDelete}
         className="text-destructive hover:text-destructive"
       >
-        {isPending ? "Deleting…" : "Delete"}
+        {isPending ? t("deleting") : t("delete")}
       </Button>
     </div>
   );

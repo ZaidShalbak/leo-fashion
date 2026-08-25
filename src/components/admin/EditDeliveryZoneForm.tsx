@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ type DeliveryZone = {
 };
 
 export function EditDeliveryZoneForm({ deliveryZone }: { deliveryZone: DeliveryZone }) {
+  const t = useTranslations("AdminDeliveryZones");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -51,11 +53,11 @@ export function EditDeliveryZoneForm({ deliveryZone }: { deliveryZone: DeliveryZ
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="name">Name (Arabic)</Label>
+        <Label htmlFor="name">{t("nameLabel")}</Label>
         <Input id="name" name="name" dir="rtl" defaultValue={deliveryZone.name} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="fee">Delivery fee</Label>
+        <Label htmlFor="fee">{t("feeLabel")}</Label>
         <Input
           id="fee"
           name="fee"
@@ -67,7 +69,7 @@ export function EditDeliveryZoneForm({ deliveryZone }: { deliveryZone: DeliveryZ
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="position">Display order</Label>
+        <Label htmlFor="position">{t("positionLabel")}</Label>
         <Input id="position" name="position" type="number" step={1} defaultValue={deliveryZone.position} />
       </div>
       <label className="flex items-center gap-2 text-sm">
@@ -76,12 +78,9 @@ export function EditDeliveryZoneForm({ deliveryZone }: { deliveryZone: DeliveryZ
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
         />
-        Active
+        {t("activeLabel")}
       </label>
-      <p className="text-muted-foreground text-xs">
-        Inactive areas stop showing up as a choice at checkout, but stay on
-        past orders that already used them.
-      </p>
+      <p className="text-muted-foreground text-xs">{t("inactiveHelp")}</p>
 
       {error && (
         <p role="alert" className="text-destructive text-sm">
@@ -91,10 +90,10 @@ export function EditDeliveryZoneForm({ deliveryZone }: { deliveryZone: DeliveryZ
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
+          {isPending ? t("saveButtonPending") : t("saveButton")}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/admin/delivery-zones")}>
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </form>

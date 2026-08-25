@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { createHeroBanner } from "@/server/actions/admin/heroBanners";
 import { HeroBannerPreview } from "./HeroBannerPreview";
 
 export function NewHeroBannerForm() {
+  const t = useTranslations("AdminHeroBanners");
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function NewHeroBannerForm() {
     <form ref={formRef} onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
       <div className="max-w-md space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="image">Image</Label>
+          <Label htmlFor="image">{t("imageLabel")}</Label>
           <input
             id="image"
             name="image"
@@ -74,55 +76,51 @@ export function NewHeroBannerForm() {
             required
             className="text-sm"
           />
-          <p className="text-muted-foreground text-xs">
-            A wide photo works best — around a 21:9 or 16:9 crop.
-          </p>
+          <p className="text-muted-foreground text-xs">{t("imageHelp")}</p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="headline">Headline (optional)</Label>
+          <Label htmlFor="headline">{t("headlineLabel")}</Label>
           <Input
             id="headline"
             name="headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
           />
-          <p className="text-muted-foreground text-xs">
-            Leave blank if the image already has its own text baked in.
-          </p>
+          <p className="text-muted-foreground text-xs">{t("headlineHelp")}</p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="subtext">Subtext (optional)</Label>
+          <Label htmlFor="subtext">{t("subtextLabel")}</Label>
           <Input id="subtext" name="subtext" value={subtext} onChange={(e) => setSubtext(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="ctaLabel">Button text (optional)</Label>
+            <Label htmlFor="ctaLabel">{t("ctaLabelLabel")}</Label>
             <Input
               id="ctaLabel"
               name="ctaLabel"
               value={ctaLabel}
               onChange={(e) => setCtaLabel(e.target.value)}
-              placeholder="Shop now"
+              placeholder={t("ctaLabelPlaceholder")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ctaUrl">Links to</Label>
-            <Input id="ctaUrl" name="ctaUrl" placeholder="/collections/outerwear" required />
+            <Label htmlFor="ctaUrl">{t("ctaUrlLabel")}</Label>
+            <Input id="ctaUrl" name="ctaUrl" placeholder={t("ctaUrlPlaceholder")} required />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="startsAt">Starts on (optional)</Label>
+            <Label htmlFor="startsAt">{t("startsAtLabel")}</Label>
             <Input id="startsAt" name="startsAt" type="date" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="endsAt">Ends on (optional)</Label>
+            <Label htmlFor="endsAt">{t("endsAtLabel")}</Label>
             <Input id="endsAt" name="endsAt" type="date" />
           </div>
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-          Active
+          {t("activeLabel")}
         </label>
 
         {error && (
@@ -132,7 +130,7 @@ export function NewHeroBannerForm() {
         )}
 
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Adding…" : "Add banner"}
+          {isPending ? t("adding") : t("addBanner")}
         </Button>
       </div>
 

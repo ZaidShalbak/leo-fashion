@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -37,28 +39,29 @@ export function SaleScopePicker({
   collections: { id: string; title: string }[];
   brands: { id: string; name: string }[];
 }) {
+  const t = useTranslations("AdminSales");
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label>Applies to</Label>
+        <Label>{t("appliesToLabel")}</Label>
         <Select value={scope} onValueChange={(v) => onScopeChange(v as SaleScopeValue)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="SITE_WIDE">Entire site</SelectItem>
-            <SelectItem value="COLLECTION">A category</SelectItem>
-            <SelectItem value="BRAND">A brand</SelectItem>
+            <SelectItem value="SITE_WIDE">{t("scopeSiteWide")}</SelectItem>
+            <SelectItem value="COLLECTION">{t("scopeCategoryOption")}</SelectItem>
+            <SelectItem value="BRAND">{t("scopeBrandOption")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {scope === "COLLECTION" && (
         <div className="space-y-1.5">
-          <Label>Category</Label>
+          <Label>{t("scopeCategory")}</Label>
           <Select value={collectionId} onValueChange={onCollectionChange}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a category" />
+              <SelectValue placeholder={t("selectCategoryPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {collections.map((collection) => (
@@ -73,10 +76,10 @@ export function SaleScopePicker({
 
       {scope === "BRAND" && (
         <div className="space-y-1.5">
-          <Label>Brand</Label>
+          <Label>{t("scopeBrand")}</Label>
           <Select value={brandId} onValueChange={onBrandChange}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a brand" />
+              <SelectValue placeholder={t("selectBrandPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {brands.map((brand) => (

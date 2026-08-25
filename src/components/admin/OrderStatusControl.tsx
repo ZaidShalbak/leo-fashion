@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,14 +16,6 @@ import {
 import { updateOrderStatus } from "@/server/actions/admin/orders";
 import { ORDER_STATUS_TRANSITIONS, type OrderStatus } from "@/lib/validators/order";
 
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: "Pending",
-  processing: "Processing",
-  shipped: "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
-
 export function OrderStatusControl({
   orderId,
   currentStatus,
@@ -32,6 +25,15 @@ export function OrderStatusControl({
   currentStatus: OrderStatus;
   currentTrackingNumber: string | null;
 }) {
+  const t = useTranslations("AdminOrders");
+  const tStatus = useTranslations("OrderStatus");
+  const STATUS_LABEL: Record<OrderStatus, string> = {
+    pending: tStatus("pending"),
+    processing: tStatus("processing"),
+    shipped: tStatus("shipped"),
+    delivered: tStatus("delivered"),
+    cancelled: tStatus("cancelled"),
+  };
   const nextOptions = ORDER_STATUS_TRANSITIONS[currentStatus];
   const [status, setStatus] = useState<OrderStatus>(currentStatus);
   const [trackingNumber, setTrackingNumber] = useState(currentTrackingNumber ?? "");
@@ -60,7 +62,7 @@ export function OrderStatusControl({
   return (
     <form onSubmit={handleSubmit} className="border-border space-y-4 rounded-lg border p-4">
       <div className="space-y-1.5">
-        <Label>Status</Label>
+        <Label>{t("statusLabel")}</Label>
         {canChangeStatus ? (
           <Select value={status} onValueChange={(v) => setStatus(v as OrderStatus)}>
             <SelectTrigger className="w-full">
@@ -68,7 +70,7 @@ export function OrderStatusControl({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={currentStatus}>
-                {STATUS_LABEL[currentStatus]} (current)
+                {t("statusCurrent", { status: STATUS_LABEL[currentStatus] })}
               </SelectItem>
               {nextOptions.map((s) => (
                 <SelectItem key={s} value={s}>
@@ -79,19 +81,19 @@ export function OrderStatusControl({
           </Select>
         ) : (
           <p className="text-muted-foreground text-sm">
-            {STATUS_LABEL[currentStatus]} — no further transitions available.
+            {t("noFurtherTransitions", { status: STATUS_LABEL[currentStatus] })}
           </p>
         )}
       </div>
 
       {(status === "shipped" || currentStatus === "shipped" || currentStatus === "delivered") && (
         <div className="space-y-1.5">
-          <Label htmlFor="trackingNumber">Tracking number</Label>
+          <Label htmlFor="trackingNumber">{t("trackingNumberLabel")}</Label>
           <Input
             id="trackingNumber"
             value={trackingNumber}
             onChange={(e) => setTrackingNumber(e.target.value)}
-            placeholder="Optional"
+            placeholder={t("trackingNumberPlaceholder")}
           />
         </div>
       )}
@@ -101,10 +103,10 @@ export function OrderStatusControl({
           {error}
         </p>
       )}
-      {saved && !error && <p className="text-sm text-green-700">Saved.</p>}
+      {saved && !error && <p className="text-sm text-green-700">{t("saved")}</p>}
 
       <Button type="submit" size="sm" disabled={isPending || !hasChanges}>
-        {isPending ? "Saving…" : "Save"}
+        {isPending ? t("saving") : t("save")}
       </Button>
     </form>
   );

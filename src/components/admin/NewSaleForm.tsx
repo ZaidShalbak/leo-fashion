@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ export function NewSaleForm({
   collections: { id: string; title: string }[];
   brands: { id: string; name: string }[];
 }) {
+  const t = useTranslations("AdminSales");
   const formRef = useRef<HTMLFormElement>(null);
   const [scope, setScope] = useState<SaleScopeValue>("SITE_WIDE");
   const [collectionId, setCollectionId] = useState(collections[0]?.id ?? "");
@@ -50,11 +52,11 @@ export function NewSaleForm({
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Title</Label>
-        <Input id="title" name="title" placeholder="Winter denim sale" required />
+        <Label htmlFor="title">{t("titleLabel")}</Label>
+        <Input id="title" name="title" placeholder={t("titlePlaceholder")} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="percentOff">Percent off</Label>
+        <Label htmlFor="percentOff">{t("percentOffLabel")}</Label>
         <Input
           id="percentOff"
           name="percentOff"
@@ -78,16 +80,14 @@ export function NewSaleForm({
       />
 
       <div className="space-y-1.5">
-        <Label htmlFor="startsAt">Starts on (optional)</Label>
+        <Label htmlFor="startsAt">{t("startsOnLabel")}</Label>
         <Input id="startsAt" name="startsAt" type="date" />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="endsAt">Ends on (optional)</Label>
+        <Label htmlFor="endsAt">{t("endsOnLabel")}</Label>
         <Input id="endsAt" name="endsAt" type="date" />
       </div>
-      <p className="text-muted-foreground text-xs">
-        No start/end date means the sale runs as soon as it&apos;s active, with no end.
-      </p>
+      <p className="text-muted-foreground text-xs">{t("dateRangeHelp")}</p>
 
       {error && (
         <p role="alert" className="text-destructive text-sm">
@@ -96,7 +96,7 @@ export function NewSaleForm({
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Adding…" : "Add sale"}
+        {isPending ? t("addingButton") : t("addSaleButton")}
       </Button>
     </form>
   );

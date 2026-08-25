@@ -1,11 +1,13 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function ThresholdControl({ defaultThreshold }: { defaultThreshold: number }) {
+  const t = useTranslations("AdminInventory");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -25,7 +27,7 @@ export function ThresholdControl({ defaultThreshold }: { defaultThreshold: numbe
   return (
     <div className="flex items-center gap-2">
       <Label htmlFor="threshold" className="text-muted-foreground text-sm font-normal">
-        Low-stock threshold
+        {t("thresholdLabel")}
       </Label>
       <Input
         id="threshold"

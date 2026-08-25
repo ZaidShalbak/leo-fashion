@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ function toDateInputValue(date: Date): string {
 }
 
 export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
+  const t = useTranslations("AdminHeroBanners");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -67,7 +69,7 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
       <div className="max-w-md space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="image">Replace image (optional)</Label>
+          <Label htmlFor="image">{t("replaceImageLabel")}</Label>
           <input
             id="image"
             name="image"
@@ -76,43 +78,41 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
             onChange={handleFileChange}
             className="text-sm"
           />
-          <p className="text-muted-foreground text-xs">Leave empty to keep the current photo.</p>
+          <p className="text-muted-foreground text-xs">{t("replaceImageHelp")}</p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="headline">Headline (optional)</Label>
+          <Label htmlFor="headline">{t("headlineLabel")}</Label>
           <Input
             id="headline"
             name="headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
           />
-          <p className="text-muted-foreground text-xs">
-            Leave blank if the image already has its own text baked in.
-          </p>
+          <p className="text-muted-foreground text-xs">{t("headlineHelp")}</p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="subtext">Subtext (optional)</Label>
+          <Label htmlFor="subtext">{t("subtextLabel")}</Label>
           <Input id="subtext" name="subtext" value={subtext} onChange={(e) => setSubtext(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="ctaLabel">Button text (optional)</Label>
+            <Label htmlFor="ctaLabel">{t("ctaLabelLabel")}</Label>
             <Input
               id="ctaLabel"
               name="ctaLabel"
               value={ctaLabel}
               onChange={(e) => setCtaLabel(e.target.value)}
-              placeholder="Shop now"
+              placeholder={t("ctaLabelPlaceholder")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ctaUrl">Links to</Label>
+            <Label htmlFor="ctaUrl">{t("ctaUrlLabel")}</Label>
             <Input id="ctaUrl" name="ctaUrl" defaultValue={banner.ctaUrl} required />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="startsAt">Starts on (optional)</Label>
+            <Label htmlFor="startsAt">{t("startsAtLabel")}</Label>
             <Input
               id="startsAt"
               name="startsAt"
@@ -121,7 +121,7 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="endsAt">Ends on (optional)</Label>
+            <Label htmlFor="endsAt">{t("endsAtLabel")}</Label>
             <Input
               id="endsAt"
               name="endsAt"
@@ -132,7 +132,7 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-          Active
+          {t("activeLabel")}
         </label>
 
         {error && (
@@ -143,14 +143,14 @@ export function EditHeroBannerForm({ banner }: { banner: HeroBanner }) {
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving…" : "Save changes"}
+            {isPending ? t("saving") : t("saveChanges")}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push("/admin/hero-banners")}
           >
-            Cancel
+            {t("cancel")}
           </Button>
         </div>
       </div>

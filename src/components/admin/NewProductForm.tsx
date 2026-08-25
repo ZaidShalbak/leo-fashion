@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ export function NewProductForm({
   collections: Collection[];
   brands: Brand[];
 }) {
+  const t = useTranslations("AdminProducts");
   const [status, setStatus] = useState<ProductStatus>("draft");
   const [brandId, setBrandId] = useState<string>(brands[0]?.id ?? "");
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set());
@@ -104,15 +106,15 @@ export function NewProductForm({
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">{t("titleLabel")}</Label>
         <Input id="title" name="title" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="slug">Slug</Label>
+        <Label htmlFor="slug">{t("slugLabel")}</Label>
         <Input id="slug" name="slug" placeholder="classic-crew-tee" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("descriptionLabel")}</Label>
         <textarea
           id="description"
           name="description"
@@ -121,16 +123,13 @@ export function NewProductForm({
         />
       </div>
       <div className="border-border space-y-4 border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          Optional — shown on the storefront when a shopper is browsing in
-          Arabic. Leave blank to keep showing the title/description above.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("arabicFieldsNote")}</p>
         <div className="space-y-1.5">
-          <Label htmlFor="titleAr">Title (Arabic)</Label>
+          <Label htmlFor="titleAr">{t("titleArLabel")}</Label>
           <Input id="titleAr" name="titleAr" dir="rtl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <Label htmlFor="descriptionAr">{t("descriptionArLabel")}</Label>
           <textarea
             id="descriptionAr"
             name="descriptionAr"
@@ -142,30 +141,30 @@ export function NewProductForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="basePrice">Base price (ILS)</Label>
+          <Label htmlFor="basePrice">{t("basePriceLabel")}</Label>
           <Input id="basePrice" name="basePrice" type="number" step="0.01" min="0" required />
         </div>
         <div className="space-y-1.5">
-          <Label>Status</Label>
+          <Label>{t("statusLabel")}</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as ProductStatus)}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="draft">{t("statusDraft")}</SelectItem>
+              <SelectItem value="active">{t("statusActive")}</SelectItem>
+              <SelectItem value="archived">{t("statusArchived")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Brand</Label>
+        <Label>{t("brandLabel")}</Label>
         {brands.length > 0 ? (
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a brand" />
+              <SelectValue placeholder={t("selectBrandPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {brands.map((brand) => (
@@ -176,15 +175,13 @@ export function NewProductForm({
             </SelectContent>
           </Select>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No brands yet — add one on the Brands page first.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("noBrandsYet")}</p>
         )}
       </div>
 
       {collections.length > 0 && (
         <div className="space-y-2">
-          <Label>Collections</Label>
+          <Label>{t("collectionsLabel")}</Label>
           <div className="flex flex-wrap gap-3">
             {collections.map((c) => (
               <label key={c.id} className="flex items-center gap-2 text-sm">
@@ -202,14 +199,14 @@ export function NewProductForm({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Variants</Label>
+          <Label>{t("variantsLabel")}</Label>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setVariants((rows) => [...rows, emptyVariant()])}
           >
-            Add variant
+            {t("addVariant")}
           </Button>
         </div>
 
@@ -220,7 +217,7 @@ export function NewProductForm({
               className="border-border grid grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] items-end gap-2 rounded-md border p-3"
             >
               <div className="space-y-1">
-                <Label className="text-xs">SKU</Label>
+                <Label className="text-xs">{t("skuLabel")}</Label>
                 <Input
                   value={v.sku}
                   onChange={(e) => updateVariant(v.key, { sku: e.target.value })}
@@ -228,7 +225,7 @@ export function NewProductForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Size</Label>
+                <Label className="text-xs">{t("sizeLabel")}</Label>
                 <Input
                   value={v.size}
                   onChange={(e) => updateVariant(v.key, { size: e.target.value })}
@@ -236,7 +233,7 @@ export function NewProductForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Color</Label>
+                <Label className="text-xs">{t("colorLabel")}</Label>
                 <Input
                   value={v.color}
                   onChange={(e) => updateVariant(v.key, { color: e.target.value })}
@@ -244,7 +241,7 @@ export function NewProductForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Price override</Label>
+                <Label className="text-xs">{t("priceOverrideLabel")}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -255,7 +252,7 @@ export function NewProductForm({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Initial stock</Label>
+                <Label className="text-xs">{t("initialStockLabel")}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -270,7 +267,7 @@ export function NewProductForm({
                 disabled={variants.length <= 1}
                 onClick={() => setVariants((rows) => rows.filter((r) => r.key !== v.key))}
               >
-                Remove
+                {t("remove")}
               </Button>
             </div>
           ))}
@@ -284,7 +281,7 @@ export function NewProductForm({
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Creating…" : "Create product"}
+        {isPending ? t("creating") : t("createProduct")}
       </Button>
     </form>
   );

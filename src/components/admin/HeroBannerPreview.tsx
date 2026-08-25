@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 /**
  * A live, always-in-sync preview of one carousel slide — deliberately
@@ -21,9 +22,10 @@ export function HeroBannerPreview({
   subtext: string;
   ctaLabel: string;
 }) {
+  const t = useTranslations("AdminHeroBanners");
   return (
     <div className="space-y-2">
-      <p className="text-muted-foreground text-xs font-medium">Preview</p>
+      <p className="text-muted-foreground text-xs font-medium">{t("previewLabel")}</p>
       <div className="bg-muted border-border relative aspect-[16/9] w-full overflow-hidden rounded-lg border sm:aspect-[21/9]">
         {imageUrl ? (
           <Image
@@ -36,13 +38,13 @@ export function HeroBannerPreview({
           />
         ) : (
           <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-            Choose an image to preview it here
+            {t("choosePreviewImage")}
           </div>
         )}
         <div className="from-foreground/70 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
         <div className="absolute inset-x-0 bottom-0 space-y-1 p-5 sm:p-8">
           <h2 className="text-background text-xl font-semibold tracking-tight sm:text-3xl">
-            {headline || "Your headline"}
+            {headline || t("defaultHeadline")}
           </h2>
           {subtext && (
             <p className="text-background/90 max-w-md text-sm sm:text-base">{subtext}</p>

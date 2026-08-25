@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { deleteCollection } from "@/server/actions/admin/collections";
@@ -16,6 +17,7 @@ export function DeleteCollectionButton({
   collectionTitle: string;
   productCount: number;
 }) {
+  const t = useTranslations("AdminCollections");
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
@@ -24,14 +26,13 @@ export function DeleteCollectionButton({
   async function handleDelete() {
     const description =
       productCount > 0
-        ? `${productCount} product${
-            productCount === 1 ? "" : "s"
-          } will lose this category (they won't be deleted).`
-        : "This can't be undone.";
+        ? t("deleteWarningWithProducts", { count: productCount })
+        : t("deleteWarningNoProducts");
     const confirmed = await confirm({
-      title: `Delete "${collectionTitle}"?`,
+      title: t("deleteConfirmTitle", { collectionTitle }),
       description,
-      confirmLabel: "Delete",
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -62,7 +63,7 @@ export function DeleteCollectionButton({
         onClick={handleDelete}
         className="text-destructive hover:text-destructive"
       >
-        {isPending ? "Deleting…" : "Delete"}
+        {isPending ? t("deleting") : t("delete")}
       </Button>
     </div>
   );

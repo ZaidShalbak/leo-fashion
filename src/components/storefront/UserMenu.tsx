@@ -1,6 +1,5 @@
 "use client";
 
-import NextLink from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { LogOutIcon, PackageIcon, ShieldIcon, UserIcon } from "lucide-react";
@@ -14,10 +13,10 @@ import { Link } from "@/i18n/navigation";
  * the desktop-nav equivalent of what MobileNav already collapses into its
  * hamburger panel. Closes on an outside click or Escape.
  *
- * The "Admin" item deliberately uses plain next/link (aliased `NextLink`),
- * not the locale-aware `Link` — /admin lives outside the [locale] routing
- * scheme entirely (see src/i18n/routing.ts), so prefixing it with the
- * current locale would produce a broken /en/admin or /ar/admin URL.
+ * The "Admin" item uses the locale-aware `Link` like every other item
+ * here — /admin is now a nested, bilingual route under [locale] (see
+ * src/app/[locale]/admin/layout.tsx), not a locale-blind second root
+ * layout, so it needs the current locale prefix like any other link.
  */
 export function UserMenu({
   isAdmin = false,
@@ -93,7 +92,7 @@ export function UserMenu({
             {t("orders")}
           </Link>
           {isAdmin && (
-            <NextLink
+            <Link
               href="/admin"
               role="menuitem"
               onClick={() => setOpen(false)}
@@ -108,7 +107,7 @@ export function UserMenu({
                   {newOrderCount > 9 ? "9+" : newOrderCount}
                 </span>
               )}
-            </NextLink>
+            </Link>
           )}
           <button
             type="button"

@@ -1,6 +1,5 @@
 "use client";
 
-import NextLink from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -16,8 +15,9 @@ type Collection = { id: string; handle: string; title: string };
  * Cart stays as its own always-visible icon link in the header regardless
  * of screen size, since it's the single most-used link.
  *
- * The "Admin" item uses plain next/link (aliased `NextLink`), not the
- * locale-aware `Link` — same reasoning as UserMenu.
+ * The "Admin" item uses the same locale-aware `Link` as everything else
+ * here — /admin is now a nested, bilingual route under [locale] (see
+ * src/app/[locale]/admin/layout.tsx), same reasoning as UserMenu.
  */
 export function MobileNav({
   collections,
@@ -83,7 +83,7 @@ export function MobileNav({
                 {t("orders")}
               </Link>
               {isAdmin && (
-                <NextLink
+                <Link
                   href="/admin"
                   onClick={() => setOpen(false)}
                   className="text-muted-foreground hover:text-foreground flex items-center justify-between py-2 transition"
@@ -94,7 +94,7 @@ export function MobileNav({
                       {newOrderCount > 9 ? "9+" : newOrderCount}
                     </span>
                   )}
-                </NextLink>
+                </Link>
               )}
               <div className="py-2">
                 <SignOutButton label={t("signOut")} pendingLabel={t("signingOut")} />
