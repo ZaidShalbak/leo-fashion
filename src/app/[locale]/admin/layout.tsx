@@ -145,12 +145,12 @@ export default async function AdminLayout({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-muted-foreground hover:bg-muted hover:text-foreground relative flex items-center gap-2 rounded-md px-3 py-2 transition"
+                      className="text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 rounded-md px-3 py-2 transition"
                     >
                       <item.Icon className="size-4 shrink-0" aria-hidden="true" />
-                      {item.label}
+                      <span className="flex-1">{item.label}</span>
                       {item.href === "/admin/orders" && (
-                        <AdminOrdersNavBadge count={newOrderCount} />
+                        <AdminOrdersNavBadge count={newOrderCount} inline />
                       )}
                     </Link>
                   ))}
