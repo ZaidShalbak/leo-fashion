@@ -5,14 +5,22 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { deleteSale } from "@/server/actions/admin/sales";
+import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 
 export function DeleteSaleButton({ saleId, title }: { saleId: string; title: string }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleDelete() {
-    if (!window.confirm(`Delete "${title}"? This can't be undone.`)) return;
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: `Delete "${title}"?`,
+      description: "This can't be undone.",
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setError(null);
     startTransition(async () => {

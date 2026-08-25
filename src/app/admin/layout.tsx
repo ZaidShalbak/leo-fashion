@@ -7,6 +7,7 @@ import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { SignOutButton } from "@/components/storefront/SignOutButton";
 import { AdminOrdersNavBadge } from "@/components/admin/AdminOrdersNavBadge";
+import { ConfirmDialogProvider } from "@/components/providers/ConfirmDialogProvider";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default async function AdminLayout({
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <ConfirmDialogProvider>
         <div className="flex min-h-full flex-col">
           <header className="border-border border-b">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4">
@@ -125,6 +127,7 @@ export default async function AdminLayout({
             <div className="mx-auto max-w-6xl px-4 py-8">{children}</div>
           </main>
         </div>
+        </ConfirmDialogProvider>
       </body>
     </html>
   );

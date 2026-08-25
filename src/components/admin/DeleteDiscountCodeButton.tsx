@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { deleteDiscountCode } from "@/server/actions/admin/discountCodes";
+import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 
 export function DeleteDiscountCodeButton({
   discountCodeId,
@@ -14,11 +15,18 @@ export function DeleteDiscountCodeButton({
   code: string;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleDelete() {
-    if (!window.confirm(`Delete "${code}"? This can't be undone.`)) return;
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: `Delete "${code}"?`,
+      description: "This can't be undone.",
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setError(null);
     startTransition(async () => {

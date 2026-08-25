@@ -56,7 +56,10 @@
     "notes": "ملاحظات الطلب (اختياري)",
     "notesPlaceholder": "تعليمات التوصيل، الوقت المفضل للتواصل، إلخ.",
     "placingOrder": "جارٍ تنفيذ الطلب…",
-    "placeOrder": "تنفيذ الطلب"
+    "placeOrder": "تنفيذ الطلب",
+    "confirmPlaceOrderTitle": "هل تريد إتمام هذا الطلب؟",
+    "confirmPlaceOrderDescription": "لن يتم تحصيل أي دفعة الآن — سيتم تنفيذ الطلب بالفاتورة أو الدفع عند الاستلام.",
+    "cancel": "إلغاء"
   },
   "Checkout": {
     "title": "الدفع",
@@ -199,7 +202,8 @@
     "proceedToCheckout": "المتابعة إلى الدفع",
     "clearCart": "إفراغ السلة",
     "clearingCart": "جارٍ الإفراغ…",
-    "clearCartConfirm": "إزالة جميع المنتجات من سلتك؟"
+    "clearCartConfirm": "إزالة جميع المنتجات من سلتك؟",
+    "cancel": "إلغاء"
   },
   "OrderConfirmation": {
     "metaTitle": "تم تأكيد الطلب",

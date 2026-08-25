@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { placeOrder } from "@/server/actions/order";
 import type { PlaceOrderInput } from "@/lib/validators/order";
+import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 import { formatPriceCents } from "./PriceDisplay";
 import { RollingText } from "./RollingText";
 
@@ -47,6 +48,7 @@ export function CheckoutForm({
   onZoneChange: (zoneId: string) => void;
 }) {
   const t = useTranslations("CheckoutForm");
+  const confirm = useConfirm();
   const defaultAddress =
     addresses.find((a) => a.isDefault) ?? addresses[0] ?? null;
   const [selected, setSelected] = useState<string>(defaultAddress?.id ?? "new");
@@ -54,7 +56,7 @@ export function CheckoutForm({
   const [isPending, startTransition] = useTransition();
   const [isHovering, setIsHovering] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
@@ -82,6 +84,14 @@ export function CheckoutForm({
     // which address mode is selected (the notes field itself always
     // renders, see below).
     const notes = (formData.get("notes") as string) || undefined;
+
+    const confirmed = await confirm({
+      title: t("confirmPlaceOrderTitle"),
+      description: t("confirmPlaceOrderDescription"),
+      confirmLabel: t("placeOrder"),
+      cancelLabel: t("cancel"),
+    });
+    if (!confirmed) return;
 
     startTransition(async () => {
       const result = await placeOrder({
