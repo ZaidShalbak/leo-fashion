@@ -46,6 +46,17 @@
 html[dir="rtl"] {
   --font-showcase-display: var(--font-tajawal), sans-serif;
   --font-showcase-body: var(--font-tajawal), sans-serif;
+  /* Sitewide default for Arabic — Geist Sans (the site's normal default,
+     see --font-sans below) has no real Arabic glyphs, so without this
+     every Arabic string anywhere on the site silently falls back to
+     whatever generic system font the browser picks, reading thin and
+     inconsistent next to the rest of the site's typography. Set directly
+     on <html> (not via the --font-sans variable, which Tailwind's
+     `@theme inline` resolves into generated utility classes at build
+     time rather than reading at runtime) so it inherits everywhere —
+     admin is unaffected since it's a separate `dir="ltr"` root layout
+     that never matches this selector. */
+  font-family: var(--font-tajawal), sans-serif;
 }
 
 .dark {
