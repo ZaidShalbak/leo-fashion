@@ -66,14 +66,11 @@ export default async function StorefrontLayout({
   return (
     <ConfirmDialogProvider>
     <div className="flex min-h-full flex-col">
-      {/* rtl:[font-family:...] — the sitewide default (Geist Sans) has no
-          real Arabic glyphs, so Arabic nav text was silently falling back
-          to a generic system font, reading thin/plain next to the rest of
-          the site's considered typography. Tajawal is already loaded for
-          the homepage showcase bands (see layout.tsx above); applying it
-          here too, scoped to the header via inheritance, fixes the same
-          problem where it was most visible — the always-on nav row. */}
-      <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a] rtl:[font-family:var(--font-tajawal)]">
+      {/* Tajawal is now the sitewide default font for Arabic (see the
+          html[dir="rtl"] rule in globals.css), so this header no longer
+          needs its own font-family override — the extra size/weight bump
+          on the nav links just below is still deliberate, though. */}
+      <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <Link href="/" aria-label={t("brandName")} dir="ltr">
             <LeoFashionLogo variant="mark" className="h-7 w-auto text-white" />
