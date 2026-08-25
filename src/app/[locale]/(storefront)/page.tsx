@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
 import { applySaleToProduct, getBestSaleForProduct } from "@/lib/sales";
 import { localize, localizeOptional } from "@/lib/localizedContent";
+import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
 import { HomeIntro } from "@/components/storefront/HomeIntro";
 import { CategorySection } from "@/components/storefront/CategorySection";
@@ -54,8 +55,15 @@ async function getBestSellers() {
 export default async function HomePage() {
   const t = await getTranslations("Home");
   const locale = await getLocale();
-  const [heroBanners, collectionsWithLeadRaw, productsRaw, bestSellersRaw, brandsRaw, sales] =
-    await Promise.all([
+  const [
+    heroBanners,
+    collectionsWithLeadRaw,
+    productsRaw,
+    bestSellersRaw,
+    brandsRaw,
+    sales,
+    cartQuantityByVariant,
+  ] = await Promise.all([
     // Admin-managed banners (see /admin/hero-banners) take priority over
     // the collection-derived fallback below. Fetching every *active* row
     // (not narrowing the scheduling window in SQL) and filtering with the
@@ -105,6 +113,7 @@ export default async function HomePage() {
     // reasoning as isHeroBannerLive above; there are only ever a handful
     // of sales running at once, so this isn't a real cost.
     db.sale.findMany({ where: { isActive: true } }),
+    getCartQuantityByVariant(),
   ]);
   const now = new Date();
 
@@ -208,8 +217,11 @@ export default async function HomePage() {
           padded, width-capped column. */}
       <CategorySection collections={collectionsWithLead} />
       <BrandsSection brands={brands} />
-      <BestSellersSection products={bestSellers.slice(0, 6)} />
-      <NewArrivalsSection products={products} />
+      <BestSellersSection
+        products={bestSellers.slice(0, 6)}
+        cartQuantityByVariant={cartQuantityByVariant}
+      />
+      <NewArrivalsSection products={products} cartQuantityByVariant={cartQuantityByVariant} />
     </>
   );
 }

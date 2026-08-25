@@ -15,12 +15,15 @@ import { QuickAddPanel } from "./QuickAddPanel";
 export function BestSellerItem({
   product,
   rank,
+  cartQuantityByVariant,
 }: {
   product: ProductCardData;
   rank: number;
+  /** Variant id -> quantity already in the cart — see useQuickAdd. */
+  cartQuantityByVariant?: Record<string, number>;
 }) {
   const t = useTranslations("BestSellersSection");
-  const quickAdd = useQuickAdd(product);
+  const quickAdd = useQuickAdd(product, cartQuantityByVariant);
 
   const primaryImage = [...product.images].sort((a, b) => a.position - b.position)[0];
   const activeColor = quickAdd.previewColor ?? quickAdd.selectedColor;

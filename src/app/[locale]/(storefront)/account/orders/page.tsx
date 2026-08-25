@@ -77,6 +77,11 @@ export default async function AccountOrdersPage(
                       count: order.items.length,
                     })}
                   </p>
+                  {order.shippingPhone && (
+                    <p className="text-muted-foreground text-sm" dir="ltr">
+                      {order.shippingPhone}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium">

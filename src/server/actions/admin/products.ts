@@ -172,6 +172,82 @@ export async function deleteProduct(
   return { success: true };
 }
 
+const duplicateProductSchema = z.object({ productId: z.string().cuid() });
+
+/**
+ * Clones a product as a starting point for a new listing — variants,
+ * collection memberships, and image references all copy over, but the
+ * result always lands as `draft` (never accidentally goes live as a
+ * second copy of something already selling) with fresh stock at 0 (a
+ * duplicate isn't the same physical inventory as the original — an admin
+ * restocks it deliberately via Inventory once it's ready, same as any new
+ * product). Slug and every variant SKU get a timestamp suffix to satisfy
+ * their unique constraints without a collision-detection loop.
+ */
+export async function duplicateProduct(
+  input: z.infer<typeof duplicateProductSchema>
+): Promise<ActionResult & { newProductId?: string }> {
+  const admin = await requireAdmin();
+  const parsed = duplicateProductSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Invalid request." };
+
+  const original = await db.product.findUnique({
+    where: { id: parsed.data.productId },
+    include: { variants: true, images: true, collections: true },
+  });
+  if (!original) return { success: false, error: "Product not found." };
+
+  const suffix = Date.now();
+  let newProduct: { id: string; title: string };
+  try {
+    newProduct = await db.product.create({
+      data: {
+        title: `${original.title} (Copy)`,
+        titleAr: original.titleAr ? `${original.titleAr} (نسخة)` : null,
+        slug: `${original.slug}-copy-${suffix}`,
+        description: original.description,
+        descriptionAr: original.descriptionAr,
+        basePriceCents: original.basePriceCents,
+        status: "draft",
+        brandId: original.brandId,
+        collections: {
+          create: original.collections.map((c) => ({ collectionId: c.collectionId })),
+        },
+        variants: {
+          create: original.variants.map((v) => ({
+            sku: `${v.sku}-COPY-${suffix}`,
+            size: v.size,
+            color: v.color,
+            priceOverrideCents: v.priceOverrideCents,
+            inventoryQuantity: 0,
+          })),
+        },
+        images: {
+          create: original.images.map((img) => ({
+            url: img.url,
+            altText: img.altText,
+            position: img.position,
+            color: img.color,
+          })),
+        },
+      },
+    });
+  } catch (error) {
+    return { success: false, error: friendlyDbError(error) };
+  }
+
+  await logAudit({
+    actorUserId: admin.id,
+    action: "product.duplicate",
+    targetType: "Product",
+    targetId: newProduct.id,
+    metadata: { sourceProductId: original.id, title: newProduct.title },
+  });
+
+  revalidatePath("/admin/products");
+  return { success: true, newProductId: newProduct.id };
+}
+
 const addVariantSchema = productVariantSchema.extend({ productId: z.string().cuid() });
 
 export async function addProductVariant(

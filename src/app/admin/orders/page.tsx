@@ -34,6 +34,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
     orderBy: { createdAt: "desc" },
     include: { user: { select: { email: true, name: true } }, items: true },
   });
+  // shippingPhone (not the user account's own phone — there isn't one) is
+  // what the customer actually gave for this specific order, so it's read
+  // straight off each order row below rather than joined from User.
 
   return (
     <div className="space-y-6">
@@ -66,7 +69,14 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                   </Badge>
                 )}
               </TableCell>
-              <TableCell>{order.user.name ?? order.user.email}</TableCell>
+              <TableCell>
+                <span className="block">{order.user.name ?? order.user.email}</span>
+                {order.shippingPhone && (
+                  <span className="text-muted-foreground block text-xs" dir="ltr">
+                    {order.shippingPhone}
+                  </span>
+                )}
+              </TableCell>
               <TableCell>
                 {order.createdAt.toLocaleDateString(undefined, {
                   year: "numeric",

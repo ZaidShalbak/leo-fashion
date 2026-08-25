@@ -25,6 +25,7 @@ export function ProductDetail({
   compareAtCents,
   images,
   variants,
+  cartQuantityByVariant,
 }: {
   productId: string;
   productTitle: string;
@@ -35,6 +36,8 @@ export function ProductDetail({
   compareAtCents: number | null;
   images: ProductImage[];
   variants: Variant[];
+  /** Variant id -> quantity already in the cart — see VariantSelector. */
+  cartQuantityByVariant?: Record<string, number>;
 }) {
   // Same initial-selection rule VariantSelector has always used (first
   // in-stock variant, falling back to the first variant at all) — color
@@ -75,6 +78,7 @@ export function ProductDetail({
           variants={variants}
           selectedColor={selectedColor}
           onColorChange={setSelectedColor}
+          cartQuantityByVariant={cartQuantityByVariant}
         />
 
         {description && (

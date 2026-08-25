@@ -111,7 +111,7 @@ export function QuickAddPanel({
             </div>
           )}
 
-          {quickAdd.canAddToCart && (
+          {quickAdd.canAddToCart ? (
             <button
               type="button"
               onClick={(e) => quickAdd.handleAddToCart(e.currentTarget.getBoundingClientRect())}
@@ -122,6 +122,10 @@ export function QuickAddPanel({
             >
               {t("addToCart")}
             </button>
+          ) : (
+            quickAdd.maxStockReached && (
+              <p className="text-center text-xs opacity-70">{t("maxStockReached")}</p>
+            )
           )}
         </div>
       )}

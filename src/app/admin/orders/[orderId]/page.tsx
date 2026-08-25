@@ -24,23 +24,21 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   if (!order) notFound();
 
   return (
-    <div className="grid max-w-4xl gap-10 lg:grid-cols-[1fr_320px]">
+    <div className="max-w-6xl">
       <MarkOrderViewed orderId={order.id} alreadyViewed={order.viewedByAdminAt !== null} />
-      <div>
-        <p className="text-muted-foreground mb-4 text-sm">
-          Customer: {order.user.name ?? "—"} · {order.user.email}
-        </p>
-        <OrderStatusTimeline order={order} />
-        <div className="mt-8">
-          <OrderDetail order={order} />
-        </div>
-      </div>
+      <p className="text-muted-foreground mb-6 text-sm">
+        Customer: {order.user.name ?? "—"} · {order.user.email}
+      </p>
 
-      <OrderStatusControl
-        orderId={order.id}
-        currentStatus={order.status}
-        currentTrackingNumber={order.trackingNumber}
-      />
+      <div className="grid gap-10 lg:grid-cols-[1fr_260px_300px]">
+        <OrderDetail order={order} />
+        <OrderStatusTimeline order={order} />
+        <OrderStatusControl
+          orderId={order.id}
+          currentStatus={order.status}
+          currentTrackingNumber={order.trackingNumber}
+        />
+      </div>
     </div>
   );
 }

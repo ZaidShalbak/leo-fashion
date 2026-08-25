@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { db } from "@/server/db";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
+import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { ProductDetail } from "@/components/storefront/ProductDetail";
 import { ProductCard } from "@/components/storefront/ProductCard";
 
@@ -81,9 +82,10 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product || product.status !== "active") notFound();
 
-  const [similarProductsRaw, sales] = await Promise.all([
+  const [similarProductsRaw, sales, cartQuantityByVariant] = await Promise.all([
     getSimilarProducts(product.id, product.brandId, product.collections.map((c) => c.collectionId)),
     db.sale.findMany({ where: { isActive: true } }),
+    getCartQuantityByVariant(),
   ]);
   const now = new Date();
   // Localized the same way the homepage/collection grids do — see
@@ -124,6 +126,7 @@ export default async function ProductPage({ params }: Props) {
           compareAtCents={compareAtCents}
           images={product.images}
           variants={product.variants}
+          cartQuantityByVariant={cartQuantityByVariant}
         />
       </div>
 
@@ -132,7 +135,11 @@ export default async function ProductPage({ params }: Props) {
           <h2 className="text-lg font-medium">{t("similarProducts")}</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
             {similarProducts.map((similarProduct) => (
-              <ProductCard key={similarProduct.id} product={similarProduct} />
+              <ProductCard
+                key={similarProduct.id}
+                product={similarProduct}
+                cartQuantityByVariant={cartQuantityByVariant}
+              />
             ))}
           </div>
         </section>

@@ -37,7 +37,8 @@
     "orders": "Orders",
     "admin": "Admin",
     "signOut": "Sign out",
-    "signingOut": "Signing out…"
+    "signingOut": "Signing out…",
+    "accountMenuWithNewOrders": "Account menu ({count} new orders)"
   },
   "CheckoutForm": {
     "shippingAddress": "Shipping address",
@@ -132,7 +133,11 @@
     "password": "Password",
     "passwordHint": "At least 8 characters.",
     "creatingAccount": "Creating account…",
-    "createAccount": "Create account"
+    "createAccount": "Create account",
+    "nameRequired": "Please enter your name.",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordInvalid": "Enter a password."
   },
   "AuthActions": {
     "nameRequired": "Name is required.",
@@ -191,7 +196,10 @@
     "discount": "Discount",
     "total": "Total",
     "shippingNote": "Shipping and totals are calculated at checkout. No payment required — orders are placed on account and fulfilled directly.",
-    "proceedToCheckout": "Proceed to checkout"
+    "proceedToCheckout": "Proceed to checkout",
+    "clearCart": "Clear cart",
+    "clearingCart": "Clearing…",
+    "clearCartConfirm": "Remove all items from your cart?"
   },
   "OrderConfirmation": {
     "metaTitle": "Order confirmed",
@@ -238,7 +246,8 @@
     "lowStock": "Only {count} left",
     "adding": "Adding…",
     "added": "Added",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "maxInCart": "No more available"
   },
   "CartActions": {
     "invalidRequest": "Invalid request.",
@@ -328,6 +337,7 @@
     "sizeAria": "Select size: {size}",
     "adding": "Adding…",
     "added": "Added",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "maxStockReached": "No more available to add."
   }
 }

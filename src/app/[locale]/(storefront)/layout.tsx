@@ -48,6 +48,13 @@ export default async function StorefrontLayout({
     getCurrentUser(),
     getCartItemCount(),
   ]);
+  // Lets an admin browsing the storefront (not already on /admin) notice
+  // there's a new order without babysitting the dashboard — mirrors the
+  // admin nav's own badge (src/components/admin/AdminOrdersNavBadge.tsx),
+  // same underlying count, just surfaced here too. Only ever queried for
+  // an actual admin, never for a plain signed-in customer.
+  const newOrderCount =
+    user?.role === "admin" ? await db.order.count({ where: { viewedByAdminAt: null } }) : 0;
   // Localized once here and reused for both the desktop nav below and
   // MobileNav — see src/lib/localizedContent.ts.
   const collections = collectionsRaw.map((collection) => ({
@@ -81,7 +88,7 @@ export default async function StorefrontLayout({
             <SearchBox />
             <CartIconLink itemCount={cartItemCount} />
             {user ? (
-              <UserMenu isAdmin={user.role === "admin"} />
+              <UserMenu isAdmin={user.role === "admin"} newOrderCount={newOrderCount} />
             ) : (
               <Link href="/login" className="text-white/70 transition hover:text-white">
                 {t("signIn")}
@@ -98,6 +105,7 @@ export default async function StorefrontLayout({
               collections={collections}
               isSignedIn={Boolean(user)}
               isAdmin={user?.role === "admin"}
+              newOrderCount={newOrderCount}
             />
           </div>
         </div>

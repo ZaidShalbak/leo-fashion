@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import type { AppLocale } from "@/i18n/routing";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
+import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { FilterBar } from "@/components/storefront/FilterBar";
 
@@ -54,7 +55,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
         ? { basePriceCents: "desc" }
         : { createdAt: "desc" };
 
-  const [productsRaw, sales] = await Promise.all([
+  const [productsRaw, sales, cartQuantityByVariant] = await Promise.all([
     db.product.findMany({
       where: {
         status: "active",
@@ -79,6 +80,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
       orderBy,
     }),
     db.sale.findMany({ where: { isActive: true } }),
+    getCartQuantityByVariant(),
   ]);
   const now = new Date();
   const products = productsRaw
@@ -105,7 +107,11 @@ export default async function BrandPage({ params, searchParams }: Props) {
       {products.length > 0 ? (
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              cartQuantityByVariant={cartQuantityByVariant}
+            />
           ))}
         </div>
       ) : (
