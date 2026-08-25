@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   adminCreateUser: vi.fn(),
   signInWithPassword: vi.fn(),
   signOut: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
+  updateUser: vi.fn(),
 }));
 
 vi.mock("@/server/auth", async () => {
@@ -26,6 +28,8 @@ vi.mock("@/server/auth", async () => {
       auth: {
         signInWithPassword: mocks.signInWithPassword,
         signOut: mocks.signOut,
+        resetPasswordForEmail: mocks.resetPasswordForEmail,
+        updateUser: mocks.updateUser,
       },
     }),
   };
@@ -39,10 +43,20 @@ vi.mock("next/headers", () => ({
     set: (name: string, value: string) => cookieJar.set(name, value),
     delete: (name: string) => cookieJar.delete(name),
   }),
+  headers: async () => new Map([["origin", "https://example.test"]]),
 }));
 
+// signOut() stays on plain next/navigation's redirect (see its comment in
+// auth.ts); everything else uses the locale-aware @/i18n/navigation
+// redirect. Both funnel into the same mockRedirect, normalized to just the
+// href string, so assertions don't need to care which one a given action
+// uses.
 const mockRedirect = vi.fn();
 vi.mock("next/navigation", () => ({ redirect: (url: string) => mockRedirect(url) }));
+vi.mock("@/i18n/navigation", () => ({
+  redirect: (arg: string | { href: string }) =>
+    mockRedirect(typeof arg === "string" ? arg : arg.href),
+}));
 
 // next-intl/server's real (getTranslations-capable) implementation only
 // resolves under Next's bundler-only "react-server" export condition, which
@@ -66,7 +80,8 @@ vi.mock("next-intl/server", async () => {
 });
 
 const { db } = await import("@/server/db");
-const { signUp, signIn, signOut } = await import("./auth");
+const { signUp, signIn, signOut, requestPasswordReset, confirmPasswordReset } =
+  await import("./auth");
 
 let productId: string;
 let variantId: string;
@@ -209,5 +224,66 @@ describe("signOut", () => {
     await signOut();
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
     expect(mockRedirect).toHaveBeenCalledWith("/");
+  });
+});
+
+describe("requestPasswordReset", () => {
+  it("rejects invalid input before calling Supabase", async () => {
+    const result = await requestPasswordReset({ email: "not-an-email" });
+    expect(result.success).toBe(false);
+    expect(mocks.resetPasswordForEmail).not.toHaveBeenCalled();
+  });
+
+  it("always reports success, and builds redirectTo from the request origin", async () => {
+    mocks.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+
+    const result = await requestPasswordReset({ email: "someone@example.com" });
+
+    expect(result).toEqual({ success: true });
+    expect(mocks.resetPasswordForEmail).toHaveBeenCalledWith(
+      "someone@example.com",
+      { redirectTo: "https://example.test/auth/confirm?next=%2Fen%2Freset-password" }
+    );
+  });
+
+  it("still reports success even when Supabase errors (no account enumeration)", async () => {
+    mocks.resetPasswordForEmail.mockResolvedValue({
+      data: null,
+      error: { message: "some internal error" },
+    });
+
+    const result = await requestPasswordReset({ email: "nobody@example.com" });
+    expect(result).toEqual({ success: true });
+  });
+});
+
+describe("confirmPasswordReset", () => {
+  it("rejects a too-short password before calling Supabase", async () => {
+    const result = await confirmPasswordReset({ password: "short" });
+    expect(result.success).toBe(false);
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("updates the password and redirects home on success", async () => {
+    mocks.updateUser.mockResolvedValue({ data: {}, error: null });
+
+    const result = await confirmPasswordReset({ password: "newpassword123" });
+
+    expect(result).toBeUndefined(); // redirects on success
+    expect(mocks.updateUser).toHaveBeenCalledWith({ password: "newpassword123" });
+    expect(mockRedirect).toHaveBeenCalledWith("/");
+  });
+
+  it("returns a friendly error when Supabase rejects the update", async () => {
+    mocks.updateUser.mockResolvedValue({
+      data: null,
+      error: { message: "Auth session missing" },
+    });
+
+    const result = await confirmPasswordReset({ password: "newpassword123" });
+    expect(result).toEqual({
+      success: false,
+      error: "Could not reset password. Try requesting a new reset link.",
+    });
   });
 });

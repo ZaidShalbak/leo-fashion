@@ -56,6 +56,10 @@ model User {
   supabaseId String   @unique
   email      String   @unique
   name       String?
+  // "+970"/"+972" + 9 digits (see src/lib/validators/phone.ts) — optional,
+  // same reasoning as Address.phone: no reason to require it and risk
+  // breaking signup for anyone who skips it.
+  phone      String?
   role       UserRole @default(customer)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -74,12 +78,19 @@ model Address {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   label      String?
   fullName   String
+  // Repurposed as a single "Street" field at checkout (see CheckoutForm) —
+  // the column stays named line1 to minimize churn, only its label/usage
+  // changed. line2 is no longer collected for new addresses but stays on
+  // the model so existing rows keep their data.
   line1      String
   line2      String?
   city       String
   state      String?
-  postalCode String
-  country    String
+  // No longer collected at checkout (see CheckoutForm) — relaxed from
+  // required to optional so existing rows keep their data with no
+  // backfill needed; new rows just leave these null.
+  postalCode String?
+  country    String?
   phone      String?
   isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
@@ -339,12 +350,15 @@ model Order {
   // Address it was copied from. There's no billing address (no payments),
   // so a single inline set of fields is enough — no separate address table.
   shippingName       String
+  // "Street" at checkout (see CheckoutForm) — column stays shippingLine1.
   shippingLine1      String
   shippingLine2      String?
   shippingCity       String
   shippingState      String?
-  shippingPostalCode String
-  shippingCountry    String
+  // No longer collected at checkout — relaxed from required to optional;
+  // existing orders keep whatever they already snapshotted.
+  shippingPostalCode String?
+  shippingCountry    String?
   shippingPhone      String?
 
   // Free-text notes a customer can leave at checkout (delivery instructions,

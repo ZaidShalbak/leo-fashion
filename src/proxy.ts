@@ -27,11 +27,15 @@ const handleI18nRouting = createIntlProxy(routing);
  * `/en/apple-icon`. icon.svg already has a dot and doesn't need this, but
  * `icon` is here too in case a code-generated (extension-less) icon route
  * is ever added alongside it.
+ *
+ * `auth` is excluded too: src/app/auth/confirm/route.ts only verifies a
+ * password-reset token and redirects, no UI to localize — it shouldn't
+ * depend on locale-detection before the token's even been checked.
  */
 export function proxy(request: NextRequest) {
   return handleI18nRouting(request);
 }
 
 export const config = {
-  matcher: ["/((?!api|icon|apple-icon|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|auth|icon|apple-icon|_next|_vercel|.*\\..*).*)"],
 };

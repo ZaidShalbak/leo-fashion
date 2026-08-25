@@ -1,9 +1,11 @@
 import type { Order, OrderItem, OrderStatus } from "@prisma/client";
 
 import { calculateTotalCents } from "@/lib/cart-totals";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { getTranslator } from "@/i18n/getTranslator";
 import type { AppLocale } from "@/i18n/routing";
 import { OrderStatusBadge } from "./OrderStatusBadge";
+import { WhatsAppIcon } from "./WhatsAppButton";
 import { formatPriceCents, PriceDisplay } from "./PriceDisplay";
 
 type OrderWithItems = Order & { items: OrderItem[] };
@@ -18,18 +20,25 @@ const ORDER_STATUSES: OrderStatus[] = [
 
 /**
  * Shared between the storefront (order confirmation, account order detail
- * — locale-aware) and the admin order detail page (always English,
- * rendered outside the [locale] tree — see src/app/admin/layout.tsx). See
+ * — locale-aware) and the admin order detail page, both inside the
+ * [locale] tree now (see the bilingual admin redesign). See
  * src/i18n/getTranslator.ts for why this uses a context-free translator
  * keyed off an explicit `locale` prop instead of useTranslations()/
- * getTranslations(); admin's caller just omits the prop and gets English.
+ * getTranslations() — this keeps the component renderable from either
+ * tree without depending on which one actually wraps it in a
+ * NextIntlClientProvider.
+ *
+ * `showWhatsAppButton` is admin-only (defaults to false) — a customer
+ * viewing their own order has no reason to message themselves.
  */
 export function OrderDetail({
   order,
   locale = "en",
+  showWhatsAppButton = false,
 }: {
   order: OrderWithItems;
   locale?: AppLocale;
+  showWhatsAppButton?: boolean;
 }) {
   const t = getTranslator(locale, "OrderDetail");
   const tStatus = getTranslator(locale, "OrderStatus");
@@ -134,12 +143,27 @@ export function OrderDetail({
           {order.shippingLine2 ? `, ${order.shippingLine2}` : ""}
           <br />
           {order.shippingCity}
-          {order.shippingState ? `, ${order.shippingState}` : ""}{" "}
-          {order.shippingPostalCode}
-          <br />
-          {order.shippingCountry}
+          {order.shippingState ? `, ${order.shippingState}` : ""}
+          {order.shippingPostalCode ? ` ${order.shippingPostalCode}` : ""}
+          {order.shippingCountry && (
+            <>
+              <br />
+              {order.shippingCountry}
+            </>
+          )}
           {order.shippingPhone ? ` · ${order.shippingPhone}` : ""}
         </p>
+        {showWhatsAppButton && order.shippingPhone && (
+          <a
+            href={buildWhatsAppUrl(order.shippingPhone)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-1.5 text-sm"
+          >
+            <WhatsAppIcon className="size-4 text-[#25D366]" />
+            {t("contactOnWhatsApp")}
+          </a>
+        )}
       </div>
 
       {order.trackingNumber && (

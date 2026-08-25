@@ -44,12 +44,8 @@
     "shippingAddress": "Shipping address",
     "useNewAddress": "Use a new address",
     "fullName": "Full name",
-    "addressLine1": "Address line 1",
-    "addressLine2": "Address line 2",
+    "street": "Street",
     "city": "City",
-    "state": "State",
-    "postalCode": "Postal code",
-    "country": "Country",
     "phone": "Phone",
     "deliveryZone": "Delivery area",
     "noDeliveryZones": "No delivery areas are available right now — please check back later.",
@@ -60,6 +56,16 @@
     "confirmPlaceOrderTitle": "Place this order?",
     "confirmPlaceOrderDescription": "No payment is collected now — this places the order for invoice/pay-on-delivery fulfillment.",
     "cancel": "Cancel"
+  },
+  "Phone": {
+    "countryLabel": "Country code",
+    "palestine": "Palestine",
+    "israel": "Israel",
+    "invalidFormat": "Enter a valid Palestine or Israel mobile number"
+  },
+  "PasswordInput": {
+    "show": "Show password",
+    "hide": "Hide password"
   },
   "Checkout": {
     "title": "Checkout",
@@ -128,7 +134,10 @@
     "email": "Email",
     "password": "Password",
     "signingIn": "Signing in…",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordRequired": "Password is required.",
+    "forgotPassword": "Forgot password?"
   },
   "SignUpForm": {
     "name": "Name",
@@ -140,7 +149,9 @@
     "nameRequired": "Please enter your name.",
     "emailInvalid": "Enter a valid email address.",
     "passwordTooShort": "Password must be at least 8 characters.",
-    "passwordInvalid": "Enter a password."
+    "passwordInvalid": "Enter a password.",
+    "phone": "Phone number (optional)",
+    "phoneInvalid": "Enter a valid Palestine or Israel mobile number."
   },
   "AuthActions": {
     "nameRequired": "Name is required.",
@@ -150,7 +161,31 @@
     "invalidInput": "Invalid input.",
     "emailAlreadyExists": "An account with this email already exists.",
     "couldNotCreateAccount": "Could not create account.",
-    "incorrectCredentials": "Incorrect email or password."
+    "incorrectCredentials": "Incorrect email or password.",
+    "couldNotResetPassword": "Could not reset password. Try requesting a new reset link."
+  },
+  "ForgotPasswordPage": {
+    "title": "Forgot password",
+    "subtitle": "Enter your email and we'll send you a reset link.",
+    "linkExpired": "That reset link has expired or already been used — request a new one below.",
+    "backToLogin": "Back to sign in"
+  },
+  "ForgotPasswordForm": {
+    "email": "Email",
+    "sending": "Sending…",
+    "sendResetLink": "Send reset link",
+    "emailSent": "If an account exists for that email, a reset link is on its way."
+  },
+  "ResetPasswordPage": {
+    "title": "Reset password",
+    "subtitle": "Choose a new password for your account."
+  },
+  "ResetPasswordForm": {
+    "newPassword": "New password",
+    "passwordHint": "At least 8 characters.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "saving": "Saving…",
+    "resetPassword": "Reset password"
   },
   "PlaceOrder": {
     "signInRequired": "Please sign in to place an order.",
@@ -241,7 +276,8 @@
     "total": "Total",
     "shippingAddress": "Shipping address",
     "tracking": "Tracking",
-    "notes": "Notes"
+    "notes": "Notes",
+    "contactOnWhatsApp": "Contact on WhatsApp"
   },
   "VariantSelector": {
     "size": "Size",

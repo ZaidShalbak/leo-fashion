@@ -67,8 +67,8 @@ export async function placeOrder(
     shippingLine2: string | null;
     shippingCity: string;
     shippingState: string | null;
-    shippingPostalCode: string;
-    shippingCountry: string;
+    shippingPostalCode: string | null;
+    shippingCountry: string | null;
     shippingPhone: string | null;
   };
   let newAddressToSave: Prisma.AddressCreateWithoutUserInput | null = null;
@@ -98,8 +98,8 @@ export async function placeOrder(
       shippingLine2: a.line2 ?? null,
       shippingCity: a.city,
       shippingState: a.state ?? null,
-      shippingPostalCode: a.postalCode,
-      shippingCountry: a.country,
+      shippingPostalCode: a.postalCode ?? null,
+      shippingCountry: a.country ?? null,
       shippingPhone: a.phone ?? null,
     };
     // Save it to the address book too, so it's selectable as a "saved
