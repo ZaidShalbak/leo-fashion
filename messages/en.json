@@ -269,7 +269,9 @@
     "showImage": "Show image {index} of {total}",
     "zoomImage": "Zoom in on product image",
     "zoomedTitle": "Zoomed image of {title}",
-    "closeZoom": "Close zoomed image"
+    "closeZoom": "Close zoomed image",
+    "previousImage": "Previous image",
+    "nextImage": "Next image"
   },
   "BrandsSection": {
     "shopByBrand": "Shop by brand",

@@ -9,6 +9,7 @@ import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
+import { colorSwatchValue } from "@/lib/colorSwatch";
 import { addToCart } from "@/server/actions/cart";
 import { PriceDisplay } from "./PriceDisplay";
 import { RollingText } from "./RollingText";
@@ -218,21 +219,31 @@ export function VariantSelector({
         <div className="flex flex-wrap gap-2">
           {sizes.map((size) => {
             const disabled = !sizeHasAnyStock(size);
+            const isSelected = size === selectedSize;
             return (
               <button
                 key={size}
                 type="button"
                 disabled={disabled}
-                aria-pressed={size === selectedSize}
+                aria-pressed={isSelected}
                 onClick={() => handleSelectSize(size)}
                 className={cn(
-                  "border-input min-w-10 rounded-md border px-3 py-1.5 text-sm transition",
-                  size === selectedSize && "border-primary bg-primary/5",
+                  "border-input relative min-w-10 rounded-md border px-3 py-1.5 text-sm transition",
                   disabled &&
                     "text-muted-foreground cursor-not-allowed line-through opacity-50"
                 )}
               >
-                {size}
+                {/* Shared layoutId — Motion animates this pill sliding from
+                    whichever size was previously selected to this one,
+                    rather than the border/tint just popping in place. */}
+                {isSelected && (
+                  <motion.span
+                    layoutId="size-selected-pill"
+                    className="border-primary bg-primary/5 absolute inset-0 rounded-md border-2"
+                    transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                  />
+                )}
+                <span className="relative">{size}</span>
               </button>
             );
           })}
@@ -241,24 +252,75 @@ export function VariantSelector({
 
       <div>
         <p className="mb-2 text-sm font-medium">{t("color")}</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           {colors.map((color) => {
             const disabled = !colorHasAnyStock(color);
+            const isSelected = color === selectedColor;
+            const swatch = colorSwatchValue(color);
             return (
               <button
                 key={color}
                 type="button"
                 disabled={disabled}
-                aria-pressed={color === selectedColor}
+                aria-pressed={isSelected}
+                aria-label={color}
                 onClick={() => handleSelectColor(color)}
                 className={cn(
-                  "border-input rounded-md border px-3 py-1.5 text-sm transition",
-                  color === selectedColor && "border-primary bg-primary/5",
-                  disabled &&
-                    "text-muted-foreground cursor-not-allowed line-through opacity-50"
+                  "group flex flex-col items-center gap-1.5",
+                  disabled && "cursor-not-allowed"
                 )}
               >
-                {color}
+                <span className="relative flex size-11 items-center justify-center">
+                  {isSelected && (
+                    <motion.span
+                      layoutId="color-selected-ring"
+                      className="ring-foreground absolute inset-0 rounded-full ring-2 ring-offset-2"
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <span
+                    className={cn(
+                      "border-border relative flex size-9 items-center justify-center overflow-hidden rounded-full border shadow-sm transition",
+                      !disabled && "group-hover:scale-110",
+                      disabled && "opacity-30"
+                    )}
+                    style={swatch ? { backgroundColor: swatch } : undefined}
+                  >
+                    {!swatch && (
+                      <span className="text-foreground/70 text-[9px] font-medium uppercase">
+                        {color.slice(0, 2)}
+                      </span>
+                    )}
+                    {disabled && (
+                      <span className="bg-border absolute inset-x-[-2px] top-1/2 h-px -rotate-45" />
+                    )}
+                    {isSelected && !disabled && (
+                      <motion.span
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                        // A light swatch needs a dark check to stay visible;
+                        // a dark one needs a light check — there's no
+                        // reliable way to know a free-text color's luminance
+                        // up front. mix-blend-difference inverts against
+                        // whatever's underneath, so a single white icon
+                        // reads correctly against any swatch color.
+                        className="absolute inset-0 flex items-center justify-center text-white mix-blend-difference"
+                      >
+                        <CheckIcon className="size-4" />
+                      </motion.span>
+                    )}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "text-xs transition",
+                    isSelected ? "text-foreground font-medium" : "text-muted-foreground",
+                    disabled && "line-through opacity-50"
+                  )}
+                >
+                  {color}
+                </span>
               </button>
             );
           })}
