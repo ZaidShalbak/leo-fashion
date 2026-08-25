@@ -24,7 +24,15 @@ export function PasswordInput({
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className="relative">
+    // dir="ltr" on the wrapper too, not just the Input — the button below
+    // is positioned with the logical `end-2`, which resolves against
+    // whichever direction its own nearest positioned ancestor has. Without
+    // this, that ancestor inherited the page's real RTL direction while
+    // the Input (forced dir="ltr") reserved padding on the opposite
+    // physical side, so the button and the padding disagreed on which
+    // side "end" was and the icon overlapped the password dots instead of
+    // sitting in the reserved gap.
+    <div className="relative" dir="ltr">
       <Input
         type={visible ? "text" : "password"}
         dir="ltr"
