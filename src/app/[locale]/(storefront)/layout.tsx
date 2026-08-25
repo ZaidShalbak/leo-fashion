@@ -66,25 +66,39 @@ export default async function StorefrontLayout({
   return (
     <ConfirmDialogProvider>
     <div className="flex min-h-full flex-col">
-      <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a]">
+      {/* rtl:[font-family:...] — the sitewide default (Geist Sans) has no
+          real Arabic glyphs, so Arabic nav text was silently falling back
+          to a generic system font, reading thin/plain next to the rest of
+          the site's considered typography. Tajawal is already loaded for
+          the homepage showcase bands (see layout.tsx above); applying it
+          here too, scoped to the header via inheritance, fixes the same
+          problem where it was most visible — the always-on nav row. */}
+      <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a] rtl:[font-family:var(--font-tajawal)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <Link href="/" aria-label={t("brandName")} dir="ltr">
             <LeoFashionLogo variant="mark" className="h-7 w-auto text-white" />
           </Link>
 
           {/* Full inline nav — desktop/tablet only; MobileNav below covers
-              small screens with a hamburger + slide-down panel instead. */}
-          <nav className="hidden items-center gap-5 text-sm sm:flex">
+              small screens with a hamburger + slide-down panel instead. The
+              size/weight bump below is scoped to the actual text links
+              only (not the whole <nav>), so it doesn't cascade into the
+              icon-based controls (search/cart/user menu/language switcher)
+              alongside them. */}
+          <nav className="hidden items-center gap-5 text-sm rtl:gap-6 sm:flex">
             {collections.map((collection) => (
               <Link
                 key={collection.id}
                 href={`/collections/${collection.handle}`}
-                className="text-white/70 transition hover:text-white"
+                className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
               >
                 {collection.title}
               </Link>
             ))}
-            <Link href="/brands" className="text-white/70 transition hover:text-white">
+            <Link
+              href="/brands"
+              className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
+            >
               {t("brands")}
             </Link>
             <SearchBox />
@@ -92,7 +106,10 @@ export default async function StorefrontLayout({
             {user ? (
               <UserMenu isAdmin={user.role === "admin"} newOrderCount={newOrderCount} />
             ) : (
-              <Link href="/login" className="text-white/70 transition hover:text-white">
+              <Link
+                href="/login"
+                className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
+              >
                 {t("signIn")}
               </Link>
             )}
