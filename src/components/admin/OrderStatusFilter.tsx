@@ -1,7 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
+import { usePathname, useRouter } from "@/i18n/navigation";
 import {
   Select,
   SelectContent,
@@ -13,6 +15,8 @@ import {
 const STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
 
 export function OrderStatusFilter() {
+  const t = useTranslations("AdminOrders");
+  const tStatus = useTranslations("OrderStatus");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,13 +33,13 @@ export function OrderStatusFilter() {
   return (
     <Select value={current} onValueChange={setStatus}>
       <SelectTrigger size="sm" className="w-44">
-        <SelectValue placeholder="Status" />
+        <SelectValue placeholder={t("statusPlaceholder")} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All statuses</SelectItem>
+        <SelectItem value="all">{t("allStatuses")}</SelectItem>
         {STATUSES.map((status) => (
           <SelectItem key={status} value={status}>
-            {status}
+            {tStatus(status)}
           </SelectItem>
         ))}
       </SelectContent>

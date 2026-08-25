@@ -1,8 +1,9 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import type { OrderStatus } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
+import { Link } from "@/i18n/navigation";
 import {
   Table,
   TableBody,
@@ -17,16 +18,30 @@ import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 import { OrderStatusFilter } from "@/components/admin/OrderStatusFilter";
 import { calculateTotalCents } from "@/lib/cart-totals";
 
-export const metadata: Metadata = { title: "Orders — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/orders">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminOrders" });
+  return { title: t("metaTitle") };
+}
 
 const VALID_STATUSES = new Set(["pending", "processing", "shipped", "delivered", "cancelled"]);
 
-type Props = {
-  searchParams: Promise<{ status?: string }>;
-};
-
-export default async function AdminOrdersPage({ searchParams }: Props) {
-  const { status } = await searchParams;
+export default async function AdminOrdersPage({
+  searchParams,
+}: PageProps<"/[locale]/admin/orders">) {
+  const t = await getTranslations("AdminOrders");
+  const tStatus = await getTranslations("OrderStatus");
+  const statusLabels = {
+    pending: tStatus("pending"),
+    processing: tStatus("processing"),
+    shipped: tStatus("shipped"),
+    delivered: tStatus("delivered"),
+    cancelled: tStatus("cancelled"),
+  };
+  const { status: statusParam } = await searchParams;
+  const status = Array.isArray(statusParam) ? statusParam[0] : statusParam;
   const statusFilter = status && VALID_STATUSES.has(status) ? (status as OrderStatus) : undefined;
 
   const orders = await db.order.findMany({
@@ -41,19 +56,19 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Orders</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
         <OrderStatusFilter />
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Order</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Items</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t("columnOrder")}</TableHead>
+            <TableHead>{t("columnCustomer")}</TableHead>
+            <TableHead>{t("columnDate")}</TableHead>
+            <TableHead>{t("columnItems")}</TableHead>
+            <TableHead>{t("columnTotal")}</TableHead>
+            <TableHead>{t("columnStatus")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -65,7 +80,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 </Link>
                 {order.viewedByAdminAt === null && (
                   <Badge variant="destructive" className="ms-2 animate-pulse">
-                    New
+                    {t("newBadge")}
                   </Badge>
                 )}
               </TableCell>
@@ -95,14 +110,14 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 )}
               </TableCell>
               <TableCell>
-                <OrderStatusBadge status={order.status} />
+                <OrderStatusBadge status={order.status} labels={statusLabels} />
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
       {orders.length === 0 && (
-        <p className="text-muted-foreground text-sm">No orders match this filter.</p>
+        <p className="text-muted-foreground text-sm">{t("noOrdersMatch")}</p>
       )}
     </div>
   );

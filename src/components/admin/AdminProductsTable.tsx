@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ImageIcon } from "lucide-react";
 import type { Product, ProductImage, ProductVariant } from "@prisma/client";
@@ -37,9 +38,15 @@ export type ProductRow = Product & { variants: ProductVariant[]; images: Product
  * two views behave identically.
  */
 export function AdminProductsTable({ products }: { products: ProductRow[] }) {
+  const t = useTranslations("AdminProducts");
   const { selectedIds, allSelected, toggleAll, toggleOne, clear } = useProductSelection(
     products.map((p) => p.id)
   );
+  const statusLabel: Record<Product["status"], string> = {
+    draft: t("statusDraft"),
+    active: t("statusActive"),
+    archived: t("statusArchived"),
+  };
 
   return (
     <div className="space-y-3">
@@ -53,15 +60,15 @@ export function AdminProductsTable({ products }: { products: ProductRow[] }) {
                 type="checkbox"
                 checked={allSelected}
                 onChange={toggleAll}
-                aria-label="Select all products"
+                aria-label={t("selectAllProducts")}
               />
             </TableHead>
             <TableHead className="w-14" />
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead>Variants</TableHead>
-            <TableHead>Total stock</TableHead>
+            <TableHead>{t("titleColumn")}</TableHead>
+            <TableHead>{t("statusColumn")}</TableHead>
+            <TableHead>{t("priceColumn")}</TableHead>
+            <TableHead>{t("variantsColumn")}</TableHead>
+            <TableHead>{t("totalStockColumn")}</TableHead>
             <TableHead />
             <TableHead />
           </TableRow>
@@ -80,7 +87,7 @@ export function AdminProductsTable({ products }: { products: ProductRow[] }) {
                     type="checkbox"
                     checked={selectedIds.has(product.id)}
                     onChange={() => toggleOne(product.id)}
-                    aria-label={`Select ${product.title}`}
+                    aria-label={t("selectProduct", { title: product.title })}
                   />
                 </TableCell>
                 <TableCell>
@@ -104,7 +111,7 @@ export function AdminProductsTable({ products }: { products: ProductRow[] }) {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={STATUS_VARIANT[product.status]}>{product.status}</Badge>
+                  <Badge variant={STATUS_VARIANT[product.status]}>{statusLabel[product.status]}</Badge>
                 </TableCell>
                 <TableCell>{formatPriceCents(product.basePriceCents)}</TableCell>
                 <TableCell>{product.variants.length}</TableCell>

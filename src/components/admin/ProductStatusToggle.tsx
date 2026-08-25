@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { setProductStatus } from "@/server/actions/admin/products";
@@ -13,6 +14,7 @@ export function ProductStatusToggle({
   productId: string;
   status: ProductStatus;
 }) {
+  const t = useTranslations("AdminProducts");
   const [isPending, startTransition] = useTransition();
 
   function setStatus(next: ProductStatus) {
@@ -30,7 +32,7 @@ export function ProductStatusToggle({
         disabled={isPending}
         onClick={() => setStatus("draft")}
       >
-        Restore to draft
+        {t("restoreToDraft")}
       </Button>
     );
   }
@@ -43,7 +45,7 @@ export function ProductStatusToggle({
       disabled={isPending}
       onClick={() => setStatus("archived")}
     >
-      Archive
+      {t("archive")}
     </Button>
   );
 }

@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
 import { HeroBannerReorderList } from "@/components/admin/HeroBannerReorderList";
 import { NewHeroBannerForm } from "@/components/admin/NewHeroBannerForm";
 
-export const metadata: Metadata = { title: "Hero banners — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/hero-banners">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminHeroBanners" });
+  return { title: t("metaTitle") };
+}
 
 function statusOf(
   banner: { isActive: boolean; startsAt: Date | null; endsAt: Date | null },
@@ -18,17 +25,15 @@ function statusOf(
 }
 
 export default async function AdminHeroBannersPage() {
+  const t = await getTranslations("AdminHeroBanners");
   const banners = await db.heroBanner.findMany({ orderBy: { position: "asc" } });
   const now = new Date();
 
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Hero banners</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          What shows in the homepage carousel. If there are no live banners, the homepage falls
-          back to showing your categories instead.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{t("subheading")}</p>
       </div>
 
       <HeroBannerReorderList
@@ -50,7 +55,7 @@ export default async function AdminHeroBannersPage() {
       />
 
       <div className="space-y-3">
-        <h2 className="text-sm font-medium">Add a banner</h2>
+        <h2 className="text-sm font-medium">{t("addBannerHeading")}</h2>
         <NewHeroBannerForm />
       </div>
     </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import {
@@ -14,16 +15,22 @@ import { LOW_STOCK_THRESHOLD as DEFAULT_THRESHOLD } from "@/lib/inventory";
 import { ThresholdControl } from "@/components/admin/ThresholdControl";
 import { InventoryAdjustControl } from "@/components/admin/InventoryAdjustRow";
 
-export const metadata: Metadata = { title: "Inventory — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/inventory">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminInventory" });
+  return { title: t("metaTitle") };
+}
 
-type Props = {
-  searchParams: Promise<{ threshold?: string }>;
-};
-
-export default async function AdminInventoryPage({ searchParams }: Props) {
+export default async function AdminInventoryPage({
+  searchParams,
+}: PageProps<"/[locale]/admin/inventory">) {
+  const t = await getTranslations("AdminInventory");
   const { threshold: thresholdParam } = await searchParams;
   const threshold = (() => {
-    const n = parseInt(thresholdParam ?? "", 10);
+    const raw = Array.isArray(thresholdParam) ? thresholdParam[0] : thresholdParam;
+    const n = parseInt(raw ?? "", 10);
     return Number.isFinite(n) && n >= 0 ? n : DEFAULT_THRESHOLD;
   })();
 
@@ -35,18 +42,18 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Inventory</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
         <ThresholdControl defaultThreshold={DEFAULT_THRESHOLD} />
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Product</TableHead>
-            <TableHead>SKU</TableHead>
-            <TableHead>Size / color</TableHead>
-            <TableHead>Stock</TableHead>
-            <TableHead>Adjust</TableHead>
+            <TableHead>{t("columnProduct")}</TableHead>
+            <TableHead>{t("columnSku")}</TableHead>
+            <TableHead>{t("columnSizeColor")}</TableHead>
+            <TableHead>{t("columnStock")}</TableHead>
+            <TableHead>{t("columnAdjust")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -64,7 +71,7 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
                     {variant.inventoryQuantity}
                   </span>
                   {lowStock && (
-                    <span className="text-destructive ml-2 text-xs">Low stock</span>
+                    <span className="text-destructive ms-2 text-xs">{t("lowStock")}</span>
                   )}
                 </TableCell>
                 <TableCell>

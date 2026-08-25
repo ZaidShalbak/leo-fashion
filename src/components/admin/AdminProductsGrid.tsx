@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ImageIcon } from "lucide-react";
 
@@ -26,7 +27,13 @@ const STATUS_VARIANT = {
  * between the two.
  */
 export function AdminProductsGrid({ products }: { products: ProductRow[] }) {
+  const t = useTranslations("AdminProducts");
   const { selectedIds, toggleOne, clear } = useProductSelection(products.map((p) => p.id));
+  const statusLabel: Record<ProductRow["status"], string> = {
+    draft: t("statusDraft"),
+    active: t("statusActive"),
+    archived: t("statusArchived"),
+  };
 
   return (
     <div className="space-y-3">
@@ -43,9 +50,9 @@ export function AdminProductsGrid({ products }: { products: ProductRow[] }) {
                   type="checkbox"
                   checked={selectedIds.has(product.id)}
                   onChange={() => toggleOne(product.id)}
-                  aria-label={`Select ${product.title}`}
+                  aria-label={t("selectProduct", { title: product.title })}
                 />
-                <Badge variant={STATUS_VARIANT[product.status]}>{product.status}</Badge>
+                <Badge variant={STATUS_VARIANT[product.status]}>{statusLabel[product.status]}</Badge>
               </div>
               <div className="bg-muted mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-md">
                 {thumbnail ? (
@@ -69,8 +76,7 @@ export function AdminProductsGrid({ products }: { products: ProductRow[] }) {
               <div className="text-muted-foreground mt-1 flex items-center justify-between text-sm">
                 <span>{formatPriceCents(product.basePriceCents)}</span>
                 <span>
-                  {product.variants.length} variant{product.variants.length === 1 ? "" : "s"} ·{" "}
-                  {totalStock} in stock
+                  {t("variantStockSummary", { variants: product.variants.length, stock: totalStock })}
                 </span>
               </div>
               <div className="mt-3 flex items-center justify-between gap-2">

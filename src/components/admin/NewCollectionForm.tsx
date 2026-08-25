@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { createCollection } from "@/server/actions/admin/collections";
 
 export function NewCollectionForm() {
+  const t = useTranslations("AdminCollections");
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,15 +38,15 @@ export function NewCollectionForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Name</Label>
+        <Label htmlFor="title">{t("nameLabel")}</Label>
         <Input id="title" name="title" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="handle">Handle</Label>
-        <Input id="handle" name="handle" placeholder="denim" required />
+        <Label htmlFor="handle">{t("handleLabel")}</Label>
+        <Input id="handle" name="handle" placeholder={t("handlePlaceholder")} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("descriptionLabel")}</Label>
         <textarea
           id="description"
           name="description"
@@ -53,16 +55,13 @@ export function NewCollectionForm() {
         />
       </div>
       <div className="border-border space-y-4 border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          Optional — shown on the storefront when a shopper is browsing in
-          Arabic. Leave blank to keep showing the name/description above.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("arabicSectionHelp")}</p>
         <div className="space-y-1.5">
-          <Label htmlFor="titleAr">Name (Arabic)</Label>
+          <Label htmlFor="titleAr">{t("nameArLabel")}</Label>
           <Input id="titleAr" name="titleAr" dir="rtl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <Label htmlFor="descriptionAr">{t("descriptionArLabel")}</Label>
           <textarea
             id="descriptionAr"
             name="descriptionAr"
@@ -80,7 +79,7 @@ export function NewCollectionForm() {
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Adding…" : "Add category"}
+        {isPending ? t("adding") : t("addCategory")}
       </Button>
     </form>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { createDiscountCode } from "@/server/actions/admin/discountCodes";
 
 export function NewDiscountCodeForm() {
+  const t = useTranslations("AdminDiscountCodes");
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -46,11 +48,11 @@ export function NewDiscountCodeForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="code">Code</Label>
+        <Label htmlFor="code">{t("codeLabel")}</Label>
         <Input id="code" name="code" placeholder="SUMMER20" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="percentOff">Percent off</Label>
+        <Label htmlFor="percentOff">{t("percentOffLabel")}</Label>
         <Input
           id="percentOff"
           name="percentOff"
@@ -62,11 +64,11 @@ export function NewDiscountCodeForm() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="expiresAt">Expires on (optional)</Label>
+        <Label htmlFor="expiresAt">{t("expiresAtLabel")}</Label>
         <Input id="expiresAt" name="expiresAt" type="date" />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="minOrderAmount">Minimum order amount (optional)</Label>
+        <Label htmlFor="minOrderAmount">{t("minOrderAmountLabel")}</Label>
         <Input
           id="minOrderAmount"
           name="minOrderAmount"
@@ -77,12 +79,10 @@ export function NewDiscountCodeForm() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="maxRedemptions">Max total redemptions (optional)</Label>
+        <Label htmlFor="maxRedemptions">{t("maxRedemptionsLabel")}</Label>
         <Input id="maxRedemptions" name="maxRedemptions" type="number" min={1} step={1} />
       </div>
-      <p className="text-muted-foreground text-xs">
-        Each customer can use a code once, regardless of these limits.
-      </p>
+      <p className="text-muted-foreground text-xs">{t("perCustomerNote")}</p>
 
       {error && (
         <p role="alert" className="text-destructive text-sm">
@@ -91,7 +91,7 @@ export function NewDiscountCodeForm() {
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Adding…" : "Add discount code"}
+        {isPending ? t("adding") : t("addDiscountCode")}
       </Button>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ function toDateInputValue(date: Date): string {
 }
 
 export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountCode }) {
+  const t = useTranslations("AdminDiscountCodes");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -66,11 +68,11 @@ export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountC
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="code">Code</Label>
+        <Label htmlFor="code">{t("codeLabel")}</Label>
         <Input id="code" name="code" defaultValue={discountCode.code} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="percentOff">Percent off</Label>
+        <Label htmlFor="percentOff">{t("percentOffLabel")}</Label>
         <Input
           id="percentOff"
           name="percentOff"
@@ -88,10 +90,10 @@ export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountC
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
         />
-        Active
+        {t("activeLabel")}
       </label>
       <div className="space-y-1.5">
-        <Label htmlFor="expiresAt">Expires on (optional)</Label>
+        <Label htmlFor="expiresAt">{t("expiresAtLabel")}</Label>
         <Input
           id="expiresAt"
           name="expiresAt"
@@ -100,7 +102,7 @@ export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountC
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="minOrderAmount">Minimum order amount (optional)</Label>
+        <Label htmlFor="minOrderAmount">{t("minOrderAmountLabel")}</Label>
         <Input
           id="minOrderAmount"
           name="minOrderAmount"
@@ -116,7 +118,7 @@ export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountC
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="maxRedemptions">Max total redemptions (optional)</Label>
+        <Label htmlFor="maxRedemptions">{t("maxRedemptionsLabel")}</Label>
         <Input
           id="maxRedemptions"
           name="maxRedemptions"
@@ -126,8 +128,7 @@ export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountC
           defaultValue={discountCode.maxRedemptions ?? ""}
         />
         <p className="text-muted-foreground text-xs">
-          Redeemed {discountCode.redemptionCount} time
-          {discountCode.redemptionCount === 1 ? "" : "s"} so far.
+          {t("redeemedCount", { count: discountCode.redemptionCount })}
         </p>
       </div>
 
@@ -139,14 +140,14 @@ export function EditDiscountCodeForm({ discountCode }: { discountCode: DiscountC
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
+          {isPending ? t("saving") : t("saveChanges")}
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={() => router.push("/admin/discount-codes")}
         >
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </form>

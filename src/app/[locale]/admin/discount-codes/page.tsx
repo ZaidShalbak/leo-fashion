@@ -1,7 +1,8 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
+import { Link } from "@/i18n/navigation";
 import {
   Table,
   TableBody,
@@ -15,9 +16,16 @@ import { formatPriceCents } from "@/components/storefront/PriceDisplay";
 import { NewDiscountCodeForm } from "@/components/admin/NewDiscountCodeForm";
 import { DeleteDiscountCodeButton } from "@/components/admin/DeleteDiscountCodeButton";
 
-export const metadata: Metadata = { title: "Discount codes — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/discount-codes">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminDiscountCodes" });
+  return { title: t("metaTitle") };
+}
 
 export default async function AdminDiscountCodesPage() {
+  const t = await getTranslations("AdminDiscountCodes");
   const discountCodes = await db.discountCode.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -26,22 +34,19 @@ export default async function AdminDiscountCodesPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Discount codes</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Percentage-off codes applied to a customer&apos;s whole order at
-          checkout.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{t("subheading")}</p>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Code</TableHead>
-            <TableHead>Off</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Expires</TableHead>
-            <TableHead>Min. order</TableHead>
-            <TableHead>Redemptions</TableHead>
+            <TableHead>{t("columnCode")}</TableHead>
+            <TableHead>{t("columnOff")}</TableHead>
+            <TableHead>{t("columnStatus")}</TableHead>
+            <TableHead>{t("columnExpires")}</TableHead>
+            <TableHead>{t("columnMinOrder")}</TableHead>
+            <TableHead>{t("columnRedemptions")}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -63,13 +68,13 @@ export default async function AdminDiscountCodesPage() {
                 <TableCell>{dc.percentOff}%</TableCell>
                 <TableCell>
                   {!dc.isActive ? (
-                    <Badge variant="secondary">Inactive</Badge>
+                    <Badge variant="secondary">{t("statusInactive")}</Badge>
                   ) : expired ? (
-                    <Badge variant="secondary">Expired</Badge>
+                    <Badge variant="secondary">{t("statusExpired")}</Badge>
                   ) : limitReached ? (
-                    <Badge variant="secondary">Limit reached</Badge>
+                    <Badge variant="secondary">{t("statusLimitReached")}</Badge>
                   ) : (
-                    <Badge>Active</Badge>
+                    <Badge>{t("statusActive")}</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
@@ -97,11 +102,11 @@ export default async function AdminDiscountCodesPage() {
         </TableBody>
       </Table>
       {discountCodes.length === 0 && (
-        <p className="text-muted-foreground text-sm">No discount codes yet.</p>
+        <p className="text-muted-foreground text-sm">{t("emptyState")}</p>
       )}
 
       <div className="space-y-3">
-        <h2 className="text-sm font-medium">Add a discount code</h2>
+        <h2 className="text-sm font-medium">{t("addHeading")}</h2>
         <NewDiscountCodeForm />
       </div>
     </div>

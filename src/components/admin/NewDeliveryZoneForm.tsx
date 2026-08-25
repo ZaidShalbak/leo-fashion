@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { createDeliveryZone } from "@/server/actions/admin/deliveryZones";
 
 export function NewDeliveryZoneForm() {
+  const t = useTranslations("AdminDeliveryZones");
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -39,16 +41,24 @@ export function NewDeliveryZoneForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="name">Name (Arabic)</Label>
-        <Input id="name" name="name" dir="rtl" placeholder="الضفة الغربية" required />
+        <Label htmlFor="name">{t("nameLabel")}</Label>
+        <Input id="name" name="name" dir="rtl" placeholder={t("namePlaceholder")} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="fee">Delivery fee</Label>
-        <Input id="fee" name="fee" type="number" min={0} step="0.01" placeholder="0.00" required />
+        <Label htmlFor="fee">{t("feeLabel")}</Label>
+        <Input
+          id="fee"
+          name="fee"
+          type="number"
+          min={0}
+          step="0.01"
+          placeholder={t("feePlaceholder")}
+          required
+        />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="position">Display order</Label>
-        <Input id="position" name="position" type="number" step={1} placeholder="0" />
+        <Label htmlFor="position">{t("positionLabel")}</Label>
+        <Input id="position" name="position" type="number" step={1} placeholder={t("positionPlaceholder")} />
       </div>
 
       {error && (
@@ -58,7 +68,7 @@ export function NewDeliveryZoneForm() {
       )}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Adding…" : "Add delivery area"}
+        {isPending ? t("addButtonPending") : t("addButton")}
       </Button>
     </form>
   );

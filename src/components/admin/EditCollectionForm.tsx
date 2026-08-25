@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ type Collection = {
 };
 
 export function EditCollectionForm({ collection }: { collection: Collection }) {
+  const t = useTranslations("AdminCollections");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -48,15 +50,15 @@ export function EditCollectionForm({ collection }: { collection: Collection }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Name</Label>
+        <Label htmlFor="title">{t("nameLabel")}</Label>
         <Input id="title" name="title" defaultValue={collection.title} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="handle">Handle</Label>
+        <Label htmlFor="handle">{t("handleLabel")}</Label>
         <Input id="handle" name="handle" defaultValue={collection.handle} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("descriptionLabel")}</Label>
         <textarea
           id="description"
           name="description"
@@ -66,16 +68,13 @@ export function EditCollectionForm({ collection }: { collection: Collection }) {
         />
       </div>
       <div className="border-border space-y-4 border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          Optional — shown on the storefront when a shopper is browsing in
-          Arabic. Leave blank to keep showing the name/description above.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("arabicSectionHelp")}</p>
         <div className="space-y-1.5">
-          <Label htmlFor="titleAr">Name (Arabic)</Label>
+          <Label htmlFor="titleAr">{t("nameArLabel")}</Label>
           <Input id="titleAr" name="titleAr" defaultValue={collection.titleAr ?? ""} dir="rtl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <Label htmlFor="descriptionAr">{t("descriptionArLabel")}</Label>
           <textarea
             id="descriptionAr"
             name="descriptionAr"
@@ -95,10 +94,10 @@ export function EditCollectionForm({ collection }: { collection: Collection }) {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
+          {isPending ? t("saving") : t("saveChanges")}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/admin/collections")}>
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </form>

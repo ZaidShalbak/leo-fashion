@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { deleteProduct } from "@/server/actions/admin/products";
@@ -14,6 +15,7 @@ export function DeleteProductButton({
   productId: string;
   productTitle: string;
 }) {
+  const t = useTranslations("AdminProducts");
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
@@ -21,9 +23,10 @@ export function DeleteProductButton({
 
   async function handleDelete() {
     const confirmed = await confirm({
-      title: `Delete "${productTitle}"?`,
-      description: "This can't be undone.",
-      confirmLabel: "Delete",
+      title: t("deleteProductTitle", { title: productTitle }),
+      description: t("cannotBeUndone"),
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -54,7 +57,7 @@ export function DeleteProductButton({
         onClick={handleDelete}
         className="text-destructive hover:text-destructive"
       >
-        {isPending ? "Deleting…" : "Delete"}
+        {isPending ? t("deleting") : t("delete")}
       </Button>
     </div>
   );

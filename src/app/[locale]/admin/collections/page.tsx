@@ -1,7 +1,8 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
+import { Link } from "@/i18n/navigation";
 import {
   Table,
   TableBody,
@@ -13,9 +14,16 @@ import {
 import { NewCollectionForm } from "@/components/admin/NewCollectionForm";
 import { DeleteCollectionButton } from "@/components/admin/DeleteCollectionButton";
 
-export const metadata: Metadata = { title: "Categories — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/collections">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminCollections" });
+  return { title: t("metaTitle") };
+}
 
 export default async function AdminCollectionsPage() {
+  const t = await getTranslations("AdminCollections");
   const collections = await db.collection.findMany({
     orderBy: { title: "asc" },
     include: { _count: { select: { products: true } } },
@@ -24,19 +32,19 @@ export default async function AdminCollectionsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Categories</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          The categories products are grouped into on the storefront (shown as
-          &ldquo;Shop by category&rdquo; and at <code>/collections/[handle]</code>).
+          {t("subheadingPrefix")} <code>/collections/[handle]</code>
+          {t("subheadingSuffix")}
         </p>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Handle</TableHead>
-            <TableHead>Products</TableHead>
+            <TableHead>{t("columnName")}</TableHead>
+            <TableHead>{t("columnHandle")}</TableHead>
+            <TableHead>{t("columnProducts")}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -66,7 +74,7 @@ export default async function AdminCollectionsPage() {
       </Table>
 
       <div className="space-y-3">
-        <h2 className="text-sm font-medium">Add a category</h2>
+        <h2 className="text-sm font-medium">{t("addCategoryHeading")}</h2>
         <NewCollectionForm />
       </div>
     </div>

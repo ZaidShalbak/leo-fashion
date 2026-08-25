@@ -1,8 +1,9 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { isSaleLive } from "@/lib/sales";
+import { Link } from "@/i18n/navigation";
 import {
   Table,
   TableBody,
@@ -15,15 +16,21 @@ import { Badge } from "@/components/ui/badge";
 import { NewSaleForm } from "@/components/admin/NewSaleForm";
 import { DeleteSaleButton } from "@/components/admin/DeleteSaleButton";
 
-export const metadata: Metadata = { title: "Sales — Admin" };
-
-const SCOPE_LABELS = {
-  SITE_WIDE: "Entire site",
-  COLLECTION: "Category",
-  BRAND: "Brand",
-} as const;
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/sales">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminSales" });
+  return { title: t("metaTitle") };
+}
 
 export default async function AdminSalesPage() {
+  const t = await getTranslations("AdminSales");
+  const SCOPE_LABELS = {
+    SITE_WIDE: t("scopeSiteWide"),
+    COLLECTION: t("scopeCategory"),
+    BRAND: t("scopeBrand"),
+  } as const;
   const [sales, collections, brands] = await Promise.all([
     db.sale.findMany({ orderBy: { createdAt: "desc" } }),
     db.collection.findMany({ orderBy: { title: "asc" } }),
@@ -36,21 +43,18 @@ export default async function AdminSalesPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Sales</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Automatic percentage markdowns — no code needed, shown directly on the storefront
-          as a struck-through price. Stacks with a customer&apos;s promo code at checkout.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{t("subheading")}</p>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Applies to</TableHead>
-            <TableHead>Off</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Window</TableHead>
+            <TableHead>{t("columnTitle")}</TableHead>
+            <TableHead>{t("columnAppliesTo")}</TableHead>
+            <TableHead>{t("columnOff")}</TableHead>
+            <TableHead>{t("columnStatus")}</TableHead>
+            <TableHead>{t("columnWindow")}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -78,15 +82,15 @@ export default async function AdminSalesPage() {
                 <TableCell>{sale.percentOff}%</TableCell>
                 <TableCell>
                   {!sale.isActive ? (
-                    <Badge variant="secondary">Inactive</Badge>
+                    <Badge variant="secondary">{t("statusInactive")}</Badge>
                   ) : scheduled ? (
-                    <Badge variant="secondary">Scheduled</Badge>
+                    <Badge variant="secondary">{t("statusScheduled")}</Badge>
                   ) : expired ? (
-                    <Badge variant="secondary">Expired</Badge>
+                    <Badge variant="secondary">{t("statusExpired")}</Badge>
                   ) : isSaleLive(sale, now) ? (
-                    <Badge>Active</Badge>
+                    <Badge>{t("statusActive")}</Badge>
                   ) : (
-                    <Badge variant="secondary">Inactive</Badge>
+                    <Badge variant="secondary">{t("statusInactive")}</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
@@ -115,10 +119,10 @@ export default async function AdminSalesPage() {
           })}
         </TableBody>
       </Table>
-      {sales.length === 0 && <p className="text-muted-foreground text-sm">No sales yet.</p>}
+      {sales.length === 0 && <p className="text-muted-foreground text-sm">{t("emptyState")}</p>}
 
       <div className="space-y-3">
-        <h2 className="text-sm font-medium">Add a sale</h2>
+        <h2 className="text-sm font-medium">{t("addSaleHeading")}</h2>
         <NewSaleForm
           collections={collections.map((c) => ({ id: c.id, title: c.title }))}
           brands={brands.map((b) => ({ id: b.id, name: b.name }))}

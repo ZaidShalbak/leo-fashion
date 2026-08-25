@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "@/i18n/navigation";
 import { updateSale } from "@/server/actions/admin/sales";
 import { SaleScopePicker, type SaleScopeValue } from "./SaleScopePicker";
 
@@ -35,6 +36,7 @@ export function EditSaleForm({
   collections: { id: string; title: string }[];
   brands: { id: string; name: string }[];
 }) {
+  const t = useTranslations("AdminSales");
   const router = useRouter();
   const [scope, setScope] = useState<SaleScopeValue>(sale.scope);
   const [collectionId, setCollectionId] = useState(
@@ -74,11 +76,11 @@ export function EditSaleForm({
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">{t("titleLabel")}</Label>
         <Input id="title" name="title" defaultValue={sale.title} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="percentOff">Percent off</Label>
+        <Label htmlFor="percentOff">{t("percentOffLabel")}</Label>
         <Input
           id="percentOff"
           name="percentOff"
@@ -96,7 +98,7 @@ export function EditSaleForm({
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
         />
-        Active
+        {t("activeLabel")}
       </label>
 
       <SaleScopePicker
@@ -111,7 +113,7 @@ export function EditSaleForm({
       />
 
       <div className="space-y-1.5">
-        <Label htmlFor="startsAt">Starts on (optional)</Label>
+        <Label htmlFor="startsAt">{t("startsOnLabel")}</Label>
         <Input
           id="startsAt"
           name="startsAt"
@@ -120,7 +122,7 @@ export function EditSaleForm({
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="endsAt">Ends on (optional)</Label>
+        <Label htmlFor="endsAt">{t("endsOnLabel")}</Label>
         <Input
           id="endsAt"
           name="endsAt"
@@ -137,10 +139,10 @@ export function EditSaleForm({
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
+          {isPending ? t("savingButton") : t("saveChangesButton")}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/admin/sales")}>
-          Cancel
+          {t("cancelButton")}
         </Button>
       </div>
     </form>

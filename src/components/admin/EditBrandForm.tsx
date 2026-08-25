@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ type Brand = {
 };
 
 export function EditBrandForm({ brand }: { brand: Brand }) {
+  const t = useTranslations("AdminBrands");
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -50,19 +52,19 @@ export function EditBrandForm({ brand }: { brand: Brand }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t("nameLabel")}</Label>
         <Input id="name" name="name" defaultValue={brand.name} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="slug">Slug</Label>
+        <Label htmlFor="slug">{t("slugLabel")}</Label>
         <Input id="slug" name="slug" defaultValue={brand.slug} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="logoUrl">Logo URL</Label>
+        <Label htmlFor="logoUrl">{t("logoUrlLabel")}</Label>
         <Input id="logoUrl" name="logoUrl" defaultValue={brand.logoUrl ?? ""} placeholder="https://…" />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("descriptionLabel")}</Label>
         <textarea
           id="description"
           name="description"
@@ -72,17 +74,13 @@ export function EditBrandForm({ brand }: { brand: Brand }) {
         />
       </div>
       <div className="border-border space-y-4 border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          Optional — shown on the storefront when a shopper is browsing in
-          Arabic. Leave blank to keep showing the name/description above.
-          The brand&apos;s wordmark/logo is unaffected either way.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("arabicSectionHelp")}</p>
         <div className="space-y-1.5">
-          <Label htmlFor="nameAr">Name (Arabic)</Label>
+          <Label htmlFor="nameAr">{t("nameArLabel")}</Label>
           <Input id="nameAr" name="nameAr" defaultValue={brand.nameAr ?? ""} dir="rtl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <Label htmlFor="descriptionAr">{t("descriptionArLabel")}</Label>
           <textarea
             id="descriptionAr"
             name="descriptionAr"
@@ -102,10 +100,10 @@ export function EditBrandForm({ brand }: { brand: Brand }) {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
+          {isPending ? t("saving") : t("saveChanges")}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/admin/brands")}>
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </form>

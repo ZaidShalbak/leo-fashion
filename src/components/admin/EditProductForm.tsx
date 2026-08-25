@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ export function EditProductForm({
   collections: Collection[];
   brands: Brand[];
 }) {
+  const t = useTranslations("AdminProducts");
   const [status, setStatus] = useState<ProductStatus>(product.status);
   const [brandId, setBrandId] = useState<string>(product.brandId ?? brands[0]?.id ?? "");
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(
@@ -84,15 +86,15 @@ export function EditProductForm({
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
       <div className="space-y-1.5">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">{t("titleLabel")}</Label>
         <Input id="title" name="title" defaultValue={product.title} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="slug">Slug</Label>
+        <Label htmlFor="slug">{t("slugLabel")}</Label>
         <Input id="slug" name="slug" defaultValue={product.slug} required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("descriptionLabel")}</Label>
         <textarea
           id="description"
           name="description"
@@ -102,16 +104,13 @@ export function EditProductForm({
         />
       </div>
       <div className="border-border space-y-4 border-t pt-4">
-        <p className="text-muted-foreground text-xs">
-          Optional — shown on the storefront when a shopper is browsing in
-          Arabic. Leave blank to keep showing the title/description above.
-        </p>
+        <p className="text-muted-foreground text-xs">{t("arabicFieldsNote")}</p>
         <div className="space-y-1.5">
-          <Label htmlFor="titleAr">Title (Arabic)</Label>
+          <Label htmlFor="titleAr">{t("titleArLabel")}</Label>
           <Input id="titleAr" name="titleAr" defaultValue={product.titleAr ?? ""} dir="rtl" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="descriptionAr">Description (Arabic)</Label>
+          <Label htmlFor="descriptionAr">{t("descriptionArLabel")}</Label>
           <textarea
             id="descriptionAr"
             name="descriptionAr"
@@ -124,7 +123,7 @@ export function EditProductForm({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="basePrice">Base price (ILS)</Label>
+          <Label htmlFor="basePrice">{t("basePriceLabel")}</Label>
           <Input
             id="basePrice"
             name="basePrice"
@@ -136,26 +135,26 @@ export function EditProductForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Status</Label>
+          <Label>{t("statusLabel")}</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as ProductStatus)}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="draft">{t("statusDraft")}</SelectItem>
+              <SelectItem value="active">{t("statusActive")}</SelectItem>
+              <SelectItem value="archived">{t("statusArchived")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Brand</Label>
+        <Label>{t("brandLabel")}</Label>
         {brands.length > 0 ? (
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a brand" />
+              <SelectValue placeholder={t("selectBrandPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {brands.map((brand) => (
@@ -166,15 +165,13 @@ export function EditProductForm({
             </SelectContent>
           </Select>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No brands yet — add one on the Brands page first.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("noBrandsYet")}</p>
         )}
       </div>
 
       {collections.length > 0 && (
         <div className="space-y-2">
-          <Label>Collections</Label>
+          <Label>{t("collectionsLabel")}</Label>
           <div className="flex flex-wrap gap-3">
             {collections.map((c) => (
               <label key={c.id} className="flex items-center gap-2 text-sm">
@@ -195,10 +192,10 @@ export function EditProductForm({
           {error}
         </p>
       )}
-      {saved && !error && <p className="text-sm text-green-700">Saved.</p>}
+      {saved && !error && <p className="text-sm text-green-700">{t("saved")}</p>}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Saving…" : "Save changes"}
+        {isPending ? t("saving") : t("saveChanges")}
       </Button>
     </form>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ type Variant = {
 };
 
 function VariantRow({ variant }: { variant: Variant }) {
+  const t = useTranslations("AdminProducts");
   const [sku, setSku] = useState(variant.sku);
   const [size, setSize] = useState(variant.size);
   const [color, setColor] = useState(variant.color);
@@ -87,15 +89,15 @@ function VariantRow({ variant }: { variant: Variant }) {
       <TableCell className="text-muted-foreground">
         {variant.inventoryQuantity}{" "}
         <Link href="/admin/inventory" className="underline">
-          adjust
+          {t("adjustLink")}
         </Link>
       </TableCell>
-      <TableCell className="space-x-2">
+      <TableCell className="flex items-center gap-2">
         <Button type="button" size="sm" variant="outline" disabled={isPending} onClick={handleSave}>
-          Save
+          {t("save")}
         </Button>
         <Button type="button" size="sm" variant="ghost" disabled={isPending} onClick={handleRemove}>
-          Remove
+          {t("remove")}
         </Button>
         {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
       </TableCell>
@@ -104,6 +106,7 @@ function VariantRow({ variant }: { variant: Variant }) {
 }
 
 function AddVariantRow({ productId }: { productId: string }) {
+  const t = useTranslations("AdminProducts");
   const [sku, setSku] = useState("");
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
@@ -143,7 +146,7 @@ function AddVariantRow({ productId }: { productId: string }) {
         <Input
           value={sku}
           onChange={(e) => setSku(e.target.value)}
-          placeholder="New SKU"
+          placeholder={t("newSkuPlaceholder")}
           className="h-8"
         />
       </TableCell>
@@ -175,7 +178,7 @@ function AddVariantRow({ productId }: { productId: string }) {
       </TableCell>
       <TableCell>
         <Button type="button" size="sm" disabled={isPending || !sku || !size || !color} onClick={handleAdd}>
-          Add variant
+          {t("addVariant")}
         </Button>
         {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
       </TableCell>
@@ -190,15 +193,16 @@ export function VariantsManager({
   productId: string;
   variants: Variant[];
 }) {
+  const t = useTranslations("AdminProducts");
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>SKU</TableHead>
-          <TableHead>Size</TableHead>
-          <TableHead>Color</TableHead>
-          <TableHead>Price override</TableHead>
-          <TableHead>Stock</TableHead>
+          <TableHead>{t("skuLabel")}</TableHead>
+          <TableHead>{t("sizeLabel")}</TableHead>
+          <TableHead>{t("colorLabel")}</TableHead>
+          <TableHead>{t("priceOverrideLabel")}</TableHead>
+          <TableHead>{t("stockLabel")}</TableHead>
           <TableHead />
         </TableRow>
       </TableHeader>

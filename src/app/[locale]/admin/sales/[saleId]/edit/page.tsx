@@ -1,17 +1,23 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { EditSaleForm } from "@/components/admin/EditSaleForm";
 
-export const metadata: Metadata = { title: "Edit sale — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/sales/[saleId]/edit">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminSales" });
+  return { title: t("editMetaTitle") };
+}
 
-type Props = {
-  params: Promise<{ saleId: string }>;
-};
-
-export default async function EditSalePage({ params }: Props) {
+export default async function EditSalePage({
+  params,
+}: PageProps<"/[locale]/admin/sales/[saleId]/edit">) {
   const { saleId } = await params;
+  const t = await getTranslations("AdminSales");
 
   const [sale, collections, brands] = await Promise.all([
     db.sale.findUnique({ where: { id: saleId } }),
@@ -23,7 +29,7 @@ export default async function EditSalePage({ params }: Props) {
   return (
     <div className="max-w-2xl space-y-10">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Edit sale</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t("editHeading")}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{sale.title}</p>
       </div>
 

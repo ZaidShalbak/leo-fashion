@@ -1,17 +1,23 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { EditCollectionForm } from "@/components/admin/EditCollectionForm";
 
-export const metadata: Metadata = { title: "Edit category — Admin" };
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/admin/collections/[collectionId]/edit">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "AdminCollections" });
+  return { title: t("editMetaTitle") };
+}
 
-type Props = {
-  params: Promise<{ collectionId: string }>;
-};
-
-export default async function EditCollectionPage({ params }: Props) {
+export default async function EditCollectionPage({
+  params,
+}: PageProps<"/[locale]/admin/collections/[collectionId]/edit">) {
   const { collectionId } = await params;
+  const t = await getTranslations("AdminCollections");
 
   const collection = await db.collection.findUnique({ where: { id: collectionId } });
   if (!collection) notFound();
@@ -19,7 +25,7 @@ export default async function EditCollectionPage({ params }: Props) {
   return (
     <div className="max-w-2xl space-y-10">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Edit category</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t("editHeading")}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{collection.title}</p>
       </div>
 
