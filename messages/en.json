@@ -345,5 +345,24 @@
     "added": "Added",
     "addToCart": "Add to cart",
     "maxStockReached": "No more available to add."
+  },
+  "AdminLayout": {
+    "metaTitle": "Leo Fashion Admin",
+    "metaDescription": "Leo Fashion admin dashboard.",
+    "brandName": "Leo Fashion Admin",
+    "navProducts": "Products",
+    "navBrands": "Brands",
+    "navCategories": "Categories",
+    "navInventory": "Inventory",
+    "navOrders": "Orders",
+    "navDiscountCodes": "Discount codes",
+    "navSales": "Sales",
+    "navDeliveryAreas": "Delivery areas",
+    "navHeroBanners": "Hero banners",
+    "viewStore": "View store",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   }
 }

@@ -12,12 +12,14 @@ const handleI18nRouting = createIntlProxy(routing);
  * since that predates the rename; the export itself works identically
  * either way, so this just wraps next-intl's handler under the new name.
  *
- * The `matcher` below excludes /admin (and API/static assets) so the admin
- * dashboard never gets locale-prefixed or redirected — see
- * src/i18n/routing.ts and CLAUDE.md for why admin stays English-only and
- * outside this routing scheme entirely.
+ * `/admin` is no longer excluded from the matcher: admin is now a nested
+ * route under src/app/[locale]/admin (bilingual, matching the storefront)
+ * instead of a second, deliberately-unlocalized root layout — see
+ * src/app/[locale]/admin/layout.tsx. An old unprefixed `/admin/...`
+ * bookmark still works, next-intl just 302s it to the default locale like
+ * any other unprefixed storefront path.
  *
- * `icon`/`apple-icon` are also excluded explicitly: they're Next's
+ * `icon`/`apple-icon` are excluded explicitly: they're Next's
  * code-generated app-icon file convention (see apple-icon.tsx), which
  * Next serves at a literal extension-less path like `/apple-icon` — the
  * `.*\\..*` dot-extension exclusion below doesn't catch that (there's no
@@ -31,5 +33,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|admin|icon|apple-icon|_next|_vercel|.*\\..*).*)"],
+  matcher: ["/((?!api|icon|apple-icon|_next|_vercel|.*\\..*).*)"],
 };

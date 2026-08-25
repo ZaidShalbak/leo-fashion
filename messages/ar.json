@@ -345,5 +345,24 @@
     "added": "تمت الإضافة",
     "addToCart": "أضف إلى السلة",
     "maxStockReached": "لا يوجد المزيد لإضافته."
+  },
+  "AdminLayout": {
+    "metaTitle": "Leo Fashion Admin",
+    "metaDescription": "لوحة تحكم Leo Fashion.",
+    "brandName": "Leo Fashion Admin",
+    "navProducts": "المنتجات",
+    "navBrands": "الماركات",
+    "navCategories": "الفئات",
+    "navInventory": "المخزون",
+    "navOrders": "الطلبات",
+    "navDiscountCodes": "أكواد الخصم",
+    "navSales": "التخفيضات",
+    "navDeliveryAreas": "مناطق التوصيل",
+    "navHeroBanners": "البانرات الرئيسية",
+    "viewStore": "زيارة المتجر",
+    "signOut": "تسجيل الخروج",
+    "signingOut": "جارٍ تسجيل الخروج…",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة"
   }
 }
