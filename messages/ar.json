@@ -269,7 +269,9 @@
     "showImage": "عرض الصورة {index} من {total}",
     "zoomImage": "تكبير صورة المنتج",
     "zoomedTitle": "صورة مكبّرة لـ {title}",
-    "closeZoom": "إغلاق الصورة المكبّرة"
+    "closeZoom": "إغلاق الصورة المكبّرة",
+    "previousImage": "الصورة السابقة",
+    "nextImage": "الصورة التالية"
   },
   "BrandsSection": {
     "shopByBrand": "تسوّق حسب الماركة",
