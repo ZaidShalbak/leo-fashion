@@ -14,6 +14,9 @@ import { SearchBox } from "@/components/storefront/SearchBox";
 import { LeoFashionLogo } from "@/components/storefront/Logo";
 import { WhatsAppButton } from "@/components/storefront/WhatsAppButton";
 import { ConfirmDialogProvider } from "@/components/providers/ConfirmDialogProvider";
+import { NavMegaMenu } from "@/components/storefront/NavMegaMenu";
+import { CategoriesMenuGrid, type CategoryMenuItem } from "@/components/storefront/CategoriesMenuGrid";
+import { BrandsMenuGrid, type BrandMenuItem } from "@/components/storefront/BrandsMenuGrid";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -43,9 +46,36 @@ export default async function StorefrontLayout({
   children: React.ReactNode;
 }) {
   const t = await getTranslations("Nav");
+  const tBrands = await getTranslations("BrandsSection");
   const locale = await getLocale();
-  const [collectionsRaw, user, cartItemCount] = await Promise.all([
-    db.collection.findMany({ orderBy: { title: "asc" } }),
+  const [collectionsRaw, brandsRaw, user, cartItemCount] = await Promise.all([
+    // Includes each collection's first active product's first image (not
+    // just bare id/handle/title) so the Categories mega menu can show a
+    // real photo per tile — same shape page.tsx's homepage query uses,
+    // minus the sale-percent calculation the homepage layers on top,
+    // since the mega menu deliberately skips sale badges (see
+    // NavMegaMenu/CategoriesMenuGrid).
+    db.collection.findMany({
+      orderBy: { title: "asc" },
+      include: {
+        products: {
+          take: 1,
+          orderBy: { product: { createdAt: "asc" } },
+          where: { product: { status: "active" } },
+          include: {
+            product: {
+              include: { images: { orderBy: { position: "asc" }, take: 1 } },
+            },
+          },
+        },
+      },
+    }),
+    // Same shape as the homepage's brand query — every brand plus its
+    // active-product count, for the Brands mega menu.
+    db.brand.findMany({
+      orderBy: { name: "asc" },
+      include: { _count: { select: { products: { where: { status: "active" } } } } },
+    }),
     getCurrentUser(),
     getCartItemCount(),
   ]);
@@ -62,6 +92,23 @@ export default async function StorefrontLayout({
     ...collection,
     title: localize(collection.title, collection.titleAr, locale),
   }));
+  const categoryMenuItems: CategoryMenuItem[] = collections.map((collection) => {
+    const leadImage = collection.products[0]?.product.images[0];
+    return {
+      id: collection.id,
+      handle: collection.handle,
+      title: collection.title,
+      imageUrl: leadImage?.url,
+      imageAlt: leadImage?.altText ?? collection.title,
+    };
+  });
+  const brandMenuItems: BrandMenuItem[] = brandsRaw.map((brand) => ({
+    id: brand.id,
+    slug: brand.slug,
+    name: localize(brand.name, brand.nameAr, locale),
+    logoUrl: brand.logoUrl,
+    itemCountLabel: tBrands("itemCount", { count: brand._count.products }),
+  }));
 
   return (
     <ConfirmDialogProvider>
@@ -71,58 +118,63 @@ export default async function StorefrontLayout({
           needs its own font-family override — the extra size/weight bump
           on the nav links just below is still deliberate, though. */}
       <header className="relative z-50 border-b border-white/10 bg-[#0a0a0a]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-          <Link href="/" aria-label={t("brandName")} dir="ltr">
-            <LeoFashionLogo variant="mark" className="h-7 w-auto text-white" />
-          </Link>
-
-          {/* Full inline nav — desktop/tablet only; MobileNav below covers
-              small screens with a hamburger + slide-down panel instead. The
-              size/weight bump below is scoped to the actual text links
-              only (not the whole <nav>), so it doesn't cascade into the
-              icon-based controls (search/cart/user menu/language switcher)
-              alongside them. */}
-          <nav className="hidden items-center gap-5 text-sm rtl:gap-6 sm:flex">
-            {collections.map((collection) => (
-              <Link
-                key={collection.id}
-                href={`/collections/${collection.handle}`}
-                className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
-              >
-                {collection.title}
-              </Link>
-            ))}
-            <Link
-              href="/brands"
-              className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
-            >
-              {t("brands")}
+        <div className="mx-auto max-w-6xl px-4">
+          {/* Row 1: logo (start) — always-visible search + language switcher
+              (desktop/tablet, end) — mobile's own icon row (small screens
+              only, unchanged from before this redesign). */}
+          <div className="flex items-center justify-between gap-4 py-4">
+            <Link href="/" aria-label={t("brandName")} dir="ltr">
+              <LeoFashionLogo variant="mark" className="h-7 w-auto text-white" />
             </Link>
-            <SearchBox />
-            <CartIconLink itemCount={cartItemCount} />
-            {user ? (
-              <UserMenu isAdmin={user.role === "admin"} newOrderCount={newOrderCount} />
-            ) : (
-              <Link
-                href="/login"
-                className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
-              >
-                {t("signIn")}
-              </Link>
-            )}
-            <LanguageSwitcher />
-          </nav>
 
-          <div className="flex items-center gap-1 sm:hidden">
-            <SearchBox />
-            <CartIconLink itemCount={cartItemCount} />
-            <LanguageSwitcher />
-            <MobileNav
-              collections={collections}
-              isSignedIn={Boolean(user)}
-              isAdmin={user?.role === "admin"}
-              newOrderCount={newOrderCount}
-            />
+            <div className="hidden flex-1 items-center justify-end gap-5 sm:flex">
+              <div className="w-full max-w-md">
+                <SearchBox alwaysOpen />
+              </div>
+              <LanguageSwitcher />
+            </div>
+
+            <div className="flex items-center gap-1 sm:hidden">
+              <SearchBox />
+              <CartIconLink itemCount={cartItemCount} />
+              <LanguageSwitcher />
+              <MobileNav
+                collections={collections}
+                isSignedIn={Boolean(user)}
+                isAdmin={user?.role === "admin"}
+                newOrderCount={newOrderCount}
+              />
+            </div>
+          </div>
+
+          {/* Row 2: Categories/Brands mega-menu triggers (start) — cart +
+              account (end). Desktop/tablet only; MobileNav's hamburger
+              panel covers the same navigation on small screens. The
+              size/weight bump below is scoped to the actual trigger/link
+              text only, not the icon-based controls beside it. */}
+          <div className="hidden items-center justify-between gap-5 border-t border-white/10 py-3 text-sm rtl:gap-6 sm:flex">
+            <nav className="flex items-center gap-5 rtl:gap-6">
+              <NavMegaMenu label={t("categories")}>
+                <CategoriesMenuGrid categories={categoryMenuItems} />
+              </NavMegaMenu>
+              <NavMegaMenu label={t("brands")}>
+                <BrandsMenuGrid brands={brandMenuItems} />
+              </NavMegaMenu>
+            </nav>
+
+            <div className="flex items-center gap-5 rtl:gap-6">
+              <CartIconLink itemCount={cartItemCount} />
+              {user ? (
+                <UserMenu isAdmin={user.role === "admin"} newOrderCount={newOrderCount} />
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-white/70 transition hover:text-white rtl:text-base rtl:font-medium"
+                >
+                  {t("signIn")}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </header>
