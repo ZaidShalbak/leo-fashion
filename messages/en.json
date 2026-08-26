@@ -329,6 +329,10 @@
     "itemCount": "{count, plural, one {# item} other {# items}}",
     "onSale": "Sale −{percent}%"
   },
+  "WishlistActions": {
+    "add": "Add to wishlist",
+    "remove": "Remove from wishlist"
+  },
   "ProductCard": {
     "outOfStock": "Out of stock",
     "lowStock": "Only {count} left",
