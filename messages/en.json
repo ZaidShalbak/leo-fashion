@@ -47,6 +47,7 @@
     "accountMenuWithNewOrders": "Account menu ({count} new orders)"
   },
   "CheckoutForm": {
+    "email": "Email",
     "shippingAddress": "Shipping address",
     "useNewAddress": "Use a new address",
     "fullName": "Full name",
@@ -200,7 +201,7 @@
     "resetPassword": "Reset password"
   },
   "PlaceOrder": {
-    "signInRequired": "Please sign in to place an order.",
+    "guestEmailRequired": "Enter a valid email so we can reach you about this order.",
     "invalidCheckoutDetails": "Invalid checkout details.",
     "addressNotFound": "That address couldn't be found.",
     "cartEmpty": "Your cart is empty.",
@@ -218,6 +219,7 @@
     "redemptionLimit": "That code has reached its redemption limit.",
     "minSubtotal": "Add {amount} more to your cart to use this code.",
     "enterCode": "Enter a code.",
+    "signInRequired": "Sign in to use a discount code.",
     "cartEmpty": "Your cart is empty.",
     "alreadyUsed": "You've already used this code.",
     "noCart": "No cart found."
@@ -227,7 +229,8 @@
     "appliedSuffix": "applied",
     "removeCode": "Remove promo code",
     "placeholder": "Promo code",
-    "apply": "Apply"
+    "apply": "Apply",
+    "signInToApply": "Sign in to use a promo code."
   },
   "CartLineItem": {
     "decreaseQuantity": "Decrease quantity",
@@ -257,7 +260,9 @@
     "heading": "Thanks — your order is in.",
     "subheading": "We'll follow up with fulfillment details. No payment was collected — this order is invoice / pay-on-delivery.",
     "continueShopping": "Continue shopping",
-    "viewMyOrders": "View my orders"
+    "viewMyOrders": "View my orders",
+    "saveOrderHeading": "Save this order to an account",
+    "saveOrderSubtext": "Create a password to track this order's status and check out faster next time."
   },
   "AccountOrders": {
     "title": "Your orders",
@@ -504,6 +509,7 @@
     "newBadge": "New",
     "noOrdersMatch": "No orders match this filter.",
     "customerLine": "Customer: {name} · {email}",
+    "guestLabel": "Guest",
     "statusPlaceholder": "Status",
     "allStatuses": "All statuses",
     "statusLabel": "Status",

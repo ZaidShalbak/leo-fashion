@@ -31,12 +31,16 @@ type SavedAddress = {
 export type DeliveryZoneOption = { id: string; name: string; feeCents: number };
 
 export function CheckoutForm({
+  isSignedIn,
   addresses,
   items,
   zones,
   selectedZoneId,
   onZoneChange,
 }: {
+  /** A guest has no user.email to fall back on, so checkout needs to ask
+   * for one directly — see order.ts's guestEmail handling. */
+  isSignedIn: boolean;
   addresses: SavedAddress[];
   items: PlaceOrderInput["items"];
   zones: DeliveryZoneOption[];
@@ -81,6 +85,7 @@ export function CheckoutForm({
     // which address mode is selected (the notes field itself always
     // renders, see below).
     const notes = (formData.get("notes") as string) || undefined;
+    const guestEmail = isSignedIn ? undefined : (formData.get("guestEmail") as string) || undefined;
 
     const confirmed = await confirm({
       title: t("confirmPlaceOrderTitle"),
@@ -95,6 +100,7 @@ export function CheckoutForm({
         address,
         items,
         notes,
+        guestEmail,
         deliveryZoneId: selectedZoneId,
       });
       // On success the action redirects and never resolves here.
@@ -104,6 +110,13 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {!isSignedIn && (
+        <div className="space-y-1.5">
+          <Label htmlFor="guestEmail">{t("email")}</Label>
+          <Input id="guestEmail" name="guestEmail" type="email" dir="ltr" required />
+        </div>
+      )}
+
       {addresses.length > 0 && (
         <div className="space-y-2">
           <p className="text-sm font-medium">{t("shippingAddress")}</p>

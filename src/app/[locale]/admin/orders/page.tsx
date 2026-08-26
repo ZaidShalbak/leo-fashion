@@ -87,7 +87,9 @@ export default async function AdminOrdersPage({
                 )}
               </TableCell>
               <TableCell>
-                <span className="block">{order.user.name ?? order.user.email}</span>
+                <span className="block">
+                  {order.user?.name ?? order.user?.email ?? order.shippingName}
+                </span>
                 {order.shippingPhone && (
                   // dir="ltr" here is a block-level element, so it also
                   // resets its own text-align to "left" regardless of the

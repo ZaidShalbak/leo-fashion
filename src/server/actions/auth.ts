@@ -120,6 +120,28 @@ async function mergeGuestCartIntoUser(userId: string): Promise<void> {
 }
 
 /**
+ * Reassigns a just-placed guest order to a newly created account — the
+ * "save this order to an account" prompt on the order-confirmation page
+ * (see CLAUDE.md's guest-checkout note). Only claims it when the order is
+ * still a real, unclaimed guest order (userId null) whose guestEmail
+ * matches the address just signed up with — the order id alone isn't
+ * proof of ownership (it's only unguessable, not secret to whoever placed
+ * it), so this stops someone from claiming a stranger's guest order by
+ * guessing its id and signing up with a different email. Never throws —
+ * failing to claim shouldn't block the sign-up itself from succeeding.
+ */
+async function claimGuestOrder(orderId: string, userId: string, email: string): Promise<void> {
+  try {
+    await db.order.updateMany({
+      where: { id: orderId, userId: null, guestEmail: { equals: email, mode: "insensitive" } },
+      data: { userId, guestEmail: null },
+    });
+  } catch (error) {
+    console.error("[auth] Failed to claim guest order on sign-up:", error);
+  }
+}
+
+/**
  * Creates a new account and signs the user in immediately. Signup emails
  * aren't wired up yet, so this auto-confirms the address via the admin API
  * (service role key) rather than leaving the account stuck waiting on a
@@ -128,7 +150,8 @@ async function mergeGuestCartIntoUser(userId: string): Promise<void> {
  */
 export async function signUp(
   input: SignUpInput,
-  redirectTo: string = "/"
+  redirectTo: string = "/",
+  claimOrderId?: string
 ): Promise<AuthActionResult> {
   const t = await getTranslations("AuthActions");
   const locale = await getLocale();
@@ -165,6 +188,10 @@ export async function signUp(
   const appUser = await db.user.create({
     data: { supabaseId: created.user.id, email, name, phone: phone ?? null },
   });
+
+  if (claimOrderId) {
+    await claimGuestOrder(claimOrderId, appUser.id, email);
+  }
 
   const supabase = await createSupabaseServerClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({

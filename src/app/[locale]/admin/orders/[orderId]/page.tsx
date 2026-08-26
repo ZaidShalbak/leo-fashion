@@ -30,11 +30,18 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
+  // Guest checkout means order.user can be null — fall back to the
+  // shipping snapshot/guestEmail captured at checkout time, same source
+  // an admin would otherwise have to open the shipping address to find.
+  const customerName = order.user?.name ?? order.shippingName;
+  const customerEmail = order.user?.email ?? order.guestEmail ?? "—";
+
   return (
     <div className="max-w-6xl">
       <MarkOrderViewed orderId={order.id} alreadyViewed={order.viewedByAdminAt !== null} />
       <p className="text-muted-foreground mb-6 text-sm">
-        {t("customerLine", { name: order.user.name ?? "—", email: order.user.email })}
+        {t("customerLine", { name: customerName || "—", email: customerEmail })}
+        {!order.userId && <span className="ms-1">({t("guestLabel")})</span>}
       </p>
 
       <div className="grid gap-10 lg:grid-cols-[1fr_260px_300px]">

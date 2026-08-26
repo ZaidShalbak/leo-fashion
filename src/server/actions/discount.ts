@@ -43,6 +43,18 @@ export async function applyDiscountCode(
   input: { code: string }
 ): Promise<ApplyDiscountResult> {
   const t = await getTranslations("DiscountActions");
+
+  // Guest checkout doesn't get discount-code support — the "one use per
+  // customer" guard is enforced via Order.userId (see the unique
+  // constraint in schema.prisma), which every guest order lacks by
+  // definition, so a guest could otherwise reuse a single-use code
+  // indefinitely. Gated here, not in placeOrder, so a guest never even
+  // sees a code seem to work only to have checkout reject it later.
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return { success: false, error: t("signInRequired") };
+  }
+
   const parsed = applyDiscountCodeSchema.safeParse(input);
   if (!parsed.success) {
     // Bypassing the raw Zod issue message on purpose — this schema only
@@ -74,20 +86,18 @@ export async function applyDiscountCode(
     return { success: false, error: reasonToMessage(result, t) };
   }
 
-  // Early, best-effort "already used" check for a signed-in shopper — the
-  // real guard is the DB-level unique constraint at order time (see
-  // order.ts), which still applies regardless of this. This just avoids
-  // letting someone apply a code on the cart page that placeOrder is
-  // certain to reject a moment later, when we can already tell.
-  const user = await getCurrentUser();
-  if (user) {
-    const alreadyUsed = await db.order.findFirst({
-      where: { userId: user.id, discountCodeId: discount!.id },
-      select: { id: true },
-    });
-    if (alreadyUsed) {
-      return { success: false, error: t("alreadyUsed") };
-    }
+  // Early, best-effort "already used" check — the real guard is the
+  // DB-level unique constraint at order time (see order.ts), which still
+  // applies regardless of this. This just avoids letting someone apply a
+  // code on the cart page that placeOrder is certain to reject a moment
+  // later, when we can already tell (currentUser is guaranteed non-null
+  // here — see the sign-in gate above).
+  const alreadyUsed = await db.order.findFirst({
+    where: { userId: currentUser.id, discountCodeId: discount!.id },
+    select: { id: true },
+  });
+  if (alreadyUsed) {
+    return { success: false, error: t("alreadyUsed") };
   }
 
   await db.cart.update({

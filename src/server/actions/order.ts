@@ -7,6 +7,7 @@ import type { Prisma } from "@prisma/client";
 
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
+import { getCurrentCart } from "@/server/actions/cart";
 import { sendAdminNewOrderEmail } from "@/server/email";
 import { placeOrderSchema, type PlaceOrderInput } from "@/lib/validators/order";
 import { calculateSubtotalCents, effectivePriceCents } from "@/lib/cart-totals";
@@ -45,9 +46,6 @@ export async function placeOrder(
   const locale = (await getLocale()) as AppLocale;
 
   const user = await getCurrentUser();
-  if (!user) {
-    return { success: false, error: t("signInRequired") };
-  }
 
   const parsed = placeOrderSchema.safeParse(input);
   if (!parsed.success) {
@@ -56,6 +54,30 @@ export async function placeOrder(
     // browser-validated, well-formed data, so a parse failure here only
     // realistically happens from tampering, not a normal user mistake.
     // One translated fallback string covers it.
+    return { success: false, error: t("invalidCheckoutDetails") };
+  }
+
+  // Guest checkout is allowed — a guest just needs a real email in place
+  // of an account, since there's no user.email to fall back to for order
+  // contact/the post-purchase "save this order to an account" prompt (see
+  // order-confirmation's page.tsx). guestEmail passing placeOrderSchema's
+  // own .email() check above is necessary but not sufficient here: the
+  // schema treats it as optional (it has no way to see session state),
+  // so a signed-out submission with no email at all still needs this
+  // explicit check.
+  let guestEmail: string | null = null;
+  if (!user) {
+    if (!parsed.data.guestEmail) {
+      return { success: false, error: t("guestEmailRequired") };
+    }
+    guestEmail = parsed.data.guestEmail;
+  }
+
+  // A saved address only ever makes sense for a signed-in caller — a
+  // guest has no address book to reference, and CheckoutForm never
+  // offers this shape to a signed-out visitor, but a tampered submission
+  // could still send one.
+  if (!user && "savedAddressId" in parsed.data.address) {
     return { success: false, error: t("invalidCheckoutDetails") };
   }
 
@@ -74,10 +96,12 @@ export async function placeOrder(
   let newAddressToSave: Prisma.AddressCreateWithoutUserInput | null = null;
 
   if ("savedAddressId" in parsed.data.address) {
+    // Guaranteed non-null here — the tampered-guest-submission case was
+    // already rejected above.
     const saved = await db.address.findUnique({
       where: { id: parsed.data.address.savedAddressId },
     });
-    if (!saved || saved.userId !== user.id) {
+    if (!saved || saved.userId !== user!.id) {
       return { success: false, error: t("addressNotFound") };
     }
     shipping = {
@@ -105,22 +129,18 @@ export async function placeOrder(
     // Save it to the address book too, so it's selectable as a "saved
     // address" on the next order — there's no separate address-management
     // UI yet (Phase 3 scope is checkout, not account settings), so this is
-    // the only way a saved address ever gets created.
-    const existingCount = await db.address.count({ where: { userId: user.id } });
-    newAddressToSave = { ...a, isDefault: existingCount === 0 };
+    // the only way a saved address ever gets created. Guests have no
+    // address book to save into (no account), so this only ever happens
+    // for a signed-in caller.
+    if (user) {
+      const existingCount = await db.address.count({ where: { userId: user.id } });
+      newAddressToSave = { ...a, isDefault: existingCount === 0 };
+    }
   }
 
-  const cart = await db.cart.findUnique({
-    where: { userId: user.id },
-    include: {
-      items: {
-        include: {
-          product: { include: { collections: { select: { collectionId: true } } } },
-          variant: true,
-        },
-      },
-    },
-  });
+  // Reuses the same user-or-guest-cookie lookup the cart page/cart
+  // actions already use, rather than a second, parallel cart query here.
+  const cart = await getCurrentCart();
 
   if (!cart || cart.items.length === 0) {
     return { success: false, error: t("cartEmpty") };
@@ -247,8 +267,9 @@ export async function placeOrder(
       }
 
       if (newAddressToSave) {
+        // Only ever set when user is signed in — see where it's built above.
         await tx.address.create({
-          data: { ...newAddressToSave, userId: user.id },
+          data: { ...newAddressToSave, userId: user!.id },
         });
       }
 
@@ -256,7 +277,8 @@ export async function placeOrder(
       try {
         order = await tx.order.create({
           data: {
-            userId: user.id,
+            userId: user?.id ?? null,
+            guestEmail,
             status: "pending",
             subtotalCents,
             discountCodeId,
@@ -320,8 +342,8 @@ export async function placeOrder(
       await sendAdminNewOrderEmail({
         order: createdOrder,
         adminEmails,
-        customerName: user.name ?? user.email,
-        customerEmail: user.email,
+        customerName: user?.name ?? user?.email ?? guestEmail ?? "Guest",
+        customerEmail: user?.email ?? guestEmail ?? "",
       });
     }
   } catch (error) {

@@ -18,6 +18,7 @@ type SummaryLine = React.ComponentProps<typeof CheckoutSummary>["items"][number]
  * `grid lg:grid-cols-[1fr_320px]` unchanged.
  */
 export function CheckoutClient({
+  isSignedIn,
   addresses,
   items,
   zones,
@@ -26,6 +27,7 @@ export function CheckoutClient({
   discountCents,
   discountCode,
 }: {
+  isSignedIn: boolean;
   addresses: SavedAddress[];
   items: PlaceOrderInput["items"];
   zones: DeliveryZoneOption[];
@@ -39,6 +41,7 @@ export function CheckoutClient({
   return (
     <>
       <CheckoutForm
+        isSignedIn={isSignedIn}
         addresses={addresses}
         items={items}
         zones={zones}

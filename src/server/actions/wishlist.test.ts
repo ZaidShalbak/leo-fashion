@@ -48,6 +48,7 @@ afterAll(async () => {
   await db.wishlistItem.deleteMany({ where: { userId } }).catch(() => {});
   await db.user.delete({ where: { id: userId } }).catch(() => {});
   await db.product.delete({ where: { id: productId } }).catch(() => {});
+  await db.$disconnect();
 });
 
 beforeEach(() => {

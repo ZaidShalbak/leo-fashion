@@ -337,7 +337,11 @@ afterAll(async () => {
 });
 
 describe("placeOrder", () => {
-  it("rejects when no user is signed in", async () => {
+  // Guest checkout is allowed now (see order.guest-checkout.test.ts for
+  // the full guest-checkout coverage) — a signed-out submission is only
+  // rejected here because it's missing the guestEmail a guest must
+  // supply in place of an account, not because signing in is required.
+  it("rejects a signed-out submission with no guest email", async () => {
     mockGetCurrentUser.mockResolvedValue(null);
     const result = await placeOrder({
       address: { newAddress: validNewAddress },
@@ -345,6 +349,7 @@ describe("placeOrder", () => {
       deliveryZoneId,
     });
     expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toMatch(/email/i);
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 

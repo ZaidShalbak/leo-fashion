@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
+import { getCurrentUser } from "@/server/auth";
 import { getCurrentCart } from "@/server/actions/cart";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localizedContent";
@@ -30,7 +31,7 @@ export async function generateMetadata(
 export default async function CartPage() {
   const t = await getTranslations("Cart");
   const locale = await getLocale();
-  const cart = await getCurrentCart();
+  const [cart, user] = await Promise.all([getCurrentCart(), getCurrentUser()]);
   const items = cart?.items ?? [];
 
   if (items.length === 0) {
@@ -107,7 +108,7 @@ export default async function CartPage() {
 
       <div className="border-border mt-6 space-y-4 border-t pt-6">
         <div>
-          <PromoCodeForm appliedCode={cart?.appliedDiscountCode ?? null} />
+          <PromoCodeForm appliedCode={cart?.appliedDiscountCode ?? null} isSignedIn={Boolean(user)} />
           {discountInvalidNotice && (
             <p className="text-destructive mt-1 text-xs">{discountInvalidNotice}</p>
           )}
