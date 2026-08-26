@@ -188,15 +188,22 @@ export default async function StorefrontLayout({
           solid black backgrounds — stacking them above the overlay just
           hides it behind their opaque bg, no coordinates needed. */}
       <footer className="relative z-50 border-t border-white/10 bg-[#0a0a0a] py-10 text-sm text-white/70">
-        <div className="mx-auto max-w-6xl px-4">
+        {/* Narrower than the header's max-w-6xl on purpose — the footer
+            has far less content, and stretching it across the same wide
+            container left a large dead gap between the two blocks (plus
+            empty space trailing the shorter one) on anything wider than a
+            laptop screen. */}
+        <div className="mx-auto max-w-3xl px-4">
           {/* Mobile: everything stacks in one centered column, same as
-              before this redesign. sm: and up: two columns — logo/tagline/
-              location card on the start side, social + legal links on the
-              end side — mirroring correctly under RTL via plain DOM order
-              (CSS Grid is direction-aware, same reasoning already used for
-              the product-detail/checkout grids) rather than any explicit
-              start/end utility on the grid itself. */}
-          <div className="grid grid-cols-1 items-start gap-10 text-center sm:grid-cols-2 sm:text-start">
+              before this redesign. sm: and up: one row, each block sized
+              to its own content (not forced into equal halves) and pushed
+              to opposite ends — logo/tagline/location card on the start
+              side, social + legal links on the end side — mirroring
+              correctly under RTL via plain DOM order (flexbox is
+              direction-aware, same reasoning already used for the
+              product-detail/checkout grids) rather than any explicit
+              start/end utility on the row itself. */}
+          <div className="flex flex-col items-center gap-10 text-center sm:flex-row sm:items-start sm:justify-between sm:text-start">
             <div className="flex flex-col items-center sm:items-start">
               <LeoFashionLogo variant="full" className="mb-6 h-16 w-auto text-white" />
               <p className="mb-6 max-w-xs">{t("footer")}</p>
