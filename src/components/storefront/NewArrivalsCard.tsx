@@ -73,7 +73,7 @@ export function NewArrivalsCard({
               </span>
             )}
           </div>
-          <div className="pt-3.5">
+          <div className="px-1 pt-3.5">
             {product.brand && (
               <span className="text-showcase-rivet block text-[10px] font-bold tracking-[0.08em] uppercase rtl:tracking-normal rtl:normal-case" dir="ltr">
                 {product.brand.name}
