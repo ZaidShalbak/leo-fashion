@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { SearchIcon, XIcon } from "lucide-react";
 
 import { Link } from "@/i18n/navigation";
@@ -25,9 +25,9 @@ const DEBOUNCE_MS = 300;
  * here are an addition on top of the product results, not a replacement
  * for them.
  */
-export function SearchBox() {
+export function SearchBox({ alwaysOpen = false }: { alwaysOpen?: boolean } = {}) {
   const t = useTranslations("SearchBox");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(alwaysOpen);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
   const [isPending, startTransition] = useTransition();
@@ -37,8 +37,23 @@ export function SearchBox() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+    // alwaysOpen renders the input pre-expanded on every page load — it's
+    // not a just-opened state, so it shouldn't steal focus the way
+    // clicking the icon-toggle open does.
+    if (open && !alwaysOpen) inputRef.current?.focus();
+  }, [open, alwaysOpen]);
+
+  // Wrapped in useCallback (rather than a plain function) so the
+  // outside-click/Escape effect below can list it as a dependency without
+  // re-subscribing its listeners on every render.
+  const close = useCallback(() => {
+    // alwaysOpen has no icon state to collapse back to — closing just
+    // clears the query/results, the input itself stays visible.
+    if (!alwaysOpen) setOpen(false);
+    setQuery("");
+    setResults(EMPTY_RESULTS);
+    setHasSearched(false);
+  }, [alwaysOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +71,7 @@ export function SearchBox() {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, close]);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -81,13 +96,6 @@ export function SearchBox() {
     }
   }
 
-  function close() {
-    setOpen(false);
-    setQuery("");
-    setResults(EMPTY_RESULTS);
-    setHasSearched(false);
-  }
-
   const showPanel = open && query.trim().length > 0;
   const noResults =
     hasSearched &&
@@ -97,9 +105,11 @@ export function SearchBox() {
     results.collections.length === 0;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className={alwaysOpen ? "relative w-full" : "relative"}>
       {open ? (
-        <div className="flex h-9 items-center gap-1.5 rounded-md border border-white/20 px-2">
+        <div
+          className={`flex h-9 items-center gap-1.5 rounded-md border border-white/20 px-2 ${alwaysOpen ? "w-full" : ""}`}
+        >
           <SearchIcon className="size-4 shrink-0 text-white/70" />
           <input
             ref={inputRef}
@@ -108,16 +118,18 @@ export function SearchBox() {
             onChange={(e) => handleQueryChange(e.target.value)}
             placeholder={t("placeholder")}
             aria-label={t("placeholder")}
-            className="w-32 bg-transparent text-sm text-white outline-none placeholder:text-white/50 sm:w-48"
+            className={`bg-transparent text-sm text-white outline-none placeholder:text-white/50 ${alwaysOpen ? "w-full" : "w-32 sm:w-48"}`}
           />
-          <button
-            type="button"
-            onClick={close}
-            aria-label={t("close")}
-            className="shrink-0 text-white/70 transition hover:text-white"
-          >
-            <XIcon className="size-4" />
-          </button>
+          {!alwaysOpen && (
+            <button
+              type="button"
+              onClick={close}
+              aria-label={t("close")}
+              className="shrink-0 text-white/70 transition hover:text-white"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )}
         </div>
       ) : (
         <button
@@ -141,7 +153,7 @@ export function SearchBox() {
           // positioning relative to the viewport instead of the icon.
           // `sm:` and up reverts to the icon-anchored dropdown, where a
           // 320px panel always has room.
-          className="border-border bg-background fixed inset-x-4 top-16 z-20 max-h-96 overflow-auto rounded-md border py-1 text-sm shadow-md sm:absolute sm:inset-x-auto sm:top-full sm:end-0 sm:mt-1 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
+          className={`border-border bg-background fixed inset-x-4 top-16 z-20 max-h-96 overflow-auto rounded-md border py-1 text-sm shadow-md sm:absolute sm:inset-x-auto sm:top-full sm:mt-1 sm:max-w-[calc(100vw-2rem)] ${alwaysOpen ? "sm:start-0 sm:w-full sm:max-w-md" : "sm:end-0 sm:w-80"}`}
         >
           {/* !hasSearched, not isPending && !hasSearched — showPanel already
               guarantees a non-empty query, and there's a debounce-sized gap

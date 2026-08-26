@@ -8,6 +8,7 @@
   },
   "Nav": {
     "brandName": "Leo Fashion",
+    "categories": "Categories",
     "brands": "Brands",
     "signIn": "Sign in",
     "footer": "Leo Fashion — pay-on-delivery / invoice checkout, no card required.",
