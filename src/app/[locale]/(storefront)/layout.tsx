@@ -17,6 +17,7 @@ import { ConfirmDialogProvider } from "@/components/providers/ConfirmDialogProvi
 import { NavMegaMenu } from "@/components/storefront/NavMegaMenu";
 import { CategoriesMenuGrid, type CategoryMenuItem } from "@/components/storefront/CategoriesMenuGrid";
 import { BrandsMenuGrid, type BrandMenuItem } from "@/components/storefront/BrandsMenuGrid";
+import { StoreLocationCard } from "@/components/storefront/StoreLocationCard";
 
 async function getCartItemCount(): Promise<number> {
   const user = await getCurrentUser();
@@ -186,17 +187,37 @@ export default async function StorefrontLayout({
           geometrically exclude them, this leans on both already having
           solid black backgrounds — stacking them above the overlay just
           hides it behind their opaque bg, no coordinates needed. */}
-      <footer className="relative z-50 border-t border-white/10 bg-[#0a0a0a] py-10 text-center text-sm text-white/70">
-        <LeoFashionLogo variant="full" className="mx-auto mb-6 h-16 w-auto text-white" />
-        <SocialLinks />
-        <p className="mt-4">{t("footer")}</p>
-        <div className="mt-3 flex items-center justify-center gap-4 text-xs">
-          <Link href="/terms" className="underline-offset-2 hover:text-white hover:underline">
-            {t("termsLink")}
-          </Link>
-          <Link href="/privacy" className="underline-offset-2 hover:text-white hover:underline">
-            {t("privacyLink")}
-          </Link>
+      <footer className="relative z-50 border-t border-white/10 bg-[#0a0a0a] py-14 text-sm text-white/70">
+        <div className="mx-auto max-w-4xl px-4">
+          {/* Mobile: everything stacks in one centered column. sm: and up:
+              two even columns — the location card on its own on the start
+              side, brand/social/legal on the end side — mirroring
+              correctly under RTL via plain DOM order (CSS Grid is
+              direction-aware, same reasoning already used for the
+              product-detail/checkout grids) rather than any explicit
+              start/end utility on the grid itself. */}
+          <div className="grid grid-cols-1 items-start gap-12 text-center sm:grid-cols-2 sm:gap-16 sm:text-start">
+            <div className="flex justify-center sm:justify-start">
+              <StoreLocationCard />
+            </div>
+
+            <div className="flex flex-col items-center sm:items-start">
+              <LeoFashionLogo variant="full" className="mb-6 h-24 w-auto text-white" />
+              <p className="mb-8 max-w-sm">{t("footer")}</p>
+              <p className="mb-3 text-xs font-medium tracking-[0.1em] text-white/45 uppercase">
+                {t("followUs")}
+              </p>
+              <SocialLinks />
+              <div className="mt-8 flex flex-col items-center gap-2 text-xs sm:items-start">
+                <Link href="/terms" className="underline-offset-2 hover:text-white hover:underline">
+                  {t("termsLink")}
+                </Link>
+                <Link href="/privacy" className="underline-offset-2 hover:text-white hover:underline">
+                  {t("privacyLink")}
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </footer>
       <WhatsAppButton />
