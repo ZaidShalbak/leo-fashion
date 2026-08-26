@@ -76,11 +76,11 @@ export function MobileNav({
           {isSignedIn ? (
             <>
               <Link
-                href="/account/orders"
+                href="/account"
                 onClick={() => setOpen(false)}
                 className="text-muted-foreground hover:text-foreground py-2 transition"
               >
-                {t("orders")}
+                {t("myAccount")}
               </Link>
               {isAdmin && (
                 <Link

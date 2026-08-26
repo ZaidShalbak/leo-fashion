@@ -94,7 +94,7 @@ export async function updateOrderStatus(
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
-  revalidatePath("/account/orders");
+  revalidatePath("/account");
   revalidatePath(`/account/orders/${orderId}`);
   return { success: true };
 }
