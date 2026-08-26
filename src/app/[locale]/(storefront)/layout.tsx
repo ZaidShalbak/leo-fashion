@@ -138,6 +138,14 @@ export default async function StorefrontLayout({
         <LeoFashionLogo variant="full" className="mx-auto mb-6 h-16 w-auto text-white" />
         <SocialLinks />
         <p className="mt-4">{t("footer")}</p>
+        <div className="mt-3 flex items-center justify-center gap-4 text-xs">
+          <Link href="/terms" className="underline-offset-2 hover:text-white hover:underline">
+            {t("termsLink")}
+          </Link>
+          <Link href="/privacy" className="underline-offset-2 hover:text-white hover:underline">
+            {t("privacyLink")}
+          </Link>
+        </div>
       </footer>
       <WhatsAppButton />
     </div>
