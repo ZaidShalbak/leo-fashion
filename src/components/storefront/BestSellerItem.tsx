@@ -11,16 +11,19 @@ import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { CartFlyAnimation } from "./CartFlyAnimation";
 import { PriceDisplay } from "./PriceDisplay";
 import { QuickAddPanel } from "./QuickAddPanel";
+import { WishlistButton } from "./WishlistButton";
 
 export function BestSellerItem({
   product,
   rank,
   cartQuantityByVariant,
+  isWishlisted = false,
 }: {
   product: ProductCardData;
   rank: number;
   /** Variant id -> quantity already in the cart — see useQuickAdd. */
   cartQuantityByVariant?: Record<string, number>;
+  isWishlisted?: boolean;
 }) {
   const t = useTranslations("BestSellersSection");
   const quickAdd = useQuickAdd(product, cartQuantityByVariant);
@@ -92,6 +95,14 @@ export function BestSellerItem({
             />
           </div>
         </Link>
+
+        {/* Sibling of the Link, same reasoning as the quick-add overlay
+            just below — see ProductCard's identical comment. */}
+        <WishlistButton
+          productId={product.id}
+          initiallyWishlisted={isWishlisted}
+          className="absolute top-3 end-3"
+        />
 
         {/* Same sibling-overlay quick-add pattern as ProductCard — see its
             comment for why this sits outside the Link. Sized to the

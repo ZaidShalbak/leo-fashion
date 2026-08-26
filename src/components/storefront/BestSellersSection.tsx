@@ -7,9 +7,11 @@ import { BestSellerItem } from "./BestSellerItem";
 export function BestSellersSection({
   products,
   cartQuantityByVariant,
+  wishlistedProductIds,
 }: {
   products: ProductCardData[];
   cartQuantityByVariant?: Record<string, number>;
+  wishlistedProductIds?: Set<string>;
 }) {
   const t = useTranslations("BestSellersSection");
   if (products.length === 0) return null;
@@ -23,6 +25,7 @@ export function BestSellersSection({
             product={product}
             rank={index + 1}
             cartQuantityByVariant={cartQuantityByVariant}
+            isWishlisted={wishlistedProductIds?.has(product.id)}
           />
         ))}
       </div>

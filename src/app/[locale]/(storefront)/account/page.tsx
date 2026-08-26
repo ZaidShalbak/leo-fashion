@@ -79,10 +79,10 @@ export default async function AccountPage(props: PageProps<"/[locale]/account">)
   });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-12 px-4 py-10">
+    <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
       <h1 className="text-xl font-semibold tracking-tight">{t("title")}</h1>
 
-      <section className="space-y-4">
+      <section className="space-y-3">
         <h2 className="text-lg font-medium">{t("ordersHeading")}</h2>
         {orders.length === 0 ? (
           <div className="text-center">
@@ -97,7 +97,7 @@ export default async function AccountPage(props: PageProps<"/[locale]/account">)
               <li key={order.id}>
                 <Link
                   href={`/account/orders/${order.id}`}
-                  className="flex items-center justify-between gap-4 py-4 hover:opacity-80"
+                  className="flex items-center justify-between gap-4 py-3 hover:opacity-80"
                 >
                   <div>
                     <p className="text-sm font-medium">
@@ -133,12 +133,12 @@ export default async function AccountPage(props: PageProps<"/[locale]/account">)
         )}
       </section>
 
-      <section className="space-y-4">
+      <section id="wishlist" className="space-y-3 scroll-mt-24">
         <h2 className="text-lg font-medium">{t("wishlistHeading")}</h2>
         <AccountWishlistGrid products={wishlistProducts} />
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-3">
         <h2 className="text-lg font-medium">{t("detailsHeading")}</h2>
         <AccountDetailsForm email={user.email} defaultName={user.name ?? ""} defaultPhone={user.phone} />
       </section>

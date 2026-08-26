@@ -352,7 +352,9 @@
   },
   "WishlistActions": {
     "add": "أضف إلى المفضلة",
-    "remove": "إزالة من المفضلة"
+    "remove": "إزالة من المفضلة",
+    "headerLabel": "المفضلة",
+    "headerLabelWithCount": "المفضلة، {count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}"
   },
   "ProductCard": {
     "outOfStock": "غير متوفر",

@@ -352,7 +352,9 @@
   },
   "WishlistActions": {
     "add": "Add to wishlist",
-    "remove": "Remove from wishlist"
+    "remove": "Remove from wishlist",
+    "headerLabel": "Wishlist",
+    "headerLabelWithCount": "Wishlist, {count, plural, one {# item} other {# items}}"
   },
   "ProductCard": {
     "outOfStock": "Out of stock",

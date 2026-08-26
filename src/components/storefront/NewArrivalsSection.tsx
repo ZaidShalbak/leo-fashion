@@ -7,9 +7,11 @@ import { NewArrivalsCard } from "./NewArrivalsCard";
 export function NewArrivalsSection({
   products,
   cartQuantityByVariant,
+  wishlistedProductIds,
 }: {
   products: ProductCardData[];
   cartQuantityByVariant?: Record<string, number>;
+  wishlistedProductIds?: Set<string>;
 }) {
   const t = useTranslations("NewArrivalsSection");
 
@@ -22,6 +24,7 @@ export function NewArrivalsSection({
               key={product.id}
               product={product}
               cartQuantityByVariant={cartQuantityByVariant}
+              isWishlisted={wishlistedProductIds?.has(product.id)}
             />
           ))}
         </div>

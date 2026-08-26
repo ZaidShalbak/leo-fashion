@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/server/auth";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localizedContent";
 import { CartIconLink } from "@/components/storefront/CartIconLink";
+import { WishlistIconLink } from "@/components/storefront/WishlistIconLink";
 import { UserMenu } from "@/components/storefront/UserMenu";
 import { MobileNav } from "@/components/storefront/MobileNav";
 import { LanguageSwitcher } from "@/components/storefront/LanguageSwitcher";
@@ -39,6 +40,13 @@ async function getCartItemCount(): Promise<number> {
     include: { items: true },
   });
   return cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+}
+
+/** Only ever queried for a signed-in user — a guest has no wishlist (see
+ * wishlist.ts), so callers check `user` first rather than this returning
+ * 0 for both "signed out" and "no items" cases. */
+async function getWishlistItemCount(userId: string): Promise<number> {
+  return db.wishlistItem.count({ where: { userId } });
 }
 
 export default async function StorefrontLayout({
@@ -87,6 +95,7 @@ export default async function StorefrontLayout({
   // an actual admin, never for a plain signed-in customer.
   const newOrderCount =
     user?.role === "admin" ? await db.order.count({ where: { viewedByAdminAt: null } }) : 0;
+  const wishlistItemCount = user ? await getWishlistItemCount(user.id) : 0;
   // Localized once here and reused for both the desktop nav below and
   // MobileNav — see src/lib/localizedContent.ts.
   const collections = collectionsRaw.map((collection) => ({
@@ -137,6 +146,7 @@ export default async function StorefrontLayout({
 
             <div className="flex items-center gap-1 sm:hidden">
               <SearchBox />
+              {user && <WishlistIconLink itemCount={wishlistItemCount} />}
               <CartIconLink itemCount={cartItemCount} />
               <LanguageSwitcher />
               <MobileNav
@@ -164,6 +174,7 @@ export default async function StorefrontLayout({
             </nav>
 
             <div className="flex items-center gap-5 rtl:gap-6">
+              {user && <WishlistIconLink itemCount={wishlistItemCount} />}
               <CartIconLink itemCount={cartItemCount} />
               {user ? (
                 <UserMenu isAdmin={user.role === "admin"} newOrderCount={newOrderCount} />
