@@ -20,7 +20,23 @@ type FieldErrors = {
   phone?: string;
 };
 
-export function SignUpForm({ redirectTo }: { redirectTo: string }) {
+export function SignUpForm({
+  redirectTo,
+  defaultName,
+  defaultEmail,
+  defaultPhone,
+  claimOrderId,
+}: {
+  redirectTo: string;
+  /** Pre-fills from a just-placed guest order (see the order-confirmation
+   * page's "save this order to an account" prompt) — signUp itself
+   * re-verifies the email against that order before claiming it, so a
+   * changed email here just means the claim silently doesn't happen. */
+  defaultName?: string;
+  defaultEmail?: string;
+  defaultPhone?: string;
+  claimOrderId?: string;
+}) {
   const t = useTranslations("SignUpForm");
   const tPassword = useTranslations("PasswordInput");
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +90,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
     setFieldErrors({});
 
     startTransition(async () => {
-      const result = await signUp(parsed.data, redirectTo);
+      const result = await signUp(parsed.data, redirectTo, claimOrderId);
       // On success the action redirects and never resolves here.
       if (!result.success) setError(result.error);
     });
@@ -89,6 +105,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
           name="name"
           type="text"
           autoComplete="name"
+          defaultValue={defaultName}
           aria-invalid={!!fieldErrors.name}
           onChange={() => clearFieldError("name")}
           className={cn(fieldErrors.name && "border-destructive")}
@@ -107,6 +124,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
           type="email"
           autoComplete="email"
           dir="ltr"
+          defaultValue={defaultEmail}
           aria-invalid={!!fieldErrors.email}
           onChange={() => clearFieldError("email")}
           className={cn(fieldErrors.email && "border-destructive")}
@@ -155,7 +173,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="phone">{t("phone")}</Label>
-        <PhoneInput id="phone" name="phone" />
+        <PhoneInput id="phone" name="phone" defaultValue={defaultPhone} />
         {fieldErrors.phone && (
           <p role="alert" className="text-destructive text-xs">
             {fieldErrors.phone}

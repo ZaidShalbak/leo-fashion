@@ -70,12 +70,15 @@ export async function updateOrderStatus(
     (NOTIFIABLE_STATUSES as readonly string[]).includes(status)
   ) {
     try {
-      await sendCustomerOrderStatusEmail({
-        order: { ...updated, items: order.items },
-        customerEmail: order.user.email,
-        customerName: order.user.name ?? order.user.email,
-        locale: (order.localeSnapshot as AppLocale | null) ?? "en",
-      });
+      const customerEmail = order.user?.email ?? order.guestEmail;
+      if (customerEmail) {
+        await sendCustomerOrderStatusEmail({
+          order: { ...updated, items: order.items },
+          customerEmail,
+          customerName: order.user?.name ?? customerEmail,
+          locale: (order.localeSnapshot as AppLocale | null) ?? "en",
+        });
+      }
     } catch (error) {
       console.error("[order] Failed to send customer order-status email:", error);
     }

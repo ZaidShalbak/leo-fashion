@@ -47,6 +47,7 @@
     "accountMenuWithNewOrders": "قائمة الحساب ({count} طلبات جديدة)"
   },
   "CheckoutForm": {
+    "email": "البريد الإلكتروني",
     "shippingAddress": "عنوان الشحن",
     "useNewAddress": "استخدام عنوان جديد",
     "fullName": "الاسم الكامل",
@@ -202,7 +203,7 @@
     "resetPassword": "إعادة تعيين كلمة المرور"
   },
   "PlaceOrder": {
-    "signInRequired": "يرجى تسجيل الدخول لإتمام الطلب.",
+    "guestEmailRequired": "أدخل بريدًا إلكترونيًا صالحًا حتى نتمكن من التواصل معك بخصوص هذا الطلب.",
     "invalidCheckoutDetails": "بيانات الدفع غير صالحة.",
     "addressNotFound": "تعذر العثور على هذا العنوان.",
     "cartEmpty": "سلتك فارغة.",
@@ -220,6 +221,7 @@
     "redemptionLimit": "وصل هذا الرمز إلى الحد الأقصى لعدد مرات الاستخدام.",
     "minSubtotal": "أضف {amount} أخرى إلى سلتك لاستخدام هذا الرمز.",
     "enterCode": "أدخل رمزًا.",
+    "signInRequired": "سجّل الدخول لاستخدام رمز الخصم.",
     "cartEmpty": "سلتك فارغة.",
     "alreadyUsed": "لقد استخدمت هذا الرمز من قبل.",
     "noCart": "لم يتم العثور على سلة."
@@ -229,7 +231,8 @@
     "appliedSuffix": "مُفعّل",
     "removeCode": "إزالة رمز الخصم",
     "placeholder": "رمز الخصم",
-    "apply": "تطبيق"
+    "apply": "تطبيق",
+    "signInToApply": "سجّل الدخول لاستخدام رمز الخصم."
   },
   "CartLineItem": {
     "decreaseQuantity": "إنقاص الكمية",
@@ -259,7 +262,9 @@
     "heading": "شكرًا — تم استلام طلبك.",
     "subheading": "سنتابع معك بتفاصيل التنفيذ. لم يتم تحصيل أي دفعة — هذا الطلب عبر فاتورة أو الدفع عند الاستلام.",
     "continueShopping": "متابعة التسوق",
-    "viewMyOrders": "عرض طلباتي"
+    "viewMyOrders": "عرض طلباتي",
+    "saveOrderHeading": "احفظ هذا الطلب في حساب",
+    "saveOrderSubtext": "أنشئ كلمة مرور لمتابعة حالة هذا الطلب وإتمام عمليات الشراء القادمة بشكل أسرع."
   },
   "AccountOrders": {
     "title": "طلباتك",
@@ -506,6 +511,7 @@
     "newBadge": "جديد",
     "noOrdersMatch": "لا توجد طلبات مطابقة لهذا الفلتر.",
     "customerLine": "العميل: {name} · {email}",
+    "guestLabel": "زائر",
     "statusPlaceholder": "الحالة",
     "allStatuses": "جميع الحالات",
     "statusLabel": "الحالة",

@@ -7,6 +7,7 @@ import { XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "@/i18n/navigation";
 import { applyDiscountCode, removeDiscountCode } from "@/server/actions/discount";
 
 /**
@@ -17,12 +18,32 @@ import { applyDiscountCode, removeDiscountCode } from "@/server/actions/discount
  * time. router.refresh() re-runs the cart page's server-side read so the
  * discount line/total shown here always reflects the DB, not local state.
  */
-export function PromoCodeForm({ appliedCode }: { appliedCode: string | null }) {
+export function PromoCodeForm({
+  appliedCode,
+  isSignedIn,
+}: {
+  appliedCode: string | null;
+  /** Discount codes require an account — see discount.ts's applyDiscountCode
+   * (the one-per-customer guard needs a real userId, which guest orders
+   * never have). A signed-out visitor gets a sign-in prompt in place of
+   * the input rather than being able to type a code that always fails. */
+  isSignedIn: boolean;
+}) {
   const t = useTranslations("PromoCodeForm");
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  if (!isSignedIn && !appliedCode) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        <Link href="/login" className="text-foreground underline underline-offset-2">
+          {t("signInToApply")}
+        </Link>
+      </p>
+    );
+  }
 
   function handleApply(event: React.FormEvent) {
     event.preventDefault();

@@ -62,6 +62,15 @@ export const placeOrderSchema = z.object({
     .union([z.string().trim().max(500), z.literal("")])
     .transform((v) => (v ? v : undefined))
     .optional(),
+  // Only meaningful for a signed-out caller — placeOrder itself decides
+  // whether it's actually required (see order.ts), since that depends on
+  // session state this schema has no way to see. Same blank-to-undefined
+  // transform as notes, so an empty field from the form parses the same
+  // as it being omitted entirely.
+  guestEmail: z
+    .union([z.string().trim().email(), z.literal("")])
+    .transform((v) => (v ? v : undefined))
+    .optional(),
 });
 export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;
 

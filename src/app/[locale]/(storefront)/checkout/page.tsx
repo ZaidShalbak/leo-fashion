@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { requireUser } from "@/server/auth";
+import { getCurrentUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { getCurrentCart } from "@/server/actions/cart";
 import { redirect } from "@/i18n/navigation";
@@ -22,14 +22,19 @@ export async function generateMetadata(
 export default async function CheckoutPage() {
   const t = await getTranslations("Checkout");
   const locale = await getLocale();
-  const user = await requireUser("/checkout");
+  // Guest checkout is allowed — see CLAUDE.md. A signed-in visitor still
+  // gets their saved address book; a guest has none (no account), so
+  // that query is skipped rather than run with an id that doesn't exist.
+  const user = await getCurrentUser();
 
   const [cart, addresses, deliveryZones] = await Promise.all([
     getCurrentCart(),
-    db.address.findMany({
-      where: { userId: user.id },
-      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-    }),
+    user
+      ? db.address.findMany({
+          where: { userId: user.id },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+        })
+      : Promise.resolve([]),
     db.deliveryZone.findMany({
       where: { isActive: true },
       orderBy: { position: "asc" },
@@ -83,6 +88,7 @@ export default async function CheckoutPage() {
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_320px]">
         <CheckoutClient
+          isSignedIn={Boolean(user)}
           addresses={addresses}
           items={items.map((item) => ({
             variantId: item.variantId,

@@ -180,6 +180,86 @@ describe("signUp", () => {
     expect(await db.cart.findUnique({ where: { guestToken } })).toBeNull();
     expect(cookieJar.has("cart_token")).toBe(false);
   });
+
+  // Covers claimGuestOrder (auth.ts) — the "save this order to an account"
+  // prompt on the order-confirmation page passes claimOrderId through to
+  // signUp. Exercised via the real signUp() rather than a separately
+  // exported helper, since createSupabaseAdminClient/ServerClient are
+  // already mocked here — no need to hit real Supabase Auth to prove the
+  // claim's own DB matching logic is correct.
+  it("claims a matching guest order and clears its guestEmail", async () => {
+    const supabaseId = `test-auth-claim-${Date.now()}`;
+    mocks.adminCreateUser.mockResolvedValue({
+      data: { user: { id: supabaseId } },
+      error: null,
+    });
+    mocks.signInWithPassword.mockResolvedValue({ data: { user: { id: supabaseId } }, error: null });
+
+    const guestEmail = `claim-${supabaseId}@example.com`;
+    const guestOrder = await db.order.create({
+      data: {
+        guestEmail,
+        status: "pending",
+        subtotalCents: 1000,
+        shippingName: "Guest Shopper",
+        shippingLine1: "1 Guest St",
+        shippingCity: "Guest City",
+      },
+    });
+
+    await signUp(
+      { name: "Claim Test", email: guestEmail, password: "password123" },
+      "/",
+      guestOrder.id
+    );
+
+    const appUser = await db.user.findUnique({ where: { supabaseId } });
+    expect(appUser).not.toBeNull();
+    createdUserIds.push(appUser!.id);
+
+    const claimedOrder = await db.order.findUnique({ where: { id: guestOrder.id } });
+    expect(claimedOrder?.userId).toBe(appUser!.id);
+    expect(claimedOrder?.guestEmail).toBeNull();
+
+    // Order.user is onDelete: Restrict (see schema.prisma) — must delete
+    // the now-claimed order before afterAll deletes the user it points to.
+    await db.order.delete({ where: { id: guestOrder.id } }).catch(() => {});
+  });
+
+  it("does not claim a guest order when the sign-up email doesn't match", async () => {
+    const supabaseId = `test-auth-noclaim-${Date.now()}`;
+    mocks.adminCreateUser.mockResolvedValue({
+      data: { user: { id: supabaseId } },
+      error: null,
+    });
+    mocks.signInWithPassword.mockResolvedValue({ data: { user: { id: supabaseId } }, error: null });
+
+    const guestOrder = await db.order.create({
+      data: {
+        guestEmail: `original-${supabaseId}@example.com`,
+        status: "pending",
+        subtotalCents: 1000,
+        shippingName: "Guest Shopper",
+        shippingLine1: "1 Guest St",
+        shippingCity: "Guest City",
+      },
+    });
+
+    await signUp(
+      { name: "Mismatch Test", email: `different-${supabaseId}@example.com`, password: "password123" },
+      "/",
+      guestOrder.id
+    );
+
+    const appUser = await db.user.findUnique({ where: { supabaseId } });
+    createdUserIds.push(appUser!.id);
+
+    const unclaimedOrder = await db.order.findUnique({ where: { id: guestOrder.id } });
+    expect(unclaimedOrder?.userId).toBeNull();
+    expect(unclaimedOrder?.guestEmail).toBe(`original-${supabaseId}@example.com`);
+
+    await db.order.delete({ where: { id: guestOrder.id } }).catch(() => {});
+  });
 });
 
 describe("signIn", () => {

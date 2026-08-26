@@ -361,8 +361,19 @@ model CartItem {
 
 model Order {
   id     String      @id @default(cuid())
-  userId String
-  user   User        @relation(fields: [userId], references: [id])
+  // Nullable — guest checkout (no account) is allowed. onDelete: Restrict
+  // kept explicit rather than left to Prisma's default-for-optional-
+  // relations (SetNull), since there's no user-deletion feature anywhere
+  // in this app and a deleted user's real orders should never silently
+  // start looking like guest orders.
+  userId String?
+  user   User?       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  // Contact email for a guest order (userId null) — a signed-in order has
+  // no need for this, since user.email already covers it; always null
+  // once a guest order is later claimed into an account (see signUp's
+  // claimOrderId param in auth.ts), since user.email takes over from
+  // there.
+  guestEmail String?
   status OrderStatus @default(pending)
 
   // Shipping address is snapshotted inline at checkout time so the order
