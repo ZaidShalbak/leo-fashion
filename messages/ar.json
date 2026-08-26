@@ -44,12 +44,8 @@
     "shippingAddress": "عنوان الشحن",
     "useNewAddress": "استخدام عنوان جديد",
     "fullName": "الاسم الكامل",
-    "addressLine1": "العنوان - السطر الأول",
-    "addressLine2": "العنوان - السطر الثاني",
+    "street": "الشارع",
     "city": "المدينة",
-    "state": "المحافظة",
-    "postalCode": "الرمز البريدي",
-    "country": "الدولة",
     "phone": "رقم الهاتف",
     "deliveryZone": "منطقة التوصيل",
     "noDeliveryZones": "لا توجد مناطق توصيل متاحة حاليًا — يرجى المحاولة لاحقًا.",
@@ -60,6 +56,16 @@
     "confirmPlaceOrderTitle": "هل تريد إتمام هذا الطلب؟",
     "confirmPlaceOrderDescription": "لن يتم تحصيل أي دفعة الآن — سيتم تنفيذ الطلب بالفاتورة أو الدفع عند الاستلام.",
     "cancel": "إلغاء"
+  },
+  "Phone": {
+    "countryLabel": "رمز الدولة",
+    "palestine": "فلسطين",
+    "israel": "إسرائيل",
+    "invalidFormat": "أدخل رقم هاتف صحيح لفلسطين أو إسرائيل"
+  },
+  "PasswordInput": {
+    "show": "إظهار كلمة المرور",
+    "hide": "إخفاء كلمة المرور"
   },
   "Checkout": {
     "title": "الدفع",
@@ -128,7 +134,10 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "signingIn": "جارٍ تسجيل الدخول…",
-    "signIn": "تسجيل الدخول"
+    "signIn": "تسجيل الدخول",
+    "emailInvalid": "أدخل بريدًا إلكترونيًا صحيحًا.",
+    "passwordRequired": "كلمة المرور مطلوبة.",
+    "forgotPassword": "نسيت كلمة المرور؟"
   },
   "SignUpForm": {
     "name": "الاسم",
@@ -140,7 +149,9 @@
     "nameRequired": "الرجاء إدخال اسمك.",
     "emailInvalid": "أدخل بريدًا إلكترونيًا صحيحًا.",
     "passwordTooShort": "يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.",
-    "passwordInvalid": "أدخل كلمة مرور."
+    "passwordInvalid": "أدخل كلمة مرور.",
+    "phone": "رقم الهاتف (اختياري)",
+    "phoneInvalid": "أدخل رقم هاتف صحيح لفلسطين أو إسرائيل."
   },
   "AuthActions": {
     "nameRequired": "الاسم مطلوب.",
@@ -150,7 +161,31 @@
     "invalidInput": "بيانات غير صالحة.",
     "emailAlreadyExists": "يوجد حساب مسجّل بهذا البريد الإلكتروني بالفعل.",
     "couldNotCreateAccount": "تعذر إنشاء الحساب.",
-    "incorrectCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+    "incorrectCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "couldNotResetPassword": "تعذّر إعادة تعيين كلمة المرور. جرّب طلب رابط إعادة تعيين جديد."
+  },
+  "ForgotPasswordPage": {
+    "title": "نسيت كلمة المرور",
+    "subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+    "linkExpired": "انتهت صلاحية رابط إعادة التعيين هذا أو تم استخدامه بالفعل — اطلب رابطًا جديدًا أدناه.",
+    "backToLogin": "العودة إلى تسجيل الدخول"
+  },
+  "ForgotPasswordForm": {
+    "email": "البريد الإلكتروني",
+    "sending": "جارٍ الإرسال…",
+    "sendResetLink": "إرسال رابط إعادة التعيين",
+    "emailSent": "إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فسيصلك رابط إعادة التعيين قريبًا."
+  },
+  "ResetPasswordPage": {
+    "title": "إعادة تعيين كلمة المرور",
+    "subtitle": "اختر كلمة مرور جديدة لحسابك."
+  },
+  "ResetPasswordForm": {
+    "newPassword": "كلمة المرور الجديدة",
+    "passwordHint": "8 أحرف على الأقل.",
+    "passwordTooShort": "يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.",
+    "saving": "جارٍ الحفظ…",
+    "resetPassword": "إعادة تعيين كلمة المرور"
   },
   "PlaceOrder": {
     "signInRequired": "يرجى تسجيل الدخول لإتمام الطلب.",
@@ -241,7 +276,8 @@
     "total": "الإجمالي",
     "shippingAddress": "عنوان الشحن",
     "tracking": "رقم التتبع",
-    "notes": "ملاحظات"
+    "notes": "ملاحظات",
+    "contactOnWhatsApp": "تواصل عبر واتساب"
   },
   "VariantSelector": {
     "size": "المقاس",

@@ -38,7 +38,7 @@ export default async function AdminOrderDetailPage({
       </p>
 
       <div className="grid gap-10 lg:grid-cols-[1fr_260px_300px]">
-        <OrderDetail order={order} locale={locale as AppLocale} />
+        <OrderDetail order={order} locale={locale as AppLocale} showWhatsAppButton />
         <OrderStatusTimeline order={order} locale={locale as AppLocale} />
         <OrderStatusControl
           orderId={order.id}

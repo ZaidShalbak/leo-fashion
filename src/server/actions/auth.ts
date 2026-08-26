@@ -1,10 +1,11 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { cookies, headers } from "next/headers";
+import { redirect as redirectPlain } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
+import { redirect } from "@/i18n/navigation";
 import {
   createSupabaseServerClient,
   createSupabaseAdminClient,
@@ -13,8 +14,12 @@ import {
 import {
   signUpSchema,
   signInSchema,
+  requestPasswordResetSchema,
+  newPasswordSchema,
   type SignUpInput,
   type SignInInput,
+  type RequestPasswordResetInput,
+  type NewPasswordInput,
 } from "@/lib/validators/auth";
 
 const GUEST_CART_COOKIE = "cart_token";
@@ -126,6 +131,7 @@ export async function signUp(
   redirectTo: string = "/"
 ): Promise<AuthActionResult> {
   const t = await getTranslations("AuthActions");
+  const locale = await getLocale();
 
   const parsed = signUpSchema.safeParse(input);
   if (!parsed.success) {
@@ -134,7 +140,7 @@ export async function signUp(
       error: authIssueMessage(t, parsed.error.issues, "passwordTooShort"),
     };
   }
-  const { name, email, password } = parsed.data;
+  const { name, email, password, phone } = parsed.data;
 
   const admin = createSupabaseAdminClient();
   const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -157,7 +163,7 @@ export async function signUp(
   }
 
   const appUser = await db.user.create({
-    data: { supabaseId: created.user.id, email, name },
+    data: { supabaseId: created.user.id, email, name, phone: phone ?? null },
   });
 
   const supabase = await createSupabaseServerClient();
@@ -168,11 +174,11 @@ export async function signUp(
   if (signInError) {
     // Account exists but the session couldn't be established — send them
     // to log in manually rather than silently failing.
-    redirect("/login");
+    redirect({ href: "/login", locale });
   }
 
   await mergeGuestCartIntoUser(appUser.id);
-  redirect(redirectTo);
+  return redirect({ href: redirectTo, locale });
 }
 
 /** Signs an existing user in and merges any guest cart into their account. */
@@ -181,6 +187,7 @@ export async function signIn(
   redirectTo: string = "/"
 ): Promise<AuthActionResult> {
   const t = await getTranslations("AuthActions");
+  const locale = await getLocale();
 
   const parsed = signInSchema.safeParse(input);
   if (!parsed.success) {
@@ -202,13 +209,100 @@ export async function signIn(
   if (appUser) {
     await mergeGuestCartIntoUser(appUser.id);
   }
-  redirect(redirectTo);
+  return redirect({ href: redirectTo, locale });
 }
 
 export async function signOut(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
-  redirect("/");
+  // Stays on plain next/navigation's redirect, not the locale-aware one —
+  // shared with the admin layout's sign-out button, which is now inside
+  // [locale] too (see the bilingual admin redesign), but this unprefixed
+  // "/" already resolves correctly via the existing NEXT_LOCALE-cookie
+  // bounce, so switching isn't required. Left as-is to keep this diff
+  // small and focused on what actually needed to change.
+  redirectPlain("/");
+}
+
+/**
+ * Sends a password-reset email. Always returns a generic success signal
+ * regardless of whether the email exists — no account enumeration; the
+ * calling form shows its own "check your inbox" message locally rather
+ * than relying on a server-supplied string.
+ *
+ * The redirect target is derived from the *live request's* Origin header
+ * rather than a hardcoded/env value — this directly fixes the real
+ * production bug found earlier this session (a hardcoded Supabase Site
+ * URL pointing at localhost, so reset links never worked outside local
+ * dev). Falls back to NEXT_PUBLIC_SITE_URL only if Origin is somehow
+ * unavailable.
+ *
+ * Requires two one-time dashboard steps in the real Supabase project —
+ * code alone can't do this, same class of setup as the original Site URL
+ * bug:
+ *  1. Authentication > URL Configuration > Redirect URLs must include
+ *     `${origin}/auth/confirm` for every environment this runs in.
+ *  2. Authentication > Email Templates > "Reset Password"'s action link
+ *     must be changed from the default `{{ .ConfirmationURL }}` to
+ *     `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`.
+ *     The default template points at Supabase's own hosted verify
+ *     endpoint, which returns the session via a URL hash fragment for a
+ *     browser-side Supabase client to read — this app is server-action-
+ *     only and has no such client. The token_hash form is what
+ *     src/app/auth/confirm/route.ts below actually expects.
+ */
+export async function requestPasswordReset(
+  input: RequestPasswordResetInput
+): Promise<AuthActionResult> {
+  const t = await getTranslations("AuthActions");
+  const locale = await getLocale();
+
+  const parsed = requestPasswordResetSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: t("invalidInput") };
+  }
+
+  const headerList = await headers();
+  const origin = headerList.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(`/${locale}/reset-password`)}`,
+  });
+
+  return { success: true };
+}
+
+/**
+ * Sets a new password for the currently-active recovery session — see
+ * src/app/auth/confirm/route.ts, which establishes that session from the
+ * emailed link's token before redirecting here. Redirects home on
+ * success, same convention as signIn/signUp.
+ */
+export async function confirmPasswordReset(
+  input: NewPasswordInput
+): Promise<AuthActionResult> {
+  const t = await getTranslations("AuthActions");
+  const locale = await getLocale();
+
+  const parsed = newPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error:
+        parsed.error.issues[0]?.code === "too_small"
+          ? t("passwordTooShort")
+          : t("invalidInput"),
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    return { success: false, error: t("couldNotResetPassword") };
+  }
+
+  return redirect({ href: "/", locale });
 }
 
 export async function getCurrentUserSummary() {

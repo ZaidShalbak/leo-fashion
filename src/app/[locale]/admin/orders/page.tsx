@@ -29,8 +29,10 @@ export async function generateMetadata({
 const VALID_STATUSES = new Set(["pending", "processing", "shipped", "delivered", "cancelled"]);
 
 export default async function AdminOrdersPage({
+  params,
   searchParams,
 }: PageProps<"/[locale]/admin/orders">) {
+  const { locale } = await params;
   const t = await getTranslations("AdminOrders");
   const tStatus = await getTranslations("OrderStatus");
   const statusLabels = {
@@ -87,7 +89,16 @@ export default async function AdminOrdersPage({
               <TableCell>
                 <span className="block">{order.user.name ?? order.user.email}</span>
                 {order.shippingPhone && (
-                  <span className="text-muted-foreground block text-xs" dir="ltr">
+                  // dir="ltr" here is a block-level element, so it also
+                  // resets its own text-align to "left" regardless of the
+                  // page's real direction (logical alignment resolves
+                  // against an element's own dir, not its ancestor's) —
+                  // pinning it explicitly by locale is what actually keeps
+                  // it under the name above in Arabic.
+                  <span
+                    className={`text-muted-foreground block text-xs ${locale === "ar" ? "text-right" : "text-left"}`}
+                    dir="ltr"
+                  >
                     {order.shippingPhone}
                   </span>
                 )}

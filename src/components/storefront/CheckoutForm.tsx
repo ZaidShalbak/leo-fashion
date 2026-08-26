@@ -11,6 +11,7 @@ import { placeOrder } from "@/server/actions/order";
 import type { PlaceOrderInput } from "@/lib/validators/order";
 import { useConfirm } from "@/components/providers/ConfirmDialogProvider";
 import { formatPriceCents } from "./PriceDisplay";
+import { PhoneInput } from "./PhoneInput";
 import { RollingText } from "./RollingText";
 
 type SavedAddress = {
@@ -21,8 +22,8 @@ type SavedAddress = {
   line2: string | null;
   city: string;
   state: string | null;
-  postalCode: string;
-  country: string;
+  postalCode: string | null;
+  country: string | null;
   phone: string | null;
   isDefault: boolean;
 };
@@ -68,11 +69,7 @@ export function CheckoutForm({
         newAddress: {
           fullName: String(formData.get("fullName") ?? ""),
           line1: String(formData.get("line1") ?? ""),
-          line2: (formData.get("line2") as string) || undefined,
           city: String(formData.get("city") ?? ""),
-          state: (formData.get("state") as string) || undefined,
-          postalCode: String(formData.get("postalCode") ?? ""),
-          country: String(formData.get("country") ?? ""),
           phone: (formData.get("phone") as string) || undefined,
         },
       };
@@ -131,8 +128,6 @@ export function CheckoutForm({
                 <span className="text-muted-foreground block">
                   {addr.line1}
                   {addr.line2 ? `, ${addr.line2}` : ""}, {addr.city}
-                  {addr.state ? `, ${addr.state}` : ""} {addr.postalCode},{" "}
-                  {addr.country}
                 </span>
               </span>
             </label>
@@ -160,36 +155,16 @@ export function CheckoutForm({
             <Input id="fullName" name="fullName" required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="line1">{t("addressLine1")}</Label>
+            <Label htmlFor="line1">{t("street")}</Label>
             <Input id="line1" name="line1" required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="line2">{t("addressLine2")}</Label>
-            <Input id="line2" name="line2" />
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="city">{t("city")}</Label>
-              <Input id="city" name="city" required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="state">{t("state")}</Label>
-              <Input id="state" name="state" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="postalCode">{t("postalCode")}</Label>
-              <Input id="postalCode" name="postalCode" required dir="ltr" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="country">{t("country")}</Label>
-              <Input id="country" name="country" required />
-            </div>
+            <Label htmlFor="city">{t("city")}</Label>
+            <Input id="city" name="city" required />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="phone">{t("phone")}</Label>
-            <Input id="phone" name="phone" type="tel" dir="ltr" />
+            <PhoneInput id="phone" name="phone" />
           </div>
         </div>
       )}

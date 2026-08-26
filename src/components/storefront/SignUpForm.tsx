@@ -6,14 +6,17 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PhoneInput } from "./PhoneInput";
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/validators/auth";
 import { signUp } from "@/server/actions/auth";
 
-type FieldErrors = { name?: string; email?: string; password?: string };
+type FieldErrors = { name?: string; email?: string; password?: string; phone?: string };
 
 export function SignUpForm({ redirectTo }: { redirectTo: string }) {
   const t = useTranslations("SignUpForm");
+  const tPassword = useTranslations("PasswordInput");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isPending, startTransition] = useTransition();
@@ -24,6 +27,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
   function fieldErrorMessage(field: keyof FieldErrors, code: string): string {
     if (field === "name") return t("nameRequired");
     if (field === "email") return t("emailInvalid");
+    if (field === "phone") return t("phoneInvalid");
     // password
     return code === "too_small" ? t("passwordTooShort") : t("passwordInvalid");
   }
@@ -39,8 +43,9 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
     const name = String(formData.get("name") ?? "");
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
+    const phone = String(formData.get("phone") ?? "");
 
-    const parsed = signUpSchema.safeParse({ name, email, password });
+    const parsed = signUpSchema.safeParse({ name, email, password, phone });
     if (!parsed.success) {
       const nextErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
@@ -100,15 +105,14 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="password">{t("password")}</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
-          dir="ltr"
           aria-invalid={!!fieldErrors.password}
           onChange={() => clearFieldError("password")}
           className={cn(fieldErrors.password && "border-destructive")}
+          toggleAriaLabel={{ show: tPassword("show"), hide: tPassword("hide") }}
         />
         {fieldErrors.password ? (
           <p role="alert" className="text-destructive text-xs">
@@ -116,6 +120,15 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
           </p>
         ) : (
           <p className="text-muted-foreground text-xs">{t("passwordHint")}</p>
+        )}
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="phone">{t("phone")}</Label>
+        <PhoneInput id="phone" name="phone" />
+        {fieldErrors.phone && (
+          <p role="alert" className="text-destructive text-xs">
+            {fieldErrors.phone}
+          </p>
         )}
       </div>
 
