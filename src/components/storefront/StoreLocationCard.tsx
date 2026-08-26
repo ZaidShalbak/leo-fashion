@@ -31,7 +31,7 @@ export async function StoreLocationCard() {
       href={GOOGLE_MAPS_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block max-w-xs rounded-lg border border-white/10 bg-white/[3%] p-5 transition hover:border-white/25 hover:bg-white/5"
+      className="group block w-full max-w-sm rounded-lg border border-white/10 bg-white/[3%] p-6 transition hover:border-white/25 hover:bg-white/5"
     >
       <p className="mb-3 text-[11px] font-medium tracking-[0.1em] text-white/45 uppercase">
         {t("visitStore")}

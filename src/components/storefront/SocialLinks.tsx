@@ -51,7 +51,7 @@ export function SocialLinks() {
   const t = useTranslations("Nav");
 
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex items-center justify-center gap-5">
       {SOCIAL_LINKS.map(({ key, href }) => {
         const Icon = ICONS[key];
         return (
@@ -63,7 +63,7 @@ export function SocialLinks() {
             aria-label={t(`${key}Link`)}
             className="text-white/70 transition hover:text-white"
           >
-            <Icon className="size-5" />
+            <Icon className="size-7" />
           </a>
         );
       })}
