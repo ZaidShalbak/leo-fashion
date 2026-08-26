@@ -230,21 +230,37 @@ export async function signOut(): Promise<void> {
  * calling form shows its own "check your inbox" message locally rather
  * than relying on a server-supplied string.
  *
- * The redirect target is derived from the *live request's* Origin header
- * rather than a hardcoded/env value — this directly fixes the real
- * production bug found earlier this session (a hardcoded Supabase Site
- * URL pointing at localhost, so reset links never worked outside local
- * dev). Falls back to NEXT_PUBLIC_SITE_URL only if Origin is somehow
- * unavailable.
+ * `redirectTo` here is *not* the confirm link's own domain — Supabase's
+ * "Reset Password" email template always builds that link from the
+ * project's fixed Site URL setting (`{{ .SiteURL }}/auth/confirm?...`),
+ * regardless of what's passed here. What `redirectTo` actually controls
+ * is the `{{ .RedirectTo }}` template variable, which the template embeds
+ * as the `next` query param — i.e. where the browser lands *after*
+ * src/app/auth/confirm/route.ts verifies the token. So this is the final
+ * destination, not (as an earlier version of this comment assumed) the
+ * confirm link's base — confirmed against Supabase's own docs after that
+ * assumption produced a real bug (verified live: the emailed link always
+ * used Site URL and dropped the locale, no matter where the request came
+ * from, because the redirectTo value was being smuggled into a `next`
+ * fragment on a link whose actual base the template never referenced).
+ *
+ * Still needs to be an absolute, allow-listed URL — Supabase validates
+ * `redirectTo` against Authentication > URL Configuration > Redirect URLs
+ * before it'll use it at all (silently falling back to Site URL if it
+ * doesn't match), so deriving it from the live request's Origin header is
+ * still correct here, just for a different reason than originally
+ * documented: it's what lets a local-dev test land back on localhost
+ * afterward instead of always ending up on production.
  *
  * Requires two one-time dashboard steps in the real Supabase project —
- * code alone can't do this, same class of setup as the original Site URL
- * bug:
+ * code alone can't do this, same class of setup as the original hardcoded-
+ * Site-URL bug:
  *  1. Authentication > URL Configuration > Redirect URLs must include
- *     `${origin}/auth/confirm` for every environment this runs in.
+ *     `${origin}/**` (or the exact final-destination path) for every
+ *     environment this runs in.
  *  2. Authentication > Email Templates > "Reset Password"'s action link
  *     must be changed from the default `{{ .ConfirmationURL }}` to
- *     `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`.
+ *     `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}`.
  *     The default template points at Supabase's own hosted verify
  *     endpoint, which returns the session via a URL hash fragment for a
  *     browser-side Supabase client to read — this app is server-action-
@@ -267,7 +283,7 @@ export async function requestPasswordReset(
 
   const supabase = await createSupabaseServerClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(`/${locale}/reset-password`)}`,
+    redirectTo: `${origin}/${locale}/reset-password`,
   });
 
   return { success: true };

@@ -242,7 +242,7 @@ describe("requestPasswordReset", () => {
     expect(result).toEqual({ success: true });
     expect(mocks.resetPasswordForEmail).toHaveBeenCalledWith(
       "someone@example.com",
-      { redirectTo: "https://example.test/auth/confirm?next=%2Fen%2Freset-password" }
+      { redirectTo: "https://example.test/en/reset-password" }
     );
   });
 
