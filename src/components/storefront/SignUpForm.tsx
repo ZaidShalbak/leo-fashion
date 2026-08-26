@@ -12,7 +12,13 @@ import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/validators/auth";
 import { signUp } from "@/server/actions/auth";
 
-type FieldErrors = { name?: string; email?: string; password?: string; phone?: string };
+type FieldErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  phone?: string;
+};
 
 export function SignUpForm({ redirectTo }: { redirectTo: string }) {
   const t = useTranslations("SignUpForm");
@@ -43,6 +49,7 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
     const name = String(formData.get("name") ?? "");
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
     const phone = String(formData.get("phone") ?? "");
 
     const parsed = signUpSchema.safeParse({ name, email, password, phone });
@@ -55,6 +62,13 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
         }
       }
       setFieldErrors(nextErrors);
+      return;
+    }
+    // Confirm-password never reaches the server — it's a client-only typo
+    // safeguard, checked after the schema itself passes so a too-short
+    // password reports as "too short" rather than "doesn't match".
+    if (password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: t("passwordMismatch") });
       return;
     }
     setFieldErrors({});
@@ -120,6 +134,23 @@ export function SignUpForm({ redirectTo }: { redirectTo: string }) {
           </p>
         ) : (
           <p className="text-muted-foreground text-xs">{t("passwordHint")}</p>
+        )}
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
+        <PasswordInput
+          id="confirmPassword"
+          name="confirmPassword"
+          autoComplete="new-password"
+          aria-invalid={!!fieldErrors.confirmPassword}
+          onChange={() => clearFieldError("confirmPassword")}
+          className={cn(fieldErrors.confirmPassword && "border-destructive")}
+          toggleAriaLabel={{ show: tPassword("show"), hide: tPassword("hide") }}
+        />
+        {fieldErrors.confirmPassword && (
+          <p role="alert" className="text-destructive text-xs">
+            {fieldErrors.confirmPassword}
+          </p>
         )}
       </div>
       <div className="space-y-1.5">
