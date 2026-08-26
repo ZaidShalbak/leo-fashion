@@ -6,6 +6,7 @@ import { db } from "@/server/db";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
+import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductDetail } from "@/components/storefront/ProductDetail";
 import { ProductCard } from "@/components/storefront/ProductCard";
 
@@ -82,10 +83,11 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product || product.status !== "active") notFound();
 
-  const [similarProductsRaw, sales, cartQuantityByVariant] = await Promise.all([
+  const [similarProductsRaw, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
     getSimilarProducts(product.id, product.brandId, product.collections.map((c) => c.collectionId)),
     db.sale.findMany({ where: { isActive: true } }),
     getCartQuantityByVariant(),
+    getWishlistedProductIds(),
   ]);
   const now = new Date();
   // Localized the same way the homepage/collection grids do — see
@@ -127,6 +129,7 @@ export default async function ProductPage({ params }: Props) {
           images={product.images}
           variants={product.variants}
           cartQuantityByVariant={cartQuantityByVariant}
+          isWishlisted={wishlistedProductIds.has(product.id)}
         />
       </div>
 
@@ -139,6 +142,7 @@ export default async function ProductPage({ params }: Props) {
                 key={similarProduct.id}
                 product={similarProduct}
                 cartQuantityByVariant={cartQuantityByVariant}
+                isWishlisted={wishlistedProductIds.has(similarProduct.id)}
               />
             ))}
           </div>

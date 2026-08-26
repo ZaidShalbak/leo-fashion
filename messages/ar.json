@@ -327,6 +327,10 @@
     "itemCount": "{count, plural, zero {# منتج} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}",
     "onSale": "Sale −{percent}%"
   },
+  "WishlistActions": {
+    "add": "أضف إلى المفضلة",
+    "remove": "إزالة من المفضلة"
+  },
   "ProductCard": {
     "outOfStock": "غير متوفر",
     "lowStock": "{count, plural, zero {لا يوجد سوى كمية محدودة} one {تبقّت قطعة واحدة فقط} two {تبقّت قطعتان فقط} few {تبقّت # قطع فقط} many {تبقّت # قطعة فقط} other {تبقّت # قطعة فقط}}",

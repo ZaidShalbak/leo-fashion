@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { imagesForColor } from "@/lib/images";
 import { ProductGallery } from "./ProductGallery";
 import { VariantSelector } from "./VariantSelector";
+import { WishlistButton } from "./WishlistButton";
 
 type ProductImage = { id: string; url: string; altText: string | null; color: string | null };
 type Variant = {
@@ -26,6 +27,7 @@ export function ProductDetail({
   images,
   variants,
   cartQuantityByVariant,
+  isWishlisted = false,
 }: {
   productId: string;
   productTitle: string;
@@ -38,6 +40,7 @@ export function ProductDetail({
   variants: Variant[];
   /** Variant id -> quantity already in the cart — see VariantSelector. */
   cartQuantityByVariant?: Record<string, number>;
+  isWishlisted?: boolean;
 }) {
   // Same initial-selection rule VariantSelector has always used (first
   // in-stock variant, falling back to the first variant at all) — color
@@ -68,7 +71,14 @@ export function ProductDetail({
               {brand.name}
             </Link>
           )}
-          <h1 className="text-2xl font-semibold tracking-tight">{productTitle}</h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">{productTitle}</h1>
+            <WishlistButton
+              productId={productId}
+              initiallyWishlisted={isWishlisted}
+              className="mt-0.5 shrink-0 border border-border"
+            />
+          </div>
         </div>
 
         <VariantSelector

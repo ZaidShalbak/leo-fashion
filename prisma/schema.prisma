@@ -64,10 +64,11 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  addresses Address[]
-  auditLogs AuditLog[]
-  cart      Cart?
-  orders    Order[]
+  addresses     Address[]
+  auditLogs     AuditLog[]
+  cart          Cart?
+  orders        Order[]
+  wishlistItems WishlistItem[]
 
   @@index([role])
 }
@@ -169,14 +170,33 @@ model Product {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  variants    ProductVariant[]
-  images      ProductImage[]
-  collections ProductCollection[]
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
+  variants      ProductVariant[]
+  images        ProductImage[]
+  collections   ProductCollection[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  wishlistedBy  WishlistItem[]
 
   @@index([status])
   @@index([brandId])
+}
+
+// Sign-in required (no guest wishlist) — unlike Cart, a wishlist is
+// inherently a "remember this for later, across visits/devices" feature,
+// so a guest-only, cookie-scoped version would be a fairly hollow copy of
+// the real thing. onDelete: Cascade on both sides — a wishlist entry is
+// informational, not a pending transaction like CartItem, so there's no
+// reason to block a user or product deletion over one.
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
 }
 
 // Added in Phase 2 — Phase 1's schema had no image field, and the product

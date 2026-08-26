@@ -12,14 +12,17 @@ import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { CartFlyAnimation } from "./CartFlyAnimation";
 import { PriceDisplay } from "./PriceDisplay";
 import { QuickAddPanel } from "./QuickAddPanel";
+import { WishlistButton } from "./WishlistButton";
 
 export function ProductCard({
   product,
   cartQuantityByVariant,
+  isWishlisted = false,
 }: {
   product: ProductCardData;
   /** Variant id -> quantity already in the cart — see useQuickAdd. */
   cartQuantityByVariant?: Record<string, number>;
+  isWishlisted?: boolean;
 }) {
   const t = useTranslations("ProductCard");
   const quickAdd = useQuickAdd(product, cartQuantityByVariant);
@@ -131,6 +134,17 @@ export function ProductCard({
             </div>
           </div>
         </Link>
+
+        {/* Sibling of the Link, same reasoning as the quick-add overlay
+            just below — a <button> can't nest inside the <a> the Link
+            renders as. top-2 end-2 lands in the image box's corner even
+            though this sits outside that div, since the image is flush
+            against the top of this relatively-positioned container. */}
+        <WishlistButton
+          productId={product.id}
+          initiallyWishlisted={isWishlisted}
+          className="absolute top-2 end-2"
+        />
 
         {/* Quick-add overlay — a sibling of the Link above, not nested
             inside it, so its buttons never end up inside an <a> (invalid
