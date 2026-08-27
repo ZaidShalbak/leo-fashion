@@ -5,7 +5,14 @@
 // brand/collection picklist queries are) because this logic is
 // materially more complex: 5 facets + sort + price, which would drift
 // fast if tripled across pages.
-import type { Prisma } from "@prisma/client";
+//
+// All three pages now filter/sort one shared, cached, in-memory product
+// array (src/server/queries.ts's getActiveProductsCached) instead of
+// building a per-page Prisma `where`/`orderBy` — this used to be a mix
+// of DB-level filtering (collection/brand pages) and in-memory filtering
+// (the /sale page, since "is this on sale" only resolves in memory).
+// Unifying on one approach means a filter click never has to hit the
+// database at all within the cache's revalidate window.
 
 export type ProductFilterParams = {
   brands: string[];
@@ -57,45 +64,6 @@ export function parseProductFilterParams(searchParams: {
   };
 }
 
-/**
- * Combines a caller-supplied base scope (the collection/brand a page is
- * already pinned to, or {} for the unscoped /sale page) with the
- * checkbox facets. Price range is deliberately NOT included here — it's
- * applied in-memory after sale pricing is resolved (see filterByPriceRange)
- * since basePriceCents in the DB is the pre-sale price, not what's shown.
- */
-export function buildProductWhereInput(
-  scopeWhere: Prisma.ProductWhereInput,
-  filters: Pick<ProductFilterParams, "brands" | "categories" | "colors" | "sizes">
-): Prisma.ProductWhereInput {
-  return {
-    ...scopeWhere,
-    // brands/categories are brand slugs / collection handles, not ids —
-    // human-readable in the URL, filtered through the relation rather
-    // than needing a separate slug/handle -> id resolution query.
-    ...(filters.brands.length > 0 ? { brand: { slug: { in: filters.brands } } } : {}),
-    ...(filters.categories.length > 0
-      ? { collections: { some: { collection: { handle: { in: filters.categories } } } } }
-      : {}),
-    ...(filters.colors.length > 0 || filters.sizes.length > 0
-      ? {
-          variants: {
-            some: {
-              ...(filters.sizes.length > 0 ? { size: { in: filters.sizes } } : {}),
-              ...(filters.colors.length > 0 ? { color: { in: filters.colors } } : {}),
-            },
-          },
-        }
-      : {}),
-  };
-}
-
-export function productSortOrderBy(sort: string | undefined): Prisma.ProductOrderByWithRelationInput {
-  if (sort === "price-asc") return { basePriceCents: "asc" };
-  if (sort === "price-desc") return { basePriceCents: "desc" };
-  return { createdAt: "desc" };
-}
-
 /** Distinct size/color values across an unfiltered product scope, so the
  * checkbox options never shrink as filters are applied — same rule the
  * old FilterBar's sizes/colors picklists already followed. */
@@ -125,14 +93,9 @@ export function computePriceBounds(products: { basePriceCents: number }[]): {
   return { min, max };
 }
 
-/**
- * In-memory equivalent of buildProductWhereInput's facet conditions —
- * needed only by the /sale page, where "is this product on sale" can't
- * be expressed as a Prisma `where` (it depends on Sale scope-matching
- * resolved in memory via applySaleToProduct), so every other facet has
- * to be applied in memory alongside it rather than mixing a DB-level
- * filter with an in-memory one.
- */
+/** In-memory check for whether a product matches the checkbox facets
+ * (brand/category/color/size) — the one shared filtering mechanism for
+ * every listing page, run against the cached full product array. */
 export function matchesFacetFilters(
   product: {
     brand: { slug: string } | null;
@@ -173,4 +136,36 @@ export function filterByPriceRange<T extends { basePriceCents: number }>(
     if (maxCents !== undefined && product.basePriceCents > maxCents) return false;
     return true;
   });
+}
+
+/**
+ * In-memory sort over an already sale-adjusted product array. "newest"
+ * is a no-op — the shared cached fetch (getActiveProductsCached) is
+ * already ordered newest-first at the database level, and Array.filter
+ * preserves that relative order, so re-sorting here would just repeat
+ * the same comparison for free. Deliberately does NOT compare by
+ * createdAt: unstable_cache round-trips its return value through
+ * serialization, so Date fields aren't guaranteed to still be real Date
+ * instances on a cache hit — comparing basePriceCents (a plain number)
+ * sidesteps that entirely rather than risking a `.getTime()` crash.
+ */
+export function sortProducts<T extends { basePriceCents: number }>(
+  products: T[],
+  sort: string | undefined
+): T[] {
+  if (sort === "price-asc") return [...products].sort((a, b) => a.basePriceCents - b.basePriceCents);
+  if (sort === "price-desc") return [...products].sort((a, b) => b.basePriceCents - a.basePriceCents);
+  return products;
+}
+
+/** Dedupes a list of {value,label} facet options by value, preserving
+ * first-seen order. Shared by every page building a Brand or Category
+ * checkbox list from the product array (values repeat once per product
+ * that carries them). */
+export function uniqueOptions(options: { value: string; label: string }[]): { value: string; label: string }[] {
+  const seen = new Map<string, string>();
+  for (const option of options) {
+    if (!seen.has(option.value)) seen.set(option.value, option.label);
+  }
+  return [...seen.entries()].map(([value, label]) => ({ value, label }));
 }

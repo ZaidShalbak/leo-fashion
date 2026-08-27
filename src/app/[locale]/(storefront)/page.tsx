@@ -4,6 +4,12 @@ import { db } from "@/server/db";
 import { isHeroBannerLive } from "@/lib/heroBanners";
 import { applySaleToProduct, getBestSaleForProduct } from "@/lib/sales";
 import { localize, localizeOptional } from "@/lib/localizedContent";
+import {
+  getActiveProductsCached,
+  getBestSellersCached,
+  getBrandsWithActiveCountCached,
+  getCollectionsWithLeadImageCached,
+} from "@/server/queries";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
@@ -12,46 +18,6 @@ import { CategorySection } from "@/components/storefront/CategorySection";
 import { BrandsSection } from "@/components/storefront/BrandsSection";
 import { BestSellersSection } from "@/components/storefront/BestSellersSection";
 import { NewArrivalsSection } from "@/components/storefront/NewArrivalsSection";
-
-// Ranks products by total units sold across every non-cancelled order,
-// then re-fetches the top N as full ProductCardData — groupBy only
-// returns the aggregated productId/sum, not the product itself. A
-// cancelled order never shipped, so it shouldn't count as a "sale" for
-// ranking purposes. Products that have since been archived (status !=
-// "active") are filtered out after the fact rather than in the groupBy's
-// where clause, since OrderItem has no direct product-status column to
-// filter on — same "quantity" for a since-archived product still exists
-// in order history, it just shouldn't show up here.
-async function getBestSellers() {
-  const ranked = await db.orderItem.groupBy({
-    by: ["productId"],
-    where: { productId: { not: null }, order: { status: { not: "cancelled" } } },
-    _sum: { quantity: true },
-    orderBy: { _sum: { quantity: "desc" } },
-    take: 8,
-  });
-  const productIds = ranked
-    .map((row) => row.productId)
-    .filter((id): id is string => id !== null);
-  if (productIds.length === 0) return [];
-
-  const products = await db.product.findMany({
-    where: { id: { in: productIds }, status: "active" },
-    include: {
-      images: true,
-      variants: true,
-      brand: true,
-      collections: { select: { collectionId: true } },
-    },
-  });
-  const productById = new Map(products.map((product) => [product.id, product]));
-  // groupBy's own ordering (by units sold) is what makes this "best
-  // sellers" rather than an arbitrary product list — findMany's `in`
-  // filter doesn't preserve it, so re-order by walking productIds.
-  return productIds
-    .map((id) => productById.get(id))
-    .filter((product): product is NonNullable<typeof product> => product !== undefined);
-}
 
 export default async function HomePage() {
   const t = await getTranslations("Home");
@@ -75,41 +41,18 @@ export default async function HomePage() {
     // memory instead of a gnarlier date-range WHERE clause isn't a real
     // cost.
     db.heroBanner.findMany({ where: { isActive: true }, orderBy: { position: "asc" } }),
-    // One representative (oldest-added) active product per collection, with
-    // its primary image, so the hero carousel and category tiles can show a
-    // real photo instead of a plain color block — see HeroCarousel/
-    // CategorySection.
-    db.collection.findMany({
-      orderBy: { title: "asc" },
-      include: {
-        products: {
-          take: 1,
-          orderBy: { product: { createdAt: "asc" } },
-          where: { product: { status: "active" } },
-          include: {
-            product: {
-              include: { images: { orderBy: { position: "asc" }, take: 1 } },
-            },
-          },
-        },
-      },
-    }),
-    db.product.findMany({
-      where: { status: "active" },
-      include: {
-        images: true,
-        variants: true,
-        brand: true,
-        collections: { select: { collectionId: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    getBestSellers(),
-    db.brand.findMany({
-      orderBy: { name: "asc" },
-      include: { _count: { select: { products: { where: { status: "active" } } } } },
-    }),
+    // Cached (60s) and shared with the header's Categories mega menu —
+    // see src/server/queries.ts. Its primary image lets the hero carousel
+    // fallback and category tiles show a real photo instead of a plain
+    // color block — see HeroCarousel/CategorySection.
+    getCollectionsWithLeadImageCached(),
+    // Cached (60s), shared with /collections/[handle], /brands/[slug],
+    // and /sale — see src/server/queries.ts. Sliced to 8 below since this
+    // is the full active catalog, newest-first.
+    getActiveProductsCached(),
+    getBestSellersCached(),
+    // Cached (60s) and shared with the header's Brands mega menu.
+    getBrandsWithActiveCountCached(),
     // Every active Sale — scope/scheduling is resolved in memory via
     // getBestSaleForProduct, same "one place decides is-this-live"
     // reasoning as isHeroBannerLive above; there are only ever a handful
@@ -139,7 +82,14 @@ export default async function HomePage() {
       getBestSaleForProduct(sales, { brandId: null, collectionIds: [collection.id] }, now)
         ?.percentOff ?? null,
   }));
+  // getActiveProductsCached() is the full active catalog (newest-first);
+  // "new arrivals" is just its first 8. Its `collections` include the
+  // full Collection row (needed by /collections, /brands, /sale for
+  // their category facet) — applySaleToProduct only wants the bare
+  // collectionId, so it's re-shaped here rather than changing the shared
+  // query's include shape for this one caller.
   const products = productsRaw
+    .slice(0, 8)
     .map((product) => ({
       ...product,
       title: localize(product.title, product.titleAr, locale),
@@ -147,7 +97,13 @@ export default async function HomePage() {
         ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
         : product.brand,
     }))
-    .map((product) => applySaleToProduct(product, sales, now));
+    .map((product) =>
+      applySaleToProduct(
+        { ...product, collections: product.collections.map((pc) => ({ collectionId: pc.collection.id })) },
+        sales,
+        now
+      )
+    );
   const bestSellers = bestSellersRaw
     .map((product) => ({
       ...product,
