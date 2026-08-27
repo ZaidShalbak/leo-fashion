@@ -7,6 +7,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
+    // Safety-net sweep for leftover integration-test fixtures — see the
+    // file's own comment for why per-file afterAll cleanup alone isn't
+    // reliable enough when DATABASE_URL points at a real remote database.
+    globalSetup: ["./vitest.global-teardown.ts"],
     // The integration tests (order.test.ts, cart.test.ts, wishlist.test.ts,
     // etc.) run real queries against DATABASE_URL — normally local
     // Postgres, sub-millisecond round trips, comfortably inside Vitest's
