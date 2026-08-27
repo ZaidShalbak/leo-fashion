@@ -10,6 +10,7 @@
     "brandName": "Leo Fashion",
     "categories": "Categories",
     "brands": "Brands",
+    "sale": "Sale",
     "signIn": "Sign in",
     "footer": "Leo Fashion — pay-on-delivery / invoice checkout, no card required.",
     "visitStore": "Visit our store",
@@ -117,11 +118,17 @@
     "fallbackTitle": "Brand",
     "noMatches": "No products match those filters."
   },
-  "FilterBar": {
-    "size": "Size",
-    "allSizes": "All sizes",
-    "color": "Color",
-    "allColors": "All colors",
+  "SalePage": {
+    "title": "Sale",
+    "subtitle": "Everything currently discounted, across every brand and category.",
+    "noActiveSales": "Nothing's on sale right now — check back soon."
+  },
+  "FilterSidebar": {
+    "categoryHeading": "Category",
+    "brandHeading": "Brand",
+    "colorHeading": "Color",
+    "sizeHeading": "Size",
+    "priceHeading": "Price",
     "sort": "Sort",
     "sortOptions": {
       "newest": "Newest",
@@ -129,6 +136,7 @@
       "price-desc": "Price: high to low"
     },
     "clearFilters": "Clear filters",
+    "filtersButton": "Filters",
     "applying": "Applying filters…"
   },
   "LoginPage": {
@@ -390,6 +398,7 @@
   "MobileNav": {
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "sale": "Sale",
     "brands": "Brands",
     "myAccount": "My account",
     "admin": "Admin",

@@ -1,20 +1,33 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import type { AppLocale } from "@/i18n/routing";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
+import {
+  buildProductWhereInput,
+  computeSizeColorFacets,
+  filterByPriceRange,
+  parseProductFilterParams,
+  productSortOrderBy,
+} from "@/lib/productFilters";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductCard } from "@/components/storefront/ProductCard";
-import { FilterBar } from "@/components/storefront/FilterBar";
+import { FilterSidebar } from "@/components/storefront/FilterSidebar";
 
 type Props = {
   params: Promise<{ handle: string; locale: AppLocale }>;
-  searchParams: Promise<{ size?: string; color?: string; sort?: string }>;
+  searchParams: Promise<{
+    brand?: string;
+    color?: string;
+    size?: string;
+    sort?: string;
+    minPrice?: string;
+    maxPrice?: string;
+  }>;
 };
 
 export async function generateMetadata({
@@ -33,7 +46,8 @@ export default async function CollectionPage({
   searchParams,
 }: Props) {
   const { handle, locale } = await params;
-  const { size, color, sort } = await searchParams;
+  const rawParams = await searchParams;
+  const filters = parseProductFilterParams(rawParams);
   const t = await getTranslations("CollectionPage");
 
   const collectionRaw = await db.collection.findUnique({ where: { handle } });
@@ -44,65 +58,68 @@ export default async function CollectionPage({
     description: localizeOptional(collectionRaw.description, collectionRaw.descriptionAr, locale),
   };
 
-  // All variant size/color values across the *unfiltered* collection, so
-  // the filter controls don't shrink as filters are applied.
-  const allVariants = await db.productVariant.findMany({
-    where: {
-      product: {
-        status: "active",
-        collections: { some: { collectionId: collection.id } },
-      },
-    },
-    select: { size: true, color: true },
-  });
-  const sizes = [...new Set(allVariants.map((v) => v.size))].sort();
-  const colors = [...new Set(allVariants.map((v) => v.color))].sort();
+  const scopeWhere = {
+    status: "active" as const,
+    collections: { some: { collectionId: collection.id } },
+  };
 
-  const orderBy: Prisma.ProductOrderByWithRelationInput =
-    sort === "price-asc"
-      ? { basePriceCents: "asc" }
-      : sort === "price-desc"
-        ? { basePriceCents: "desc" }
-        : { createdAt: "desc" };
+  // Sizes/colors/brands/price bounds are all computed against the
+  // *unfiltered* scope (this collection, no facet filters applied yet)
+  // so the sidebar's own options never shrink as filters are applied —
+  // same rule the old FilterBar's picklists already followed. Category
+  // isn't offered as a facet here — it would just duplicate the page's
+  // own scope (see FilterSidebar's categories prop being omitted below).
+  const [allVariants, brandsRaw, priceAgg, productsRaw, sales, cartQuantityByVariant, wishlistedProductIds] =
+    await Promise.all([
+      db.productVariant.findMany({ where: { product: scopeWhere }, select: { size: true, color: true } }),
+      db.brand.findMany({
+        where: { products: { some: scopeWhere } },
+        orderBy: { name: "asc" },
+      }),
+      db.product.aggregate({
+        where: scopeWhere,
+        _min: { basePriceCents: true },
+        _max: { basePriceCents: true },
+      }),
+      db.product.findMany({
+        where: buildProductWhereInput(scopeWhere, filters),
+        include: {
+          images: true,
+          variants: true,
+          brand: true,
+          collections: { select: { collectionId: true } },
+        },
+        orderBy: productSortOrderBy(filters.sort),
+      }),
+      db.sale.findMany({ where: { isActive: true } }),
+      getCartQuantityByVariant(),
+      getWishlistedProductIds(),
+    ]);
 
-  const [productsRaw, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
-    db.product.findMany({
-      where: {
-        status: "active",
-        collections: { some: { collectionId: collection.id } },
-        ...(size || color
-          ? {
-              variants: {
-                some: {
-                  ...(size ? { size } : {}),
-                  ...(color ? { color } : {}),
-                },
-              },
-            }
-          : {}),
-      },
-      include: {
-        images: true,
-        variants: true,
-        brand: true,
-        collections: { select: { collectionId: true } },
-      },
-      orderBy,
-    }),
-    db.sale.findMany({ where: { isActive: true } }),
-    getCartQuantityByVariant(),
-    getWishlistedProductIds(),
-  ]);
+  const { sizes, colors } = computeSizeColorFacets(allVariants);
+  const brandOptions = brandsRaw.map((brand) => ({
+    value: brand.slug,
+    label: localize(brand.name, brand.nameAr, locale),
+  }));
+  const priceBounds = {
+    min: priceAgg._min.basePriceCents ?? 0,
+    max: priceAgg._max.basePriceCents ?? 0,
+  };
+
   const now = new Date();
-  const products = productsRaw
-    .map((product) => ({
-      ...product,
-      title: localize(product.title, product.titleAr, locale),
-      brand: product.brand
-        ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
-        : product.brand,
-    }))
-    .map((product) => applySaleToProduct(product, sales, now));
+  const products = filterByPriceRange(
+    productsRaw
+      .map((product) => ({
+        ...product,
+        title: localize(product.title, product.titleAr, locale),
+        brand: product.brand
+          ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+          : product.brand,
+      }))
+      .map((product) => applySaleToProduct(product, sales, now)),
+    filters.minPriceCents,
+    filters.maxPriceCents
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
@@ -117,24 +134,28 @@ export default async function CollectionPage({
         )}
       </div>
 
-      <FilterBar sizes={sizes} colors={colors} />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
+        <FilterSidebar brands={brandOptions} sizes={sizes} colors={colors} priceBounds={priceBounds} />
 
-      {products.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              cartQuantityByVariant={cartQuantityByVariant}
-              isWishlisted={wishlistedProductIds.has(product.id)}
-            />
-          ))}
+        <div>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  cartQuantityByVariant={cartQuantityByVariant}
+                  isWishlisted={wishlistedProductIds.has(product.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground py-12 text-center">
+              {t("noMatches")}
+            </p>
+          )}
         </div>
-      ) : (
-        <p className="text-muted-foreground py-12 text-center">
-          {t("noMatches")}
-        </p>
-      )}
+      </div>
     </div>
   );
 }

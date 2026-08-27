@@ -67,6 +67,13 @@ export function MobileNav({
             </Link>
           ))}
           <Link
+            href="/sale"
+            onClick={() => setOpen(false)}
+            className="py-2 font-medium text-red-400 transition hover:text-red-300"
+          >
+            {t("sale")}
+          </Link>
+          <Link
             href="/brands"
             onClick={() => setOpen(false)}
             className="text-muted-foreground hover:text-foreground py-2 transition"
