@@ -92,6 +92,13 @@ function FilterControls({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  // Radix's Select doesn't read the ambient CSS `dir` — it defaults to
+  // ltr unless told otherwise, which left the sort dropdown's text
+  // stuck left-aligned even inside an RTL page. Passed explicitly here
+  // rather than fixed globally in src/components/ui/select.tsx, since
+  // PhoneInput's Select deliberately wants to stay ltr always (same
+  // "island" pattern as prices/postal codes) regardless of locale.
+  const isRtl = useLocale() === "ar";
 
   function getList(key: string): string[] {
     const raw = searchParams.get(key);
@@ -183,7 +190,7 @@ function FilterControls({
   return (
     <div className="space-y-6" data-slot="filter-sidebar">
       <div className="flex items-center justify-between">
-        <Select value={currentSort} onValueChange={setSort}>
+        <Select value={currentSort} onValueChange={setSort} dir={isRtl ? "rtl" : "ltr"}>
           <SelectTrigger size="sm" className="w-full">
             <SelectValue placeholder={t("sort")} />
           </SelectTrigger>
