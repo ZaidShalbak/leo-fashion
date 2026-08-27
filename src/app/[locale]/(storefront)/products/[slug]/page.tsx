@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { db } from "@/server/db";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
+import { getActiveProductsCached } from "@/server/queries";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductDetail } from "@/components/storefront/ProductDetail";
@@ -14,16 +15,32 @@ type Props = {
   params: Promise<{ slug: string; locale: string }>;
 };
 
+/**
+ * Looks the product up in the same shared, cached (60s) active-product
+ * array every listing page uses — see src/server/queries.ts — instead of
+ * its own per-slug query. This matters more here than almost anywhere
+ * else: Next.js prefetches every <Link>'d product card the moment it
+ * scrolls into view, so a listing page with a dozen visible cards used
+ * to fire a dozen concurrent, uncached `db.product.findUnique` calls in
+ * the background — real, measured contention (some individual prefetch
+ * requests took 2.5-4s) that made even an already-fast page feel
+ * sluggish. A product no longer active (draft/archived) simply won't be
+ * in the cached array, so the not-found check below still behaves
+ * identically to the old direct-query version.
+ *
+ * Re-sorts images/variants after the lookup since the shared cache's own
+ * include has no explicit ordering (it's built for filtering, not
+ * display) — matches this page's previous `orderBy` exactly.
+ */
 async function getProduct(slug: string) {
-  return db.product.findUnique({
-    where: { slug },
-    include: {
-      images: { orderBy: { position: "asc" } },
-      variants: { orderBy: { size: "asc" } },
-      brand: true,
-      collections: { select: { collectionId: true } },
-    },
-  });
+  const allActiveProducts = await getActiveProductsCached();
+  const product = allActiveProducts.find((p) => p.slug === slug);
+  if (!product) return null;
+  return {
+    ...product,
+    images: [...product.images].sort((a, b) => a.position - b.position),
+    variants: [...product.variants].sort((a, b) => a.size.localeCompare(b.size)),
+  };
 }
 
 /**
@@ -34,6 +51,11 @@ async function getProduct(slug: string) {
  * surfacing. Returns nothing (rather than falling back to "recent
  * products in general") when neither signal exists, so this section
  * only ever shows genuinely related items, never arbitrary ones.
+ *
+ * Also sourced from the shared cached array (see getProduct above) —
+ * filtered/sliced in memory instead of its own DB query. take(4) after
+ * filtering preserves the cached array's own newest-first order, same
+ * "no real sort needed" reasoning as productFilters.ts's sortProducts.
  */
 async function getSimilarProducts(
   productId: string,
@@ -42,26 +64,15 @@ async function getSimilarProducts(
 ) {
   if (collectionIds.length === 0 && !brandId) return [];
 
-  return db.product.findMany({
-    where: {
-      id: { not: productId },
-      status: "active",
-      OR: [
-        ...(collectionIds.length > 0
-          ? [{ collections: { some: { collectionId: { in: collectionIds } } } }]
-          : []),
-        ...(brandId ? [{ brandId }] : []),
-      ],
-    },
-    include: {
-      images: true,
-      variants: true,
-      brand: true,
-      collections: { select: { collectionId: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 4,
-  });
+  const allActiveProducts = await getActiveProductsCached();
+  return allActiveProducts
+    .filter(
+      (product) =>
+        product.id !== productId &&
+        (product.collections.some((pc) => collectionIds.includes(pc.collection.id)) ||
+          (brandId !== null && product.brandId === brandId))
+    )
+    .slice(0, 4);
 }
 
 export async function generateMetadata({
@@ -84,14 +95,21 @@ export default async function ProductPage({ params }: Props) {
   if (!product || product.status !== "active") notFound();
 
   const [similarProductsRaw, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
-    getSimilarProducts(product.id, product.brandId, product.collections.map((c) => c.collectionId)),
+    getSimilarProducts(
+      product.id,
+      product.brandId,
+      product.collections.map((pc) => pc.collection.id)
+    ),
     db.sale.findMany({ where: { isActive: true } }),
     getCartQuantityByVariant(),
     getWishlistedProductIds(),
   ]);
   const now = new Date();
   // Localized the same way the homepage/collection grids do — see
-  // src/lib/localizedContent.ts.
+  // src/lib/localizedContent.ts. applySaleToProduct wants `collections`
+  // as {collectionId}[]; the shared cache's richer {collection}[] shape
+  // (see getProduct above) is re-shaped here, same as every other
+  // listing page that sources from getActiveProductsCached.
   const similarProducts = similarProductsRaw
     .map((p) => ({
       ...p,
@@ -100,13 +118,19 @@ export default async function ProductPage({ params }: Props) {
         ? { ...p.brand, name: localize(p.brand.name, p.brand.nameAr, locale) }
         : p.brand,
     }))
-    .map((p) => applySaleToProduct(p, sales, now));
+    .map((p) =>
+      applySaleToProduct(
+        { ...p, collections: p.collections.map((pc) => ({ collectionId: pc.collection.id })) },
+        sales,
+        now
+      )
+    );
 
   const { basePriceCents, compareAtCents } = applySaleToProduct(
     {
       basePriceCents: product.basePriceCents,
       brandId: product.brandId,
-      collections: product.collections,
+      collections: product.collections.map((pc) => ({ collectionId: pc.collection.id })),
     },
     sales,
     now
