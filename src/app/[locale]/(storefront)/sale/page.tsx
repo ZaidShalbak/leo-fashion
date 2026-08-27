@@ -148,7 +148,9 @@ export default async function SalePage({ params, searchParams }: Props) {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground py-12 text-center">{t("noActiveSales")}</p>
+            <p className="text-muted-foreground py-12 text-center">
+              {onSaleProducts.length === 0 ? t("noActiveSales") : t("noMatches")}
+            </p>
           )}
         </div>
       </div>

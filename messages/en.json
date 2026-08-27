@@ -121,7 +121,8 @@
   "SalePage": {
     "title": "Sale",
     "subtitle": "Everything currently discounted, across every brand and category.",
-    "noActiveSales": "Nothing's on sale right now — check back soon."
+    "noActiveSales": "Nothing's on sale right now — check back soon.",
+    "noMatches": "No sale items match those filters."
   },
   "FilterSidebar": {
     "categoryHeading": "Category",
