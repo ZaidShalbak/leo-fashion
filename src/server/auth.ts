@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
@@ -65,13 +66,23 @@ export async function getSupabaseUser() {
  * The app's own User row (with role, etc) for the current session, or null
  * if signed out. Looked up by supabaseId — the stable link between
  * Supabase Auth's auth.users and our own User table — never by email.
+ *
+ * Wrapped in React's `cache()` — this is Next.js's own documented pattern
+ * for a per-request "who's signed in" lookup (see the App Router
+ * authentication guide's `getUser`/`verifySession` example). Without it,
+ * every independent call site within the same request (StorefrontLayout,
+ * getCartQuantityByVariant, getWishlistedProductIds, requireUser, etc.)
+ * was each paying its own full Supabase Auth + database round trip for
+ * what's always the same answer within one request. `cache()` scopes the
+ * memoization to the current request only — it never leaks across
+ * requests or between different signed-in users.
  */
-export async function getCurrentUser(): Promise<User | null> {
+export const getCurrentUser = cache(async (): Promise<User | null> => {
   const authUser = await getSupabaseUser();
   if (!authUser) return null;
 
   return db.user.findUnique({ where: { supabaseId: authUser.id } });
-}
+});
 
 /**
  * Requires a signed-in user, redirecting to /login otherwise. Use in

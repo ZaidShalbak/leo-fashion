@@ -7,12 +7,15 @@ import type { AppLocale } from "@/i18n/routing";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
 import {
-  buildProductWhereInput,
+  computePriceBounds,
   computeSizeColorFacets,
   filterByPriceRange,
+  matchesFacetFilters,
   parseProductFilterParams,
-  productSortOrderBy,
+  sortProducts,
+  uniqueOptions,
 } from "@/lib/productFilters";
+import { getActiveProductsCached } from "@/server/queries";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -50,6 +53,9 @@ export default async function CollectionPage({
   const filters = parseProductFilterParams(rawParams);
   const t = await getTranslations("CollectionPage");
 
+  // Not cached — a single-row lookup by unique index is already cheap,
+  // and this is exactly the field (title/description) an admin most
+  // wants to see reflected instantly after an edit.
   const collectionRaw = await db.collection.findUnique({ where: { handle } });
   if (!collectionRaw) notFound();
   const collection = {
@@ -58,67 +64,60 @@ export default async function CollectionPage({
     description: localizeOptional(collectionRaw.description, collectionRaw.descriptionAr, locale),
   };
 
-  const scopeWhere = {
-    status: "active" as const,
-    collections: { some: { collectionId: collection.id } },
-  };
-
-  // Sizes/colors/brands/price bounds are all computed against the
-  // *unfiltered* scope (this collection, no facet filters applied yet)
-  // so the sidebar's own options never shrink as filters are applied —
-  // same rule the old FilterBar's picklists already followed. Category
-  // isn't offered as a facet here — it would just duplicate the page's
-  // own scope (see FilterSidebar's categories prop being omitted below).
-  const [allVariants, brandsRaw, priceAgg, productsRaw, sales, cartQuantityByVariant, wishlistedProductIds] =
-    await Promise.all([
-      db.productVariant.findMany({ where: { product: scopeWhere }, select: { size: true, color: true } }),
-      db.brand.findMany({
-        where: { products: { some: scopeWhere } },
-        orderBy: { name: "asc" },
-      }),
-      db.product.aggregate({
-        where: scopeWhere,
-        _min: { basePriceCents: true },
-        _max: { basePriceCents: true },
-      }),
-      db.product.findMany({
-        where: buildProductWhereInput(scopeWhere, filters),
-        include: {
-          images: true,
-          variants: true,
-          brand: true,
-          collections: { select: { collectionId: true } },
-        },
-        orderBy: productSortOrderBy(filters.sort),
-      }),
-      db.sale.findMany({ where: { isActive: true } }),
-      getCartQuantityByVariant(),
-      getWishlistedProductIds(),
-    ]);
-
-  const { sizes, colors } = computeSizeColorFacets(allVariants);
-  const brandOptions = brandsRaw.map((brand) => ({
-    value: brand.slug,
-    label: localize(brand.name, brand.nameAr, locale),
-  }));
-  const priceBounds = {
-    min: priceAgg._min.basePriceCents ?? 0,
-    max: priceAgg._max.basePriceCents ?? 0,
-  };
+  const [allActiveProducts, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
+    // Shared, cached (60s) full-catalog fetch — see src/server/queries.ts.
+    // Filtering down to this collection, and every facet/sort/price
+    // operation below, all happen in memory against this one array, so a
+    // sidebar filter click never has to hit the database.
+    getActiveProductsCached(),
+    db.sale.findMany({ where: { isActive: true } }),
+    getCartQuantityByVariant(),
+    getWishlistedProductIds(),
+  ]);
 
   const now = new Date();
-  const products = filterByPriceRange(
-    productsRaw
-      .map((product) => ({
-        ...product,
-        title: localize(product.title, product.titleAr, locale),
-        brand: product.brand
-          ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
-          : product.brand,
-      }))
-      .map((product) => applySaleToProduct(product, sales, now)),
-    filters.minPriceCents,
-    filters.maxPriceCents
+  const inScope = allActiveProducts.filter((product) =>
+    product.collections.some((pc) => pc.collection.id === collection.id)
+  );
+  // Localized and sale-adjusted once, up front — every facet (brand/
+  // color/size/price) and the final product grid all read from this same
+  // array afterward. Merges the sale-adjusted price back onto the full
+  // original object (rather than using applySaleToProduct's own return
+  // value directly) since that helper strips `collections`, which the
+  // Brand facet still needs downstream.
+  const productsWithPricing = inScope
+    .map((product) => ({
+      ...product,
+      title: localize(product.title, product.titleAr, locale),
+      brand: product.brand
+        ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+        : product.brand,
+    }))
+    .map((product) => {
+      const adjusted = applySaleToProduct(
+        { ...product, collections: product.collections.map((pc) => ({ collectionId: pc.collection.id })) },
+        sales,
+        now
+      );
+      return { ...product, basePriceCents: adjusted.basePriceCents, compareAtCents: adjusted.compareAtCents };
+    });
+
+  // Category isn't offered as a facet here — it would just duplicate
+  // this page's own scope (see FilterSidebar's categories prop being
+  // omitted below).
+  const { sizes, colors } = computeSizeColorFacets(productsWithPricing.flatMap((p) => p.variants));
+  const brandOptions = uniqueOptions(
+    productsWithPricing.filter((p) => p.brand !== null).map((p) => ({ value: p.brand!.slug, label: p.brand!.name }))
+  );
+  const priceBounds = computePriceBounds(productsWithPricing);
+
+  const products = sortProducts(
+    filterByPriceRange(
+      productsWithPricing.filter((p) => matchesFacetFilters(p, filters)),
+      filters.minPriceCents,
+      filters.maxPriceCents
+    ),
+    filters.sort
   );
 
   return (

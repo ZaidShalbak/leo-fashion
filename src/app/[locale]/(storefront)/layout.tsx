@@ -1,8 +1,11 @@
 import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import type { User } from "@prisma/client";
+
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
+import { getBrandsWithActiveCountCached, getCollectionsWithLeadImageCached } from "@/server/queries";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localizedContent";
 import { CartIconLink } from "@/components/storefront/CartIconLink";
@@ -20,9 +23,12 @@ import { CategoriesMenuGrid, type CategoryMenuItem } from "@/components/storefro
 import { BrandsMenuGrid, type BrandMenuItem } from "@/components/storefront/BrandsMenuGrid";
 import { StoreLocationCard } from "@/components/storefront/StoreLocationCard";
 
-async function getCartItemCount(): Promise<number> {
-  const user = await getCurrentUser();
-
+/** Takes the already-resolved user rather than calling getCurrentUser()
+ * itself — that call is real work (a Supabase Auth check plus a DB
+ * lookup), and this used to run it a second time on every single
+ * storefront page load, duplicating the one StorefrontLayout already
+ * does below. */
+async function getCartItemCount(user: User | null): Promise<number> {
   if (user) {
     const cart = await db.cart.findUnique({
       where: { userId: user.id },
@@ -57,45 +63,33 @@ export default async function StorefrontLayout({
   const t = await getTranslations("Nav");
   const tBrands = await getTranslations("BrandsSection");
   const locale = await getLocale();
-  const [collectionsRaw, brandsRaw, user, cartItemCount] = await Promise.all([
-    // Includes each collection's first active product's first image (not
-    // just bare id/handle/title) so the Categories mega menu can show a
-    // real photo per tile — same shape page.tsx's homepage query uses,
-    // minus the sale-percent calculation the homepage layers on top,
-    // since the mega menu deliberately skips sale badges (see
-    // NavMegaMenu/CategoriesMenuGrid).
-    db.collection.findMany({
-      orderBy: { title: "asc" },
-      include: {
-        products: {
-          take: 1,
-          orderBy: { product: { createdAt: "asc" } },
-          where: { product: { status: "active" } },
-          include: {
-            product: {
-              include: { images: { orderBy: { position: "asc" }, take: 1 } },
-            },
-          },
-        },
-      },
-    }),
-    // Same shape as the homepage's brand query — every brand plus its
-    // active-product count, for the Brands mega menu.
-    db.brand.findMany({
-      orderBy: { name: "asc" },
-      include: { _count: { select: { products: { where: { status: "active" } } } } },
-    }),
-    getCurrentUser(),
-    getCartItemCount(),
+  // Resolved once, up front, and passed down to every branch below that
+  // needs to know who's signed in — see getCartItemCount's comment for
+  // why this can't just run inside the Promise.all like the other
+  // fetches (they'd each redundantly re-resolve it themselves).
+  const user = await getCurrentUser();
+  // Both collection/brand queries are cached (60s) and shared with the
+  // homepage, which needs the exact same data — see
+  // src/server/queries.ts. Sale-percent badges the homepage layers on
+  // top are computed separately there, from the (deliberately uncached)
+  // live Sale rows; the mega menu itself skips sale badges entirely (see
+  // NavMegaMenu/CategoriesMenuGrid). newOrderCount and wishlistItemCount
+  // used to run as two sequential awaits after this block — now
+  // parallelized alongside everything else, since both only depend on
+  // the `user` already resolved above.
+  const [collectionsRaw, brandsRaw, cartItemCount, newOrderCount, wishlistItemCount] = await Promise.all([
+    getCollectionsWithLeadImageCached(),
+    getBrandsWithActiveCountCached(),
+    getCartItemCount(user),
+    // Lets an admin browsing the storefront (not already on /admin)
+    // notice there's a new order without babysitting the dashboard —
+    // mirrors the admin nav's own badge
+    // (src/components/admin/AdminOrdersNavBadge.tsx), same underlying
+    // count, just surfaced here too. Only ever queried for an actual
+    // admin, never for a plain signed-in customer.
+    user?.role === "admin" ? db.order.count({ where: { viewedByAdminAt: null } }) : Promise.resolve(0),
+    user ? getWishlistItemCount(user.id) : Promise.resolve(0),
   ]);
-  // Lets an admin browsing the storefront (not already on /admin) notice
-  // there's a new order without babysitting the dashboard — mirrors the
-  // admin nav's own badge (src/components/admin/AdminOrdersNavBadge.tsx),
-  // same underlying count, just surfaced here too. Only ever queried for
-  // an actual admin, never for a plain signed-in customer.
-  const newOrderCount =
-    user?.role === "admin" ? await db.order.count({ where: { viewedByAdminAt: null } }) : 0;
-  const wishlistItemCount = user ? await getWishlistItemCount(user.id) : 0;
   // Localized once here and reused for both the desktop nav below and
   // MobileNav — see src/lib/localizedContent.ts.
   const collections = collectionsRaw.map((collection) => ({

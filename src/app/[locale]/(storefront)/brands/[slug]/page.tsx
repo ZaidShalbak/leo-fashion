@@ -7,12 +7,15 @@ import type { AppLocale } from "@/i18n/routing";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
 import {
-  buildProductWhereInput,
+  computePriceBounds,
   computeSizeColorFacets,
   filterByPriceRange,
+  matchesFacetFilters,
   parseProductFilterParams,
-  productSortOrderBy,
+  sortProducts,
+  uniqueOptions,
 } from "@/lib/productFilters";
+import { getActiveProductsCached } from "@/server/queries";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -45,6 +48,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
   const filters = parseProductFilterParams(rawParams);
   const t = await getTranslations("BrandDetailPage");
 
+  // Not cached — same reasoning as the collection page's own lookup.
   const brandRaw = await db.brand.findUnique({ where: { slug } });
   if (!brandRaw) notFound();
   const brand = {
@@ -53,62 +57,57 @@ export default async function BrandPage({ params, searchParams }: Props) {
     description: localizeOptional(brandRaw.description, brandRaw.descriptionAr, locale),
   };
 
-  const scopeWhere = { status: "active" as const, brandId: brand.id };
-
-  // Same "compute against the unfiltered scope" rule as the collection
-  // page — Brand isn't offered as a facet here, since it would just
-  // duplicate this page's own scope (see FilterSidebar's brands prop
-  // being omitted below).
-  const [allVariants, categoriesRaw, priceAgg, productsRaw, sales, cartQuantityByVariant, wishlistedProductIds] =
-    await Promise.all([
-      db.productVariant.findMany({ where: { product: scopeWhere }, select: { size: true, color: true } }),
-      db.collection.findMany({
-        where: { products: { some: { product: scopeWhere } } },
-        orderBy: { title: "asc" },
-      }),
-      db.product.aggregate({
-        where: scopeWhere,
-        _min: { basePriceCents: true },
-        _max: { basePriceCents: true },
-      }),
-      db.product.findMany({
-        where: buildProductWhereInput(scopeWhere, filters),
-        include: {
-          images: true,
-          variants: true,
-          brand: true,
-          collections: { select: { collectionId: true } },
-        },
-        orderBy: productSortOrderBy(filters.sort),
-      }),
-      db.sale.findMany({ where: { isActive: true } }),
-      getCartQuantityByVariant(),
-      getWishlistedProductIds(),
-    ]);
-
-  const { sizes, colors } = computeSizeColorFacets(allVariants);
-  const categoryOptions = categoriesRaw.map((collection) => ({
-    value: collection.handle,
-    label: localize(collection.title, collection.titleAr, locale),
-  }));
-  const priceBounds = {
-    min: priceAgg._min.basePriceCents ?? 0,
-    max: priceAgg._max.basePriceCents ?? 0,
-  };
+  const [allActiveProducts, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
+    // Shared, cached (60s) full-catalog fetch — see src/server/queries.ts.
+    getActiveProductsCached(),
+    db.sale.findMany({ where: { isActive: true } }),
+    getCartQuantityByVariant(),
+    getWishlistedProductIds(),
+  ]);
 
   const now = new Date();
-  const products = filterByPriceRange(
-    productsRaw
-      .map((product) => ({
-        ...product,
-        title: localize(product.title, product.titleAr, locale),
-        brand: product.brand
-          ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
-          : product.brand,
+  const inScope = allActiveProducts.filter((product) => product.brandId === brand.id);
+  // Same "localize + sale-adjust once, up front" pattern as the
+  // collection page — see its comment for why the adjusted price is
+  // merged back onto the full object instead of used directly.
+  const productsWithPricing = inScope
+    .map((product) => ({
+      ...product,
+      title: localize(product.title, product.titleAr, locale),
+      brand: product.brand
+        ? { ...product.brand, name: localize(product.brand.name, product.brand.nameAr, locale) }
+        : product.brand,
+    }))
+    .map((product) => {
+      const adjusted = applySaleToProduct(
+        { ...product, collections: product.collections.map((pc) => ({ collectionId: pc.collection.id })) },
+        sales,
+        now
+      );
+      return { ...product, basePriceCents: adjusted.basePriceCents, compareAtCents: adjusted.compareAtCents };
+    });
+
+  // Brand isn't offered as a facet here — it would just duplicate this
+  // page's own scope (see FilterSidebar's brands prop being omitted
+  // below).
+  const { sizes, colors } = computeSizeColorFacets(productsWithPricing.flatMap((p) => p.variants));
+  const categoryOptions = uniqueOptions(
+    productsWithPricing.flatMap((p) =>
+      p.collections.map((pc) => ({
+        value: pc.collection.handle,
+        label: localize(pc.collection.title, pc.collection.titleAr, locale),
       }))
-      .map((product) => applySaleToProduct(product, sales, now)),
-    filters.minPriceCents,
-    filters.maxPriceCents
+    )
+  );
+  const priceBounds = computePriceBounds(productsWithPricing);
+
+  const products = sortProducts(
+    filterByPriceRange(
+      productsWithPricing.filter((p) => matchesFacetFilters(p, filters)),
+      filters.minPriceCents,
+      filters.maxPriceCents
+    ),
+    filters.sort
   );
 
   return (

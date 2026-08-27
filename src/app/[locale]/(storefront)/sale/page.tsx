@@ -11,8 +11,10 @@ import {
   filterByPriceRange,
   matchesFacetFilters,
   parseProductFilterParams,
-  productSortOrderBy,
+  sortProducts,
+  uniqueOptions,
 } from "@/lib/productFilters";
+import { getActiveProductsCached } from "@/server/queries";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -39,47 +41,28 @@ export async function generateMetadata({
   return { title: t("title") };
 }
 
-/** Dedupes a list of {value,label} pairs by value, preserving first-seen
- * order (already alphabetical since the source query below is). */
-function uniqueOptions(options: { value: string; label: string }[]) {
-  const seen = new Map<string, string>();
-  for (const option of options) {
-    if (!seen.has(option.value)) seen.set(option.value, option.label);
-  }
-  return [...seen.entries()].map(([value, label]) => ({ value, label }));
-}
-
 export default async function SalePage({ params, searchParams }: Props) {
   const { locale } = await params;
   const rawParams = await searchParams;
   const filters = parseProductFilterParams(rawParams);
   const t = await getTranslations("SalePage");
 
-  // Unlike /collections/[handle] and /brands/[slug], "is this product on
-  // sale" can't be expressed as a Prisma `where` clause — it depends on
-  // Sale scope-matching (site-wide/brand/collection) resolved in memory
-  // by applySaleToProduct (see src/lib/sales.ts). So this page fetches
-  // every active product once, resolves sale pricing, and does every
-  // other facet/filter in memory too via matchesFacetFilters, rather than
-  // mixing a DB-level filter with an in-memory one.
-  const [allActiveProductsRaw, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
-    db.product.findMany({
-      where: { status: "active" },
-      include: {
-        images: true,
-        variants: true,
-        brand: true,
-        collections: { include: { collection: true } },
-      },
-      orderBy: productSortOrderBy(filters.sort),
-    }),
+  // "Is this product on sale" can't be expressed as a Prisma `where`
+  // clause — it depends on Sale scope-matching (site-wide/brand/
+  // collection) resolved in memory by applySaleToProduct (see
+  // src/lib/sales.ts). So every facet/filter here runs in memory via
+  // matchesFacetFilters, against the same shared, cached (60s)
+  // full-catalog array every other listing page now uses too — see
+  // src/server/queries.ts.
+  const [allActiveProducts, sales, cartQuantityByVariant, wishlistedProductIds] = await Promise.all([
+    getActiveProductsCached(),
     db.sale.findMany({ where: { isActive: true } }),
     getCartQuantityByVariant(),
     getWishlistedProductIds(),
   ]);
 
   const now = new Date();
-  const onSaleProducts = allActiveProductsRaw
+  const onSaleProducts = allActiveProducts
     .map((product) => ({
       ...product,
       title: localize(product.title, product.titleAr, locale),
@@ -113,10 +96,13 @@ export default async function SalePage({ params, searchParams }: Props) {
   );
   const priceBounds = computePriceBounds(onSaleProducts);
 
-  const products = filterByPriceRange(
-    onSaleProducts.filter((p) => matchesFacetFilters(p, filters)),
-    filters.minPriceCents,
-    filters.maxPriceCents
+  const products = sortProducts(
+    filterByPriceRange(
+      onSaleProducts.filter((p) => matchesFacetFilters(p, filters)),
+      filters.minPriceCents,
+      filters.maxPriceCents
+    ),
+    filters.sort
   );
 
   return (
