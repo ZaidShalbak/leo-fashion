@@ -351,6 +351,6 @@ export async function placeOrder(
   }
 
   revalidatePath("/cart");
-  revalidatePath("/account/orders");
+  revalidatePath("/account");
   redirect(`/order-confirmation/${orderId}`);
 }

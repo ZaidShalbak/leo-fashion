@@ -5,6 +5,7 @@ import { isHeroBannerLive } from "@/lib/heroBanners";
 import { applySaleToProduct, getBestSaleForProduct } from "@/lib/sales";
 import { localize, localizeOptional } from "@/lib/localizedContent";
 import { getCartQuantityByVariant } from "@/server/actions/cart";
+import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
 import { HomeIntro } from "@/components/storefront/HomeIntro";
 import { CategorySection } from "@/components/storefront/CategorySection";
@@ -63,6 +64,7 @@ export default async function HomePage() {
     brandsRaw,
     sales,
     cartQuantityByVariant,
+    wishlistedProductIds,
   ] = await Promise.all([
     // Admin-managed banners (see /admin/hero-banners) take priority over
     // the collection-derived fallback below. Fetching every *active* row
@@ -114,6 +116,7 @@ export default async function HomePage() {
     // of sales running at once, so this isn't a real cost.
     db.sale.findMany({ where: { isActive: true } }),
     getCartQuantityByVariant(),
+    getWishlistedProductIds(),
   ]);
   const now = new Date();
 
@@ -220,8 +223,13 @@ export default async function HomePage() {
       <BestSellersSection
         products={bestSellers.slice(0, 6)}
         cartQuantityByVariant={cartQuantityByVariant}
+        wishlistedProductIds={wishlistedProductIds}
       />
-      <NewArrivalsSection products={products} cartQuantityByVariant={cartQuantityByVariant} />
+      <NewArrivalsSection
+        products={products}
+        cartQuantityByVariant={cartQuantityByVariant}
+        wishlistedProductIds={wishlistedProductIds}
+      />
     </>
   );
 }

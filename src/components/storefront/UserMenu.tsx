@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { LogOutIcon, PackageIcon, ShieldIcon, UserIcon } from "lucide-react";
+import { CircleUserIcon, LogOutIcon, ShieldIcon, UserIcon } from "lucide-react";
 
 import { signOut } from "@/server/actions/auth";
 import { Link } from "@/i18n/navigation";
@@ -83,13 +83,13 @@ export function UserMenu({
           className="border-border bg-background absolute top-full end-0 z-20 mt-1 min-w-40 rounded-md border py-1 text-sm shadow-md"
         >
           <Link
-            href="/account/orders"
+            href="/account"
             role="menuitem"
             onClick={() => setOpen(false)}
             className="hover:bg-muted flex items-center gap-2 px-3 py-2 transition"
           >
-            <PackageIcon className="size-4" />
-            {t("orders")}
+            <CircleUserIcon className="size-4" />
+            {t("myAccount")}
           </Link>
           {isAdmin && (
             <Link

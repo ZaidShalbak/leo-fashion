@@ -71,7 +71,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
         </Button>
         {user && (
           <Button asChild>
-            <Link href="/account/orders">{t("viewMyOrders")}</Link>
+            <Link href="/account">{t("viewMyOrders")}</Link>
           </Button>
         )}
       </div>

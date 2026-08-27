@@ -40,7 +40,7 @@
   },
   "UserMenu": {
     "accountMenu": "Account menu",
-    "orders": "Orders",
+    "myAccount": "My account",
     "admin": "Admin",
     "signOut": "Sign out",
     "signingOut": "Signing out…",
@@ -266,8 +266,24 @@
     "saveOrderHeading": "Save this order to an account",
     "saveOrderSubtext": "Create a password to track this order's status and check out faster next time."
   },
+  "Account": {
+    "title": "Your account",
+    "ordersHeading": "Orders",
+    "wishlistHeading": "Wishlist",
+    "wishlistEmpty": "You haven't saved anything yet.",
+    "detailsHeading": "Your details"
+  },
+  "AccountDetailsForm": {
+    "email": "Email",
+    "name": "Name",
+    "phone": "Phone number (optional)",
+    "nameRequired": "Please enter your name.",
+    "invalidInput": "Please check your details and try again.",
+    "saved": "Saved.",
+    "saving": "Saving…",
+    "save": "Save"
+  },
   "AccountOrders": {
-    "title": "Your orders",
     "noOrders": "You haven't placed any orders yet.",
     "startShopping": "Start shopping",
     "orderNumber": "Order #{id}",
@@ -336,7 +352,9 @@
   },
   "WishlistActions": {
     "add": "Add to wishlist",
-    "remove": "Remove from wishlist"
+    "remove": "Remove from wishlist",
+    "headerLabel": "Wishlist",
+    "headerLabelWithCount": "Wishlist, {count, plural, one {# item} other {# items}}"
   },
   "ProductCard": {
     "outOfStock": "Out of stock",
@@ -373,7 +391,7 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "brands": "Brands",
-    "orders": "Orders",
+    "myAccount": "My account",
     "admin": "Admin",
     "signIn": "Sign in",
     "signOut": "Sign out",

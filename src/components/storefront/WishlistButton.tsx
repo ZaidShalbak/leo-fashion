@@ -20,10 +20,17 @@ export function WishlistButton({
   productId,
   initiallyWishlisted,
   className,
+  onRemoved,
 }: {
   productId: string;
   initiallyWishlisted: boolean;
   className?: string;
+  /** Fired after a successful removal — lets a caller like the account
+   * page's wishlist list drop the whole card immediately instead of just
+   * showing an unfilled heart on an otherwise-still-listed item. Omitted
+   * everywhere else (ProductCard, the product detail page), where staying
+   * in place with the heart toggled off is the right behavior. */
+  onRemoved?: () => void;
 }) {
   const t = useTranslations("WishlistActions");
   const router = useRouter();
@@ -48,6 +55,8 @@ export function WishlistButton({
         if (result.reason === "signInRequired") {
           router.push(`/login?next=${encodeURIComponent(pathname)}`);
         }
+      } else if (!next) {
+        onRemoved?.();
       }
     });
   }
