@@ -171,6 +171,9 @@ export default async function StorefrontLayout({
               <NavMegaMenu label={t("brands")}>
                 <BrandsMenuGrid brands={brandMenuItems} />
               </NavMegaMenu>
+              <Link href="/sale" className="font-medium text-red-400 transition hover:text-red-300">
+                {t("sale")}
+              </Link>
             </nav>
 
             <div className="flex items-center gap-5 rtl:gap-6">

@@ -10,6 +10,7 @@
     "brandName": "Leo Fashion",
     "categories": "الفئات",
     "brands": "الماركات",
+    "sale": "التخفيضات",
     "signIn": "تسجيل الدخول",
     "footer": "ليو فاشون — الدفع عند الاستلام أو عبر فاتورة، بدون الحاجة لبطاقة ائتمان.",
     "visitStore": "زوروا متجرنا",
@@ -117,11 +118,18 @@
     "fallbackTitle": "الماركة",
     "noMatches": "لا توجد منتجات مطابقة لهذه الفلاتر."
   },
-  "FilterBar": {
-    "size": "المقاس",
-    "allSizes": "كل المقاسات",
-    "color": "اللون",
-    "allColors": "كل الألوان",
+  "SalePage": {
+    "title": "التخفيضات",
+    "subtitle": "كل ما هو مخفض حاليًا، عبر جميع الماركات والفئات.",
+    "noActiveSales": "لا توجد تخفيضات حاليًا — تحقق لاحقًا.",
+    "noMatches": "لا توجد منتجات مخفضة مطابقة لهذه الفلاتر."
+  },
+  "FilterSidebar": {
+    "categoryHeading": "الفئة",
+    "brandHeading": "الماركة",
+    "colorHeading": "اللون",
+    "sizeHeading": "المقاس",
+    "priceHeading": "السعر",
     "sort": "الترتيب",
     "sortOptions": {
       "newest": "الأحدث",
@@ -129,6 +137,7 @@
       "price-desc": "السعر: من الأعلى إلى الأقل"
     },
     "clearFilters": "مسح التصفية",
+    "filtersButton": "التصفية",
     "applying": "جارٍ تطبيق التصفية…"
   },
   "LoginPage": {
@@ -390,6 +399,7 @@
   "MobileNav": {
     "openMenu": "فتح القائمة",
     "closeMenu": "إغلاق القائمة",
+    "sale": "التخفيضات",
     "brands": "الماركات",
     "myAccount": "حسابي",
     "admin": "لوحة التحكم",
