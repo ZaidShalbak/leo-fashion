@@ -4,8 +4,8 @@ import { z } from "zod";
 // `labelKey` points at a key in the shared `Phone` message namespace so the
 // UI and the validator agree on one source of truth for the country list.
 export const PHONE_COUNTRIES = [
-  { code: "+970", labelKey: "palestine" },
-  { code: "+972", labelKey: "israel" },
+  { code: "+970", labelKey: "palestine", flag: "🇵🇸" },
+  { code: "+972", labelKey: "israel", flag: "🇮🇱" },
 ] as const;
 export type PhoneCountryCode = (typeof PHONE_COUNTRIES)[number]["code"];
 

@@ -54,8 +54,8 @@ export function PhoneInput({
         </SelectTrigger>
         <SelectContent>
           {PHONE_COUNTRIES.map((c) => (
-            <SelectItem key={c.code} value={c.code}>
-              {c.code} {t(c.labelKey)}
+            <SelectItem key={c.code} value={c.code} aria-label={`${t(c.labelKey)} ${c.code}`}>
+              {c.flag} {c.code}
             </SelectItem>
           ))}
         </SelectContent>
