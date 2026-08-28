@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { FilterIcon, XIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { ChevronDownIcon, FilterIcon, XIcon } from "lucide-react";
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -194,7 +195,10 @@ function FilterControls({
   }
 
   return (
-    <div className="space-y-6" data-slot="filter-sidebar">
+    // Tighter than before (space-y-4, not -6) since each FilterSection
+    // now carries its own bottom border + pb-4, which already reads as
+    // a real separator between sections on its own.
+    <div className="space-y-4" data-slot="filter-sidebar">
       <div className="flex items-center justify-between">
         <Select value={currentSort} onValueChange={setSort} dir={isRtl ? "rtl" : "ltr"}>
           <SelectTrigger size="sm" className="w-full">
@@ -218,51 +222,68 @@ function FilterControls({
       )}
 
       {categories && categories.length > 0 && (
-        <FacetGroup
-          heading={t("categoryHeading")}
-          options={categories}
-          selected={selectedCategories}
-          onToggle={(value) => toggleValue("category", value)}
-        />
+        // Whichever of Category/Brand is this page's *only* scoped-out
+        // facet opens by default — the natural "primary" section to land
+        // on. Category always qualifies when it's shown at all (either
+        // it's the only one, on /sale, or Brand is omitted entirely on
+        // /collections/[handle]).
+        <FilterSection heading={t("categoryHeading")} defaultOpen>
+          <FacetGroup
+            idPrefix="category"
+            options={categories}
+            selected={selectedCategories}
+            onToggle={(value) => toggleValue("category", value)}
+          />
+        </FilterSection>
       )}
 
       {brands && brands.length > 0 && (
-        <FacetGroup
-          heading={t("brandHeading")}
-          options={brands}
-          selected={selectedBrands}
-          onToggle={(value) => toggleValue("brand", value)}
-        />
+        <FilterSection heading={t("brandHeading")} defaultOpen={!categories || categories.length === 0}>
+          <FacetGroup
+            idPrefix="brand"
+            options={brands}
+            selected={selectedBrands}
+            onToggle={(value) => toggleValue("brand", value)}
+          />
+        </FilterSection>
       )}
 
-      <FacetGroup
-        heading={t("colorHeading")}
-        options={colors.map((c) => ({ value: c, label: c }))}
-        selected={selectedColors}
-        onToggle={(value) => toggleValue("color", value)}
-      />
+      <FilterSection heading={t("colorHeading")}>
+        <FacetGroup
+          idPrefix="color"
+          options={colors.map((c) => ({ value: c, label: c }))}
+          selected={selectedColors}
+          onToggle={(value) => toggleValue("color", value)}
+        />
+      </FilterSection>
 
-      <FacetGroup
-        heading={t("sizeHeading")}
-        options={sizes.map((s) => ({ value: s, label: s }))}
-        selected={selectedSizes}
-        onToggle={(value) => toggleValue("size", value)}
-      />
+      <FilterSection heading={t("sizeHeading")}>
+        <FacetGroup
+          idPrefix="size"
+          options={sizes.map((s) => ({ value: s, label: s }))}
+          selected={selectedSizes}
+          onToggle={(value) => toggleValue("size", value)}
+        />
+      </FilterSection>
 
       {priceBounds.max > priceBounds.min && (
-        <PriceRangeSlider
-          // Remounts (resetting local drag state fresh) whenever the URL
-          // params or bounds change from outside this control — e.g.
-          // "Clear filters", or the bounds narrowing because another
-          // facet changed — instead of syncing via an effect.
-          key={`${urlMinPrice}-${urlMaxPrice}-${boundsMinDollars}-${boundsMaxDollars}`}
-          heading={t("priceHeading")}
-          min={boundsMinDollars}
-          max={boundsMaxDollars}
-          initialMin={urlMinPrice ? Number(urlMinPrice) : boundsMinDollars}
-          initialMax={urlMaxPrice ? Number(urlMaxPrice) : boundsMaxDollars}
-          onCommit={commitPriceRange}
-        />
+        <FilterSection heading={t("priceHeading")}>
+          <PriceRangeSlider
+            // Remounts (resetting local drag state fresh) whenever the
+            // URL params or bounds change from outside this control —
+            // e.g. "Clear filters", or the bounds narrowing because
+            // another facet changed — instead of syncing via an effect.
+            // The wrapping FilterSection is unaffected by this remount,
+            // so an already-open Price section doesn't collapse just
+            // because its contents refreshed.
+            key={`${urlMinPrice}-${urlMaxPrice}-${boundsMinDollars}-${boundsMaxDollars}`}
+            min={boundsMinDollars}
+            max={boundsMaxDollars}
+            initialMin={urlMinPrice ? Number(urlMinPrice) : boundsMinDollars}
+            initialMax={urlMaxPrice ? Number(urlMaxPrice) : boundsMaxDollars}
+            onCommit={commitPriceRange}
+          />
+        </FilterSection>
       )}
 
       {isPending && (
@@ -274,15 +295,69 @@ function FilterControls({
   );
 }
 
-function PriceRangeSlider({
+/**
+ * Collapsible wrapper shared by every facet section (Category/Brand/
+ * Color/Size/Price) — label + a rotating chevron toggling an animated
+ * height reveal. Same restrained "timed reveal" easing already
+ * established elsewhere (RollingText.tsx, NavMegaMenu.tsx) rather than a
+ * spring, kept distinct from the springier size/color-selection motion
+ * used on the PDP. `defaultOpen` only applies on first mount — a filter
+ * change re-navigates rather than remounting this component, so a
+ * section the shopper already opened stays open across "Clear filters"
+ * or any other filter interaction.
+ */
+function FilterSection({
   heading,
+  defaultOpen = false,
+  children,
+}: {
+  heading: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-border border-b pb-4">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between text-start"
+      >
+        <h3 className="text-sm font-medium">{heading}</h3>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: [0.338, 0.015, 0.395, 0.959] }}
+          className="text-muted-foreground"
+        >
+          <ChevronDownIcon className="size-4" />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.338, 0.015, 0.395, 0.959] }}
+            className="overflow-hidden"
+          >
+            <div className="pt-3">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function PriceRangeSlider({
   min,
   max,
   initialMin,
   initialMax,
   onCommit,
 }: {
-  heading: string;
   min: number;
   max: number;
   initialMin: number;
@@ -293,7 +368,6 @@ function PriceRangeSlider({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium">{heading}</h3>
       <div dir="ltr">
         <Slider
           min={min}
@@ -313,33 +387,30 @@ function PriceRangeSlider({
 }
 
 function FacetGroup({
-  heading,
+  idPrefix,
   options,
   selected,
   onToggle,
 }: {
-  heading: string;
+  idPrefix: string;
   options: FacetOption[];
   selected: string[];
   onToggle: (value: string) => void;
 }) {
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-medium">{heading}</h3>
-      <ul className="space-y-2">
-        {options.map((option) => {
-          const id = `filter-${heading}-${option.value}`;
-          const checked = selected.includes(option.value);
-          return (
-            <li key={option.value} className="flex items-center gap-2">
-              <Checkbox id={id} checked={checked} onCheckedChange={() => onToggle(option.value)} />
-              <label htmlFor={id} className="text-sm leading-none">
-                {option.label}
-              </label>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className="space-y-2">
+      {options.map((option) => {
+        const id = `filter-${idPrefix}-${option.value}`;
+        const checked = selected.includes(option.value);
+        return (
+          <li key={option.value} className="flex items-center gap-2">
+            <Checkbox id={id} checked={checked} onCheckedChange={() => onToggle(option.value)} />
+            <label htmlFor={id} className="text-sm leading-none">
+              {option.label}
+            </label>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
