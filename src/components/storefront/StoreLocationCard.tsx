@@ -37,63 +37,56 @@ export async function StoreLocationCard() {
         {t("visitStore")}
       </p>
 
-      <svg viewBox="0 0 300 170" className="mb-2.5 h-auto w-full" aria-hidden="true">
-        <defs>
-          <radialGradient id="melonBody" cx="36%" cy="30%" r="80%">
-            <stop offset="0%" stopColor="#5aab5f" />
-            <stop offset="55%" stopColor="#316f41" />
-            <stop offset="100%" stopColor="#1e4a2a" />
-          </radialGradient>
-          <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#8a9a55" />
-            <stop offset="100%" stopColor="#4d5a2c" />
-          </linearGradient>
-          <clipPath id="melonClip">
-            <ellipse cx="70" cy="87" rx="14.5" ry="13.5" />
-          </clipPath>
-        </defs>
+      {/* SVG `<text>` doesn't reliably run the Unicode bidi reordering
+          algorithm the way normal HTML text does — a known, long-standing
+          WebKit-specific gap (confirmed on real iOS Safari/Chrome, both
+          WebKit-based): the `direction="rtl"` presentation attribute alone
+          doesn't fix it, glyphs render in raw logical order instead of
+          right-to-left with broken contextual shaping. The three Arabic
+          street/roundabout labels below are plain HTML `<span dir="rtl">`
+          elements absolutely positioned over the decorative SVG instead,
+          which renders correctly everywhere. `containerType: inline-size`
+          + `cqw` font sizing keeps them scaling fluidly with the card's
+          width, matching how the SVG's own viewBox-relative text used to
+          scale. */}
+      <div className="relative mb-2.5" style={{ containerType: "inline-size" }}>
+        <svg viewBox="0 0 300 170" className="block h-auto w-full" aria-hidden="true">
+          <defs>
+            <radialGradient id="melonBody" cx="36%" cy="30%" r="80%">
+              <stop offset="0%" stopColor="#5aab5f" />
+              <stop offset="55%" stopColor="#316f41" />
+              <stop offset="100%" stopColor="#1e4a2a" />
+            </radialGradient>
+            <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#8a9a55" />
+              <stop offset="100%" stopColor="#4d5a2c" />
+            </linearGradient>
+            <clipPath id="melonClip">
+              <ellipse cx="70" cy="87" rx="14.5" ry="13.5" />
+            </clipPath>
+          </defs>
 
-        <line
-          x1="70"
-          y1="52"
-          x2="70"
-          y2="14"
-          stroke="rgba(255,255,255,0.22)"
-          strokeWidth="2"
-          strokeDasharray="1 8"
-          strokeLinecap="round"
-        />
-        <text
-          x="70"
-          y="9"
-          textAnchor="middle"
-          fontSize="9.5"
-          letterSpacing="0.3"
-          className="fill-white/50 font-[family-name:var(--font-tajawal)]"
-        >
-          شارع حيفا
-        </text>
+          <line
+            x1="70"
+            y1="52"
+            x2="70"
+            y2="14"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="2"
+            strokeDasharray="1 8"
+            strokeLinecap="round"
+          />
 
-        <path
-          d="M70 166 L70 120 C 70 100, 42 86, 10 86"
-          stroke="rgba(255,255,255,0.22)"
-          strokeWidth="2"
-          strokeDasharray="1 8"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <text
-          x="76"
-          y="151"
-          textAnchor="start"
-          fontSize="9.5"
-          letterSpacing="0.3"
-          className="fill-white/50 font-[family-name:var(--font-tajawal)]"
-        >
-          الشارع العسكري
-        </text>
+          <path
+            d="M70 166 L70 120 C 70 100, 42 86, 10 86"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="2"
+            strokeDasharray="1 8"
+            strokeLinecap="round"
+            fill="none"
+          />
 
-        <circle cx="70" cy="86" r="30" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="9" />
+          <circle cx="70" cy="86" r="30" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="9" />
 
         <ellipse cx="70" cy="101" rx="12" ry="2.4" fill="#000" opacity="0.28" />
         <path
@@ -125,33 +118,52 @@ export async function StoreLocationCard() {
           />
         </g>
 
-        <text
-          x="70"
-          y="134"
-          textAnchor="middle"
-          fontSize="10.5"
-          letterSpacing="0.5"
-          className="fill-white/50 font-[family-name:var(--font-tajawal)]"
+          <path
+            d="M98 78 C 130 74, 150 82, 172 76"
+            stroke="rgba(255,255,255,0.28)"
+            strokeWidth="2"
+            strokeDasharray="1 8"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <g transform="translate(172, 46)">
+            <path
+              d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 26 15 26s15-14.8 15-26C30 6.7 23.3 0 15 0z"
+              fill="#fff"
+            />
+            <circle cx="15" cy="15" r="5.6" fill="#0a0a0a" />
+          </g>
+        </svg>
+
+        {/* Positions/font sizes below are the original SVG <text> elements'
+            x/y (as % of the 300×170 viewBox) and fontSize (as cqw, so
+            9.5/300*100 ≈ 3.17cqw) — same visual placement, correct
+            rendering. */}
+        <span
+          dir="rtl"
+          aria-hidden="true"
+          className="text-white/50 absolute font-[family-name:var(--font-tajawal)] whitespace-nowrap"
+          style={{ left: "23.3%", top: "5.3%", fontSize: "3.2cqw", letterSpacing: "0.3px", transform: "translate(-50%, -50%)" }}
+        >
+          شارع حيفا
+        </span>
+        <span
+          dir="rtl"
+          aria-hidden="true"
+          className="text-white/50 absolute font-[family-name:var(--font-tajawal)] whitespace-nowrap"
+          style={{ left: "25.3%", top: "88.8%", fontSize: "3.2cqw", letterSpacing: "0.3px", transform: "translateY(-50%)" }}
+        >
+          الشارع العسكري
+        </span>
+        <span
+          dir="rtl"
+          aria-hidden="true"
+          className="text-white/50 absolute font-[family-name:var(--font-tajawal)] whitespace-nowrap"
+          style={{ left: "23.3%", top: "78.8%", fontSize: "3.5cqw", letterSpacing: "0.5px", transform: "translate(-50%, -50%)" }}
         >
           دوار البطيخة
-        </text>
-
-        <path
-          d="M98 78 C 130 74, 150 82, 172 76"
-          stroke="rgba(255,255,255,0.28)"
-          strokeWidth="2"
-          strokeDasharray="1 8"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <g transform="translate(172, 46)">
-          <path
-            d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 26 15 26s15-14.8 15-26C30 6.7 23.3 0 15 0z"
-            fill="#fff"
-          />
-          <circle cx="15" cy="15" r="5.6" fill="#0a0a0a" />
-        </g>
-      </svg>
+        </span>
+      </div>
 
       <p dir="ltr" className="font-[family-name:var(--font-bebas-neue)] text-2xl tracking-wide text-white">
         Leo Fashion
