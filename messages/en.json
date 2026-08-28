@@ -385,14 +385,14 @@
   "ScrollCarousel": {
     "eyebrow": "Step inside",
     "dotLabel": "{title} slide",
-    "entranceTitle": "Welcome in",
-    "entranceDescription": "Every visit starts at the window.",
+    "interiorTitle": "Welcome in",
+    "interiorDescription": "Every visit starts with a look around.",
     "racksTitle": "The first rack",
     "racksDescription": "Something for every day, right up front.",
-    "colorTitle": "A little color",
-    "colorDescription": "Bold picks, easy to spot from the aisle.",
     "detailTitle": "Look closer",
     "detailDescription": "The details are where the quality shows.",
+    "styleTitle": "A little character",
+    "styleDescription": "Pieces that feel considered, not off the shelf.",
     "boutiqueTitle": "Find your fit",
     "boutiqueDescription": "Every size, every style, all in one place."
   },

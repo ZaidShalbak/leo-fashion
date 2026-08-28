@@ -385,14 +385,14 @@
   "ScrollCarousel": {
     "eyebrow": "تفضل بالدخول",
     "dotLabel": "شريحة {title}",
-    "entranceTitle": "أهلاً بك",
-    "entranceDescription": "كل زيارة تبدأ من الواجهة.",
+    "interiorTitle": "أهلاً بك",
+    "interiorDescription": "كل زيارة تبدأ بجولة سريعة.",
     "racksTitle": "أول رف",
     "racksDescription": "قطع لكل يوم، في المقدمة مباشرة.",
-    "colorTitle": "لمسة من الألوان",
-    "colorDescription": "قطع جريئة يسهل ملاحظتها من الممر.",
     "detailTitle": "اقترب أكثر",
     "detailDescription": "الجودة تظهر في التفاصيل.",
+    "styleTitle": "لمسة من الطابع الخاص",
+    "styleDescription": "قطع مدروسة، لا تشبه أي رف آخر.",
     "boutiqueTitle": "اعثر على مقاسك",
     "boutiqueDescription": "كل المقاسات وكل الأنماط في مكان واحد."
   },

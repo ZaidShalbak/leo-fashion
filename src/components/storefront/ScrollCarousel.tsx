@@ -14,54 +14,57 @@ type WalkFrame = {
 };
 
 /**
- * Freely-licensed (Unsplash License) store-interior stock photography,
- * standing in for a real photo/frame sequence of the actual store — see
- * next.config.ts's remotePatterns comment. Ordered to read as walking
- * deeper into the space (entrance/window display → racks → boutique
- * interior) even though the five photos aren't from one real place. Swap
- * for a real walkthrough sequence of the actual store whenever one exists;
- * nothing else in this component needs to change to do that.
+ * A real, matched photo series — not disconnected stock photos — so the
+ * walk-through actually reads as one place: all 8 shots on Unsplash's
+ * @mercantile account are Clark Street Mercantile's own photos of their
+ * own menswear boutique (5200 Clark St, Montreal), shot on the same
+ * camera in the same visit. Freely licensed (Unsplash License). Ordered
+ * to read as walking deeper in — wide interior view, into the racks,
+ * then closer looks at individual pieces on display — even though it's
+ * still someone else's real store, not this one. Swap for a real
+ * walkthrough of the actual store whenever one exists; nothing else in
+ * this component needs to change to do that.
  */
 const WALK_FRAMES: WalkFrame[] = [
   {
-    id: "entrance",
-    titleKey: "entranceTitle",
-    descriptionKey: "entranceDescription",
+    id: "interior",
+    titleKey: "interiorTitle",
+    descriptionKey: "interiorDescription",
     imageUrl:
-      "https://images.unsplash.com/photo-1770226415002-dbbd40327ec7?q=80&w=2400&auto=format&fit=crop",
-    imageAlt: "Mannequins in a clothing store window display",
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Clothing boutique interior",
   },
   {
-    id: "racks-1",
+    id: "racks",
     titleKey: "racksTitle",
     descriptionKey: "racksDescription",
     imageUrl:
-      "https://images.unsplash.com/photo-1777628530456-bb93d3a03faf?q=80&w=2400&auto=format&fit=crop",
-    imageAlt: "Clothing boutique interior with racks of apparel",
+      "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Clothing boutique interior with hanging racks",
   },
   {
-    id: "racks-2",
-    titleKey: "colorTitle",
-    descriptionKey: "colorDescription",
-    imageUrl:
-      "https://images.unsplash.com/photo-1776000680544-ebf0989a71df?q=80&w=2400&auto=format&fit=crop",
-    imageAlt: "Clothing racks filled with colorful garments in a store",
-  },
-  {
-    id: "racks-3",
+    id: "jacket-1",
     titleKey: "detailTitle",
     descriptionKey: "detailDescription",
     imageUrl:
-      "https://images.unsplash.com/photo-1766934587214-86e21b3ae093?q=80&w=2400&auto=format&fit=crop",
-    imageAlt: "Clothing racks in a well-lit store",
+      "https://images.unsplash.com/photo-1441986380878-c4248f5b8b5b?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Jacket displayed on a wall",
   },
   {
-    id: "boutique",
+    id: "jacket-2",
+    titleKey: "styleTitle",
+    descriptionKey: "styleDescription",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441984344779-4716bd9e6b04?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Jacket hanging on a wooden wall beside a decorative paddle",
+  },
+  {
+    id: "shoe",
     titleKey: "boutiqueTitle",
     descriptionKey: "boutiqueDescription",
     imageUrl:
-      "https://images.unsplash.com/photo-1769107805412-90d9191d53e9?q=80&w=2400&auto=format&fit=crop",
-    imageAlt: "Modern boutique interior with clothing and accessories",
+      "https://images.unsplash.com/photo-1441986236893-3b3ed54c6cb1?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Leather wingtip shoe on a floating shelf",
   },
 ];
 
@@ -80,13 +83,14 @@ const WALK_FRAMES: WalkFrame[] = [
  * A real Apple-style effect scrubs through dozens/hundreds of photographed
  * frames along one continuous camera path — this store doesn't have that
  * (no physical location to shoot), so instead this crossfades between a
- * handful of stock "store interior" photos (see WALK_FRAMES above) with a
- * stronger forward-dolly zoom, a subtle `perspective`/`rotateX` tilt that
- * settles as each frame becomes current, and the title/description
- * drifting slightly slower than the photo — three cheap depth cues (scale,
- * tilt, parallax) standing in for true 3D, not a literal continuous
- * corridor. Deliberately kept separate from HeroCarousel rather than
- * replacing it — this is here to be evaluated, not committed to.
+ * real matched photo series of one actual boutique (see WALK_FRAMES above)
+ * with a stronger forward-dolly zoom, a subtle `perspective`/`rotateX`
+ * tilt that settles as each frame becomes current, and the title/
+ * description drifting slightly slower than the photo — three cheap depth
+ * cues (scale, tilt, parallax) standing in for true 3D, not a literal
+ * continuous corridor. Deliberately kept separate from HeroCarousel
+ * rather than replacing it — this is here to be evaluated, not committed
+ * to.
  */
 export function ScrollCarousel() {
   const t = useTranslations("ScrollCarousel");
