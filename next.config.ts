@@ -26,6 +26,16 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        // Freely-licensed (Unsplash License) stock photography standing in
+        // for real store-interior photography in the experimental
+        // ScrollCarousel homepage section — see that file's comments. Swap
+        // for real photos of the actual store whenever they exist, same
+        // "placeholder now, real asset later" precedent as the brand logos
+        // (Wikimedia) and product SVGs.
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
   },
 };

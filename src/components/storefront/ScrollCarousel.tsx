@@ -5,34 +5,90 @@ import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { motion, useScroll, useTransform } from "motion/react";
 
-import { Link } from "@/i18n/navigation";
-
-export type ScrollCarouselSlide = {
+type WalkFrame = {
   id: string;
-  handle: string;
-  title: string;
-  description: string | null;
+  titleKey: string;
+  descriptionKey: string;
   imageUrl: string;
   imageAlt: string;
 };
 
 /**
- * EXPERIMENTAL homepage section — a scroll-linked carousel (inspired by
- * animejs.com's Scroll Observer-driven homepage demo) rather than the
- * timer/arrow-driven HeroCarousel. The section pins in place
- * (`sticky top-0`) for one viewport-height of scroll per slide; each
- * slide's opacity/scale is derived directly from scroll progress via
- * Motion's useScroll/useTransform (already the animation library used
- * everywhere else in this app — HeroCarousel, RollingText, NavMegaMenu,
- * FilterSidebar's collapsible sections — so this needed no new
- * dependency) rather than React state synced to a scroll listener, which
- * keeps the animation on the compositor thread instead of tied to
+ * Freely-licensed (Unsplash License) store-interior stock photography,
+ * standing in for a real photo/frame sequence of the actual store — see
+ * next.config.ts's remotePatterns comment. Ordered to read as walking
+ * deeper into the space (entrance/window display → racks → boutique
+ * interior) even though the five photos aren't from one real place. Swap
+ * for a real walkthrough sequence of the actual store whenever one exists;
+ * nothing else in this component needs to change to do that.
+ */
+const WALK_FRAMES: WalkFrame[] = [
+  {
+    id: "entrance",
+    titleKey: "entranceTitle",
+    descriptionKey: "entranceDescription",
+    imageUrl:
+      "https://images.unsplash.com/photo-1770226415002-dbbd40327ec7?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Mannequins in a clothing store window display",
+  },
+  {
+    id: "racks-1",
+    titleKey: "racksTitle",
+    descriptionKey: "racksDescription",
+    imageUrl:
+      "https://images.unsplash.com/photo-1777628530456-bb93d3a03faf?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Clothing boutique interior with racks of apparel",
+  },
+  {
+    id: "racks-2",
+    titleKey: "colorTitle",
+    descriptionKey: "colorDescription",
+    imageUrl:
+      "https://images.unsplash.com/photo-1776000680544-ebf0989a71df?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Clothing racks filled with colorful garments in a store",
+  },
+  {
+    id: "racks-3",
+    titleKey: "detailTitle",
+    descriptionKey: "detailDescription",
+    imageUrl:
+      "https://images.unsplash.com/photo-1766934587214-86e21b3ae093?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Clothing racks in a well-lit store",
+  },
+  {
+    id: "boutique",
+    titleKey: "boutiqueTitle",
+    descriptionKey: "boutiqueDescription",
+    imageUrl:
+      "https://images.unsplash.com/photo-1769107805412-90d9191d53e9?q=80&w=2400&auto=format&fit=crop",
+    imageAlt: "Modern boutique interior with clothing and accessories",
+  },
+];
+
+/**
+ * EXPERIMENTAL homepage section — a scroll-linked "walk through the store"
+ * (inspired by animejs.com's Scroll Observer-driven homepage demo and
+ * Apple-style scroll-scrubbed product pages) rather than the timer/arrow-
+ * driven HeroCarousel. The section pins in place (`sticky top-0`) for one
+ * viewport-height of scroll per frame; each frame's opacity/scale/depth is
+ * derived directly from scroll progress via Motion's
+ * useScroll/useTransform (already the animation library used everywhere
+ * else in this app) rather than React state synced to a scroll listener,
+ * keeping the animation on the compositor thread instead of tied to
  * render passes.
  *
- * Deliberately kept separate from HeroCarousel rather than replacing
- * it — this is here to be evaluated, not committed to.
+ * A real Apple-style effect scrubs through dozens/hundreds of photographed
+ * frames along one continuous camera path — this store doesn't have that
+ * (no physical location to shoot), so instead this crossfades between a
+ * handful of stock "store interior" photos (see WALK_FRAMES above) with a
+ * stronger forward-dolly zoom, a subtle `perspective`/`rotateX` tilt that
+ * settles as each frame becomes current, and the title/description
+ * drifting slightly slower than the photo — three cheap depth cues (scale,
+ * tilt, parallax) standing in for true 3D, not a literal continuous
+ * corridor. Deliberately kept separate from HeroCarousel rather than
+ * replacing it — this is here to be evaluated, not committed to.
  */
-export function ScrollCarousel({ slides }: { slides: ScrollCarouselSlide[] }) {
+export function ScrollCarousel() {
   const t = useTranslations("ScrollCarousel");
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -40,43 +96,47 @@ export function ScrollCarousel({ slides }: { slides: ScrollCarouselSlide[] }) {
     offset: ["start start", "end end"],
   });
 
-  const count = slides.length;
-  if (count === 0) return null;
+  const count = WALK_FRAMES.length;
 
   return (
     <section
       ref={containerRef}
-      // One viewport-height of scroll distance per slide — long enough
-      // that each slide gets a real, deliberate dwell as you scroll
+      // One viewport-height of scroll distance per frame — long enough
+      // that each frame gets a real, deliberate dwell as you scroll
       // through it, short enough that trying it out doesn't take forever.
       style={{ height: `${count * 100}vh` }}
       className="relative"
     >
-      <div className="bg-showcase-ink text-showcase-paper sticky top-0 h-screen overflow-hidden">
+      <div
+        className="bg-showcase-ink text-showcase-paper sticky top-0 h-screen overflow-hidden"
+        style={{ perspective: "1200px" }}
+      >
         <div className="absolute inset-x-0 top-8 z-10 text-center sm:top-10">
           <p className="text-xs font-semibold tracking-[0.2em] uppercase opacity-55">
             {t("eyebrow")}
           </p>
         </div>
 
-        {slides.map((slide, index) => (
-          <ScrollCarouselSlideLayer
-            key={slide.id}
-            slide={slide}
+        {WALK_FRAMES.map((frame, index) => (
+          <ScrollCarouselFrame
+            key={frame.id}
+            frame={frame}
             index={index}
             count={count}
             scrollYProgress={scrollYProgress}
+            title={t(frame.titleKey)}
+            description={t(frame.descriptionKey)}
           />
         ))}
 
         <div className="absolute inset-x-0 bottom-8 z-10 flex justify-center gap-2 sm:bottom-10">
-          {slides.map((slide, index) => (
+          {WALK_FRAMES.map((frame, index) => (
             <ScrollCarouselDot
-              key={slide.id}
+              key={frame.id}
               index={index}
               count={count}
               scrollYProgress={scrollYProgress}
-              label={t("dotLabel", { title: slide.title })}
+              label={t("dotLabel", { title: t(frame.titleKey) })}
             />
           ))}
         </div>
@@ -85,20 +145,24 @@ export function ScrollCarousel({ slides }: { slides: ScrollCarouselSlide[] }) {
   );
 }
 
-function ScrollCarouselSlideLayer({
-  slide,
+function ScrollCarouselFrame({
+  frame,
   index,
   count,
   scrollYProgress,
+  title,
+  description,
 }: {
-  slide: ScrollCarouselSlide;
+  frame: WalkFrame;
   index: number;
   count: number;
   scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
+  title: string;
+  description: string;
 }) {
-  // Each slide owns an equal [start, end) segment of the full 0-1 scroll
+  // Each frame owns an equal [start, end) segment of the full 0-1 scroll
   // range. A short overlap on either side (rather than a hard cut) is
-  // what produces the crossfade — progress values inside a slide's own
+  // what produces the crossfade — progress values inside a frame's own
   // segment sit at opacity 1; the overlap into its neighbors' segments
   // is where the fade actually happens.
   const segment = 1 / count;
@@ -116,37 +180,47 @@ function ScrollCarouselSlideLayer({
     ],
     [0, 1, 1, 0]
   );
-  // A slow, continuous scale tied to how far *through* this slide's own
-  // segment scroll progress currently is — same "photo drifts slowly
-  // while its slide is showing" idea as HeroCarousel's Ken Burns zoom,
-  // just driven by scroll position instead of elapsed time.
-  const scale = useTransform(scrollYProgress, [start, end], [1, 1.12]);
+  // A pronounced continuous scale across this frame's own segment — the
+  // main "walking toward it" cue, stronger than a simple Ken Burns drift
+  // since this is standing in for forward camera motion, not just a
+  // slow zoom on a static product photo.
+  const scale = useTransform(scrollYProgress, [start, end], [1, 1.35]);
+  // Settles from a slight backward tilt to dead-on as the frame becomes
+  // current — combined with the `perspective` on the parent, this reads
+  // as the frame swinging into place rather than a flat crossfade.
+  const rotateX = useTransform(
+    scrollYProgress,
+    [Math.max(0, start - overlap), start],
+    [6, 0]
+  );
+  // The text drifts upward slower than the photo scales — a cheap
+  // multi-plane parallax cue (foreground text, background photo moving
+  // at different rates) that reinforces depth without a second image
+  // layer.
+  const textY = useTransform(scrollYProgress, [start, end], [24, -24]);
 
   return (
     <motion.div style={{ opacity }} className="absolute inset-0">
-      <Link href={`/collections/${slide.handle}`} className="absolute inset-0 block">
-        <motion.div style={{ scale }} className="absolute inset-0">
-          <Image
-            src={slide.imageUrl}
-            alt={slide.imageAlt}
-            fill
-            priority={index === 0}
-            sizes="100vw"
-            className="object-cover"
-          />
-        </motion.div>
-        <div className="absolute inset-0 bg-black/35" />
-        <div className="absolute inset-x-0 bottom-24 space-y-2 px-6 text-center sm:bottom-28">
-          <h2 className="font-showcase-display text-[clamp(2rem,6vw,4rem)] leading-[0.95] font-bold uppercase rtl:normal-case">
-            {slide.title}
-          </h2>
-          {slide.description && (
-            <p className="mx-auto max-w-md text-sm opacity-80 sm:text-base">
-              {slide.description}
-            </p>
-          )}
-        </div>
-      </Link>
+      <motion.div style={{ scale, rotateX }} className="absolute inset-0">
+        <Image
+          src={frame.imageUrl}
+          alt={frame.imageAlt}
+          fill
+          priority={index === 0}
+          sizes="100vw"
+          className="object-cover"
+        />
+      </motion.div>
+      <div className="absolute inset-0 bg-black/40" />
+      <motion.div
+        style={{ y: textY }}
+        className="absolute inset-x-0 bottom-24 space-y-2 px-6 text-center sm:bottom-28"
+      >
+        <h2 className="font-showcase-display text-[clamp(2rem,6vw,4rem)] leading-[0.95] font-bold uppercase rtl:normal-case">
+          {title}
+        </h2>
+        <p className="mx-auto max-w-md text-sm opacity-80 sm:text-base">{description}</p>
+      </motion.div>
     </motion.div>
   );
 }
