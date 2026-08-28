@@ -24,11 +24,15 @@ export function MobileNav({
   isSignedIn,
   isAdmin = false,
   newOrderCount = 0,
+  salesPageVisible = true,
 }: {
   collections: Collection[];
   isSignedIn: boolean;
   isAdmin?: boolean;
   newOrderCount?: number;
+  /** See StorefrontLayout — hides the "Sale" link while an admin is
+   * staging upcoming discounts (StoreSettings.salesPageVisible). */
+  salesPageVisible?: boolean;
 }) {
   const t = useTranslations("MobileNav");
   const [open, setOpen] = useState(false);
@@ -66,13 +70,15 @@ export function MobileNav({
               {collection.title}
             </Link>
           ))}
-          <Link
-            href="/sale"
-            onClick={() => setOpen(false)}
-            className="py-2 font-medium text-red-400 transition hover:text-red-300"
-          >
-            {t("sale")}
-          </Link>
+          {salesPageVisible && (
+            <Link
+              href="/sale"
+              onClick={() => setOpen(false)}
+              className="py-2 font-medium text-red-400 transition hover:text-red-300"
+            >
+              {t("sale")}
+            </Link>
+          )}
           <Link
             href="/brands"
             onClick={() => setOpen(false)}

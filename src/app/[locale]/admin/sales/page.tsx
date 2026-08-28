@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import { isSaleLive } from "@/lib/sales";
+import { getStoreSettings } from "@/server/settings";
 import { Link } from "@/i18n/navigation";
 import {
   Table,
@@ -15,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { NewSaleForm } from "@/components/admin/NewSaleForm";
 import { DeleteSaleButton } from "@/components/admin/DeleteSaleButton";
+import { SalesPageVisibilityToggle } from "@/components/admin/SalesPageVisibilityToggle";
 
 export async function generateMetadata({
   params,
@@ -31,10 +33,11 @@ export default async function AdminSalesPage() {
     COLLECTION: t("scopeCategory"),
     BRAND: t("scopeBrand"),
   } as const;
-  const [sales, collections, brands] = await Promise.all([
+  const [sales, collections, brands, storeSettings] = await Promise.all([
     db.sale.findMany({ orderBy: { createdAt: "desc" } }),
     db.collection.findMany({ orderBy: { title: "asc" } }),
     db.brand.findMany({ orderBy: { name: "asc" } }),
+    getStoreSettings(),
   ]);
   const now = new Date();
   const collectionTitleById = new Map(collections.map((c) => [c.id, c.title]));
@@ -46,6 +49,8 @@ export default async function AdminSalesPage() {
         <h1 className="text-xl font-semibold tracking-tight">{t("heading")}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t("subheading")}</p>
       </div>
+
+      <SalesPageVisibilityToggle initialVisible={storeSettings.salesPageVisible} />
 
       <Table>
         <TableHeader>
