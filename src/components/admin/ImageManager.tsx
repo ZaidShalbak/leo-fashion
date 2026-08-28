@@ -1,19 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { AnimatePresence, motion } from "motion/react";
+import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   uploadProductImage,
   removeProductImage,
   updateProductImageColor,
 } from "@/server/actions/admin/images";
+import { ProductImageDropzone } from "./ProductImageDropzone";
 
 type ProductImage = { id: string; url: string; altText: string | null; color: string | null };
 
 const GENERAL_VALUE = "";
+const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp,image/gif";
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
+type QueueItem = {
+  key: string;
+  name: string;
+  status: "pending" | "uploading" | "done" | "error";
+  error?: string;
+};
 
 export function ImageManager({
   productId,
@@ -26,44 +38,81 @@ export function ImageManager({
   colors: string[];
 }) {
   const t = useTranslations("AdminProducts");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const [uploadColor, setUploadColor] = useState(GENERAL_VALUE);
-  const [error, setError] = useState<string | null>(null);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isPending, startTransition] = useTransition();
 
-  function handleUpload() {
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) return;
-    setError(null);
+  const isUploading = queue.some((item) => item.status === "pending" || item.status === "uploading");
 
-    const formData = new FormData();
-    formData.set("productId", productId);
-    formData.set("file", file);
-    formData.set("color", uploadColor);
+  function handleFilesSelected(files: File[]) {
+    const items: QueueItem[] = files.map((file, index) => ({
+      key: `${Date.now()}-${index}-${file.name}`,
+      name: file.name,
+      status: "pending",
+    }));
+    setQueue(items);
 
+    // Sequential, not Promise.all — uploadProductImage computes each new
+    // image's `position` from the product's current image count read
+    // fresh inside the action, so concurrent calls would race and could
+    // hand out the same position to more than one photo. One at a time
+    // keeps that count accurate for every file in the batch.
     startTransition(async () => {
-      const result = await uploadProductImage(formData);
-      if (!result.success) {
-        setError(result.error);
-      } else if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      let anyError = false;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const key = items[i].key;
+        setQueue((prev) => prev.map((q) => (q.key === key ? { ...q, status: "uploading" } : q)));
+
+        const formData = new FormData();
+        formData.set("productId", productId);
+        formData.set("file", file);
+        formData.set("color", uploadColor);
+        const result = await uploadProductImage(formData);
+
+        if (result.success) {
+          setQueue((prev) => prev.map((q) => (q.key === key ? { ...q, status: "done" } : q)));
+        } else {
+          anyError = true;
+          setQueue((prev) =>
+            prev.map((q) => (q.key === key ? { ...q, status: "error", error: result.error } : q))
+          );
+        }
+      }
+
+      router.refresh();
+
+      if (!anyError) {
+        // Brief pause so the admin actually sees the final checkmarks
+        // before the queue clears back to the dropzone — errors stay
+        // visible until the next batch replaces them.
+        setTimeout(() => setQueue([]), 1200);
       }
     });
   }
 
+  function handleFilesRejected(rejections: { file: File; reason: string }[]) {
+    const items: QueueItem[] = rejections.map((r, index) => ({
+      key: `rejected-${Date.now()}-${index}-${r.file.name}`,
+      name: r.file.name,
+      status: "error",
+      error: r.reason === "size" ? t("imageTooLarge") : t("imageWrongType"),
+    }));
+    setQueue((prev) => [...prev, ...items]);
+  }
+
   function handleRemove(imageId: string) {
-    setError(null);
     startTransition(async () => {
       const result = await removeProductImage({ imageId });
-      if (!result.success) setError(result.error);
+      if (result.success) router.refresh();
     });
   }
 
   function handleRecolor(imageId: string, color: string) {
-    setError(null);
     startTransition(async () => {
       const result = await updateProductImageColor({ imageId, color });
-      if (!result.success) setError(result.error);
+      if (result.success) router.refresh();
     });
   }
 
@@ -113,19 +162,16 @@ export function ImageManager({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          className="text-sm"
-        />
-        {colors.length > 0 && (
+      {colors.length > 0 && (
+        <div>
+          <label className="text-muted-foreground mb-1 block text-xs" htmlFor="upload-color">
+            {t("newPhotoColorLabel")}
+          </label>
           <select
+            id="upload-color"
             value={uploadColor}
             onChange={(e) => setUploadColor(e.target.value)}
             className="border-input rounded-md border bg-transparent px-2 py-1 text-sm"
-            aria-label={t("newPhotoColorLabel")}
           >
             <option value={GENERAL_VALUE}>{t("generalAllColors")}</option>
             {colors.map((color) => (
@@ -134,15 +180,45 @@ export function ImageManager({
               </option>
             ))}
           </select>
-        )}
-        <Button type="button" size="sm" disabled={isPending} onClick={handleUpload}>
-          {isPending ? t("uploading") : t("uploadImage")}
-        </Button>
-      </div>
-      {error && (
-        <p role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
+        </div>
+      )}
+
+      {queue.length > 0 ? (
+        <div className="border-input space-y-2 rounded-lg border p-3">
+          <AnimatePresence initial={false}>
+            {queue.map((item) => (
+              <motion.div
+                key={item.key}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 text-sm"
+              >
+                {item.status === "uploading" || item.status === "pending" ? (
+                  <Loader2Icon className="text-muted-foreground size-4 shrink-0 animate-spin" />
+                ) : item.status === "done" ? (
+                  <CheckIcon className="size-4 shrink-0 text-green-600" />
+                ) : (
+                  <XIcon className="text-destructive size-4 shrink-0" />
+                )}
+                <span className="truncate">{item.name}</span>
+                {item.error && <span className="text-destructive text-xs">— {item.error}</span>}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <ProductImageDropzone
+          accept={ACCEPTED_TYPES}
+          maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
+          disabled={isUploading}
+          onFilesSelected={handleFilesSelected}
+          onFilesRejected={handleFilesRejected}
+          label={t("dropzoneLabel")}
+          hint={t("dropzoneHint")}
+          browseLabel={t("dropzoneBrowse")}
+          dragActiveLabel={t("dropzoneDragActive")}
+        />
       )}
     </div>
   );
