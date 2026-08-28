@@ -382,6 +382,10 @@
     "nextSlide": "Next slide",
     "goToSlide": "Go to slide {number}"
   },
+  "ScrollCarousel": {
+    "eyebrow": "Scroll to explore",
+    "dotLabel": "{title} slide"
+  },
   "Home": {
     "title": "Leo Fashion",
     "tagline": "Wardrobe staples, outerwear, and easy weekend pieces — order online, pay on delivery or by invoice."

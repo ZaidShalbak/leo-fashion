@@ -13,6 +13,7 @@ import {
 import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { HeroCarousel, type HeroSlide } from "@/components/storefront/HeroCarousel";
+import { ScrollCarousel, type ScrollCarouselSlide } from "@/components/storefront/ScrollCarousel";
 import { HomeIntro } from "@/components/storefront/HomeIntro";
 import { CategorySection } from "@/components/storefront/CategorySection";
 import { BrandsSection } from "@/components/storefront/BrandsSection";
@@ -157,6 +158,24 @@ export default async function HomePage() {
 
   const heroSlides = liveBannerSlides.length > 0 ? liveBannerSlides : collectionSlides;
 
+  // EXPERIMENTAL section (see ScrollCarousel.tsx) — same source/shape as
+  // collectionSlides above, just collections with a real lead image, but
+  // keyed on `handle` (its link target) rather than a full `href`.
+  const scrollCarouselSlides: ScrollCarouselSlide[] = collectionsWithLead
+    .map((collection): ScrollCarouselSlide | null => {
+      const leadImage = collection.products[0]?.product.images[0];
+      if (!leadImage) return null;
+      return {
+        id: collection.id,
+        handle: collection.handle,
+        title: collection.title,
+        description: collection.description,
+        imageUrl: leadImage.url,
+        imageAlt: leadImage.altText ?? collection.title,
+      };
+    })
+    .filter((slide): slide is ScrollCarouselSlide => slide !== null);
+
   return (
     <>
       {/* Rendered outside the max-w-6xl/px-4 container below (its direct
@@ -169,6 +188,11 @@ export default async function HomePage() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
         <HomeIntro title={t("title")} tagline={t("tagline")} />
       </div>
+
+      {/* EXPERIMENTAL — trying out a scroll-linked carousel (see
+          ScrollCarousel.tsx). Not replacing anything above; here to be
+          evaluated on its own before deciding whether it stays. */}
+      <ScrollCarousel slides={scrollCarouselSlides} />
 
       {/* Full-bleed "showcase" bands — outside the max-w-6xl container above,
           same reasoning as HeroCarousel: each section owns its own
