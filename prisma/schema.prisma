@@ -620,3 +620,28 @@ model AuditLog {
   @@index([targetType, targetId])
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------------------
+// Site settings
+// ---------------------------------------------------------------------------
+
+// A single-row settings table rather than a key/value table — there's
+// only ever been the one setting worth toggling at runtime so far
+// (whether /sale is visible while store owners stage upcoming
+// discounts). getStoreSettings() (src/server/actions/admin/settings.ts)
+// always reads/upserts the fixed id below; add more Boolean/String
+// columns here if more toggles show up later rather than reaching for a
+// generic key/value model prematurely.
+model StoreSettings {
+  id String @id @default("singleton")
+
+  // Controls both the storefront's /sale route (renders a 404 when
+  // false — see (storefront)/sale/page.tsx) and the "Sale" nav link
+  // (desktop header + MobileNav) so store owners can stage upcoming
+  // discounts on individual Sale rows without them going live to
+  // shoppers until everything's ready. Defaults to true so existing
+  // stores see no behavior change until an admin explicitly hides it.
+  salesPageVisible Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+}

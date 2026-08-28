@@ -5,6 +5,7 @@ import type { User } from "@prisma/client";
 
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/auth";
+import { getStoreSettings } from "@/server/settings";
 import { getBrandsWithActiveCountCached, getCollectionsWithLeadImageCached } from "@/server/queries";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localizedContent";
@@ -77,19 +78,24 @@ export default async function StorefrontLayout({
   // used to run as two sequential awaits after this block — now
   // parallelized alongside everything else, since both only depend on
   // the `user` already resolved above.
-  const [collectionsRaw, brandsRaw, cartItemCount, newOrderCount, wishlistItemCount] = await Promise.all([
-    getCollectionsWithLeadImageCached(),
-    getBrandsWithActiveCountCached(),
-    getCartItemCount(user),
-    // Lets an admin browsing the storefront (not already on /admin)
-    // notice there's a new order without babysitting the dashboard —
-    // mirrors the admin nav's own badge
-    // (src/components/admin/AdminOrdersNavBadge.tsx), same underlying
-    // count, just surfaced here too. Only ever queried for an actual
-    // admin, never for a plain signed-in customer.
-    user?.role === "admin" ? db.order.count({ where: { viewedByAdminAt: null } }) : Promise.resolve(0),
-    user ? getWishlistItemCount(user.id) : Promise.resolve(0),
-  ]);
+  const [collectionsRaw, brandsRaw, cartItemCount, newOrderCount, wishlistItemCount, storeSettings] =
+    await Promise.all([
+      getCollectionsWithLeadImageCached(),
+      getBrandsWithActiveCountCached(),
+      getCartItemCount(user),
+      // Lets an admin browsing the storefront (not already on /admin)
+      // notice there's a new order without babysitting the dashboard —
+      // mirrors the admin nav's own badge
+      // (src/components/admin/AdminOrdersNavBadge.tsx), same underlying
+      // count, just surfaced here too. Only ever queried for an actual
+      // admin, never for a plain signed-in customer.
+      user?.role === "admin" ? db.order.count({ where: { viewedByAdminAt: null } }) : Promise.resolve(0),
+      user ? getWishlistItemCount(user.id) : Promise.resolve(0),
+      // Deliberately not cached (unlike everything else in this
+      // Promise.all) — see src/server/settings.ts. Gates the "Sale" nav
+      // link below and MobileNav's copy of it.
+      getStoreSettings(),
+    ]);
   // Localized once here and reused for both the desktop nav below and
   // MobileNav — see src/lib/localizedContent.ts.
   const collections = collectionsRaw.map((collection) => ({
@@ -148,6 +154,7 @@ export default async function StorefrontLayout({
                 isSignedIn={Boolean(user)}
                 isAdmin={user?.role === "admin"}
                 newOrderCount={newOrderCount}
+                salesPageVisible={storeSettings.salesPageVisible}
               />
             </div>
           </div>
@@ -165,9 +172,11 @@ export default async function StorefrontLayout({
               <NavMegaMenu label={t("brands")}>
                 <BrandsMenuGrid brands={brandMenuItems} />
               </NavMegaMenu>
-              <Link href="/sale" className="font-medium text-red-400 transition hover:text-red-300">
-                {t("sale")}
-              </Link>
+              {storeSettings.salesPageVisible && (
+                <Link href="/sale" className="font-medium text-red-400 transition hover:text-red-300">
+                  {t("sale")}
+                </Link>
+              )}
             </nav>
 
             <div className="flex items-center gap-5 rtl:gap-6">

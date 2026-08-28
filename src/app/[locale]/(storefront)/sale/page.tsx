@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { db } from "@/server/db";
 import type { AppLocale } from "@/i18n/routing";
 import { localize } from "@/lib/localizedContent";
 import { applySaleToProduct } from "@/lib/sales";
+import { getStoreSettings } from "@/server/settings";
 import {
   computePriceBounds,
   computeSizeColorFacets,
@@ -51,6 +53,15 @@ export default async function SalePage({ params, searchParams }: Props) {
   const rawParams = await searchParams;
   const filters = parseProductFilterParams(rawParams);
   const t = await getTranslations("SalePage");
+
+  // Store owners can hide this route entirely while staging upcoming
+  // discounts (StoreSettings.salesPageVisible) — see
+  // src/server/settings.ts. Renders as a 404 rather than redirecting, same
+  // "soft 404" caveat noted in CLAUDE.md for every other notFound() route
+  // in this app (loading.tsx means the response has already started
+  // streaming as 200 by the time this resolves).
+  const { salesPageVisible } = await getStoreSettings();
+  if (!salesPageVisible) notFound();
 
   // "Is this product on sale" can't be expressed as a Prisma `where`
   // clause — it depends on Sale scope-matching (site-wide/brand/
