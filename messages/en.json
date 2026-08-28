@@ -94,6 +94,12 @@
     "noPaymentNote": "No payment is collected here — this places the order for invoice/pay-on-delivery fulfillment.",
     "editCart": "Edit cart"
   },
+  "Pagination": {
+    "navLabel": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageLabel": "Go to page {page}"
+  },
   "CollectionPage": {
     "fallbackTitle": "Collection",
     "noMatches": "No products match those filters."

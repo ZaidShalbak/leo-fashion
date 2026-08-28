@@ -116,6 +116,10 @@ function FilterControls({
     } else {
       params.delete(key);
     }
+    // Narrowing/widening the result set almost always changes what page
+    // 2+ would even mean — always land back on page 1 rather than risk a
+    // stale or now-out-of-range page.
+    params.delete("page");
     const query = params.toString();
     startTransition(() => {
       router.push(query ? `${pathname}?${query}` : pathname);
@@ -130,6 +134,7 @@ function FilterControls({
     } else {
       params.set("sort", value);
     }
+    params.delete("page");
     const query = params.toString();
     startTransition(() => {
       router.push(query ? `${pathname}?${query}` : pathname);
@@ -150,6 +155,7 @@ function FilterControls({
     } else {
       params.set("maxPrice", String(Math.round(maxDollars)));
     }
+    params.delete("page");
     const query = params.toString();
     startTransition(() => {
       router.push(query ? `${pathname}?${query}` : pathname);
@@ -177,7 +183,7 @@ function FilterControls({
 
   function clearFilters() {
     const params = new URLSearchParams(searchParams.toString());
-    for (const key of ["category", "brand", "color", "size", "minPrice", "maxPrice"]) {
+    for (const key of ["category", "brand", "color", "size", "minPrice", "maxPrice", "page"]) {
       params.delete(key);
     }
     const query = params.toString();
