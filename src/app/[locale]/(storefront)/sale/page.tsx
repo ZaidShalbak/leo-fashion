@@ -10,6 +10,7 @@ import {
   computeSizeColorFacets,
   filterByPriceRange,
   matchesFacetFilters,
+  paginateProducts,
   parseProductFilterParams,
   sortProducts,
   uniqueOptions,
@@ -19,6 +20,9 @@ import { getCartQuantityByVariant } from "@/server/actions/cart";
 import { getWishlistedProductIds } from "@/server/actions/wishlist";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { FilterSidebar } from "@/components/storefront/FilterSidebar";
+import { Pagination } from "@/components/storefront/Pagination";
+
+const PAGE_SIZE = 24;
 
 type Props = {
   params: Promise<{ locale: AppLocale }>;
@@ -30,6 +34,7 @@ type Props = {
     sort?: string;
     minPrice?: string;
     maxPrice?: string;
+    page?: string;
   }>;
 };
 
@@ -96,13 +101,18 @@ export default async function SalePage({ params, searchParams }: Props) {
   );
   const priceBounds = computePriceBounds(onSaleProducts);
 
-  const products = sortProducts(
+  const filteredProducts = sortProducts(
     filterByPriceRange(
       onSaleProducts.filter((p) => matchesFacetFilters(p, filters)),
       filters.minPriceCents,
       filters.maxPriceCents
     ),
     filters.sort
+  );
+  const { items: products, currentPage, totalPages } = paginateProducts(
+    filteredProducts,
+    filters.page,
+    PAGE_SIZE
   );
 
   return (
@@ -123,16 +133,19 @@ export default async function SalePage({ params, searchParams }: Props) {
 
         <div>
           {products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  cartQuantityByVariant={cartQuantityByVariant}
-                  isWishlisted={wishlistedProductIds.has(product.id)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    cartQuantityByVariant={cartQuantityByVariant}
+                    isWishlisted={wishlistedProductIds.has(product.id)}
+                  />
+                ))}
+              </div>
+              <Pagination currentPage={currentPage} totalPages={totalPages} />
+            </>
           ) : (
             <p className="text-muted-foreground py-12 text-center">
               {onSaleProducts.length === 0 ? t("noActiveSales") : t("noMatches")}

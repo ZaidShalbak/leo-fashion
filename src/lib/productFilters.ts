@@ -22,6 +22,7 @@ export type ProductFilterParams = {
   sort?: string;
   minPriceCents?: number;
   maxPriceCents?: number;
+  page: number;
 };
 
 /** Splits a comma-separated URL param into a clean array (no empty
@@ -44,9 +45,11 @@ export function parseProductFilterParams(searchParams: {
   sort?: string;
   minPrice?: string;
   maxPrice?: string;
+  page?: string;
 }): ProductFilterParams {
   const minPriceDollars = searchParams.minPrice ? Number(searchParams.minPrice) : undefined;
   const maxPriceDollars = searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined;
+  const parsedPage = searchParams.page ? Number(searchParams.page) : 1;
   return {
     brands: splitParam(searchParams.brand),
     categories: splitParam(searchParams.category),
@@ -61,6 +64,7 @@ export function parseProductFilterParams(searchParams: {
       maxPriceDollars !== undefined && Number.isFinite(maxPriceDollars)
         ? Math.round(maxPriceDollars * 100)
         : undefined,
+    page: Number.isFinite(parsedPage) ? Math.max(1, Math.floor(parsedPage)) : 1,
   };
 }
 
@@ -156,6 +160,25 @@ export function sortProducts<T extends { basePriceCents: number }>(
   if (sort === "price-asc") return [...products].sort((a, b) => a.basePriceCents - b.basePriceCents);
   if (sort === "price-desc") return [...products].sort((a, b) => b.basePriceCents - a.basePriceCents);
   return products;
+}
+
+/**
+ * Slices an already filtered-and-sorted product array to one page.
+ * Clamps `page` into `[1, totalPages]` internally rather than trusting
+ * the caller — a bookmarked/shared URL with a stale `?page=` (the
+ * catalog shrank since) lands on the last real page instead of an empty
+ * grid. `totalPages` is always at least 1, even for zero products, so
+ * callers never have to special-case "no results" separately here.
+ */
+export function paginateProducts<T>(
+  products: T[],
+  page: number,
+  pageSize: number
+): { items: T[]; currentPage: number; totalPages: number } {
+  const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  return { items: products.slice(start, start + pageSize), currentPage, totalPages };
 }
 
 /** Dedupes a list of {value,label} facet options by value, preserving
