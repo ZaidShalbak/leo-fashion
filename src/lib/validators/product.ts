@@ -21,6 +21,9 @@ export const productVariantSchema = z.object({
   color: z.string().trim().min(1, "Color is required").max(40),
   // Overrides the product's basePriceCents when set (e.g. a size upcharge).
   priceOverrideCents: z.number().int().nonnegative().optional(),
+  // Cost of goods, admin-entered — optional, same reasoning as
+  // priceOverrideCents (see ProductVariant.costCents in schema.prisma).
+  costCents: z.number().int().nonnegative().optional(),
   inventoryQuantity: z.number().int().nonnegative().default(0),
 });
 export type ProductVariantInput = z.infer<typeof productVariantSchema>;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import {
   BadgePercentIcon,
+  ChartColumnIcon,
   ClipboardListIcon,
   LayersIcon,
   PercentIcon,
@@ -54,6 +55,7 @@ const NAV_GROUPS = [
       { href: "/admin/discount-codes", labelKey: "navDiscountCodes", Icon: PercentIcon } as const,
       { href: "/admin/sales", labelKey: "navSales", Icon: BadgePercentIcon } as const,
       { href: "/admin/delivery-zones", labelKey: "navDeliveryAreas", Icon: TruckIcon } as const,
+      { href: "/admin/analytics", labelKey: "navAnalytics", Icon: ChartColumnIcon } as const,
     ],
   },
   {

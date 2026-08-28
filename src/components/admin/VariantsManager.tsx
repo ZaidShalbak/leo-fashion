@@ -26,6 +26,7 @@ type Variant = {
   size: string;
   color: string;
   priceOverrideCents: number | null;
+  costCents: number | null;
   inventoryQuantity: number;
 };
 
@@ -36,6 +37,9 @@ function VariantRow({ variant }: { variant: Variant }) {
   const [color, setColor] = useState(variant.color);
   const [priceOverride, setPriceOverride] = useState(
     variant.priceOverrideCents != null ? (variant.priceOverrideCents / 100).toFixed(2) : ""
+  );
+  const [cost, setCost] = useState(
+    variant.costCents != null ? (variant.costCents / 100).toFixed(2) : ""
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -51,6 +55,7 @@ function VariantRow({ variant }: { variant: Variant }) {
         priceOverrideCents: priceOverride.trim()
           ? Math.round(parseFloat(priceOverride) * 100)
           : undefined,
+        costCents: cost.trim() ? Math.round(parseFloat(cost) * 100) : undefined,
       });
       if (!result.success) setError(result.error);
     });
@@ -86,6 +91,17 @@ function VariantRow({ variant }: { variant: Variant }) {
           className="h-8 w-24"
         />
       </TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="—"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
+          className="h-8 w-24"
+        />
+      </TableCell>
       <TableCell className="text-muted-foreground">
         {variant.inventoryQuantity}{" "}
         <Link href="/admin/inventory" className="underline">
@@ -111,6 +127,7 @@ function AddVariantRow({ productId }: { productId: string }) {
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
   const [priceOverride, setPriceOverride] = useState("");
+  const [cost, setCost] = useState("");
   const [inventoryQuantity, setInventoryQuantity] = useState("0");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -126,6 +143,7 @@ function AddVariantRow({ productId }: { productId: string }) {
         priceOverrideCents: priceOverride.trim()
           ? Math.round(parseFloat(priceOverride) * 100)
           : undefined,
+        costCents: cost.trim() ? Math.round(parseFloat(cost) * 100) : undefined,
         inventoryQuantity: parseInt(inventoryQuantity || "0", 10),
       });
       if (result.success) {
@@ -133,6 +151,7 @@ function AddVariantRow({ productId }: { productId: string }) {
         setSize("");
         setColor("");
         setPriceOverride("");
+        setCost("");
         setInventoryQuantity("0");
       } else {
         setError(result.error);
@@ -164,6 +183,17 @@ function AddVariantRow({ productId }: { productId: string }) {
           placeholder="—"
           value={priceOverride}
           onChange={(e) => setPriceOverride(e.target.value)}
+          className="h-8 w-24"
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="—"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
           className="h-8 w-24"
         />
       </TableCell>
@@ -202,6 +232,7 @@ export function VariantsManager({
           <TableHead>{t("sizeLabel")}</TableHead>
           <TableHead>{t("colorLabel")}</TableHead>
           <TableHead>{t("priceOverrideLabel")}</TableHead>
+          <TableHead>{t("costLabel")}</TableHead>
           <TableHead>{t("stockLabel")}</TableHead>
           <TableHead />
         </TableRow>
