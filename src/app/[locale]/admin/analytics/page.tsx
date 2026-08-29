@@ -35,12 +35,16 @@ export async function generateMetadata({
   return { title: t("metaTitle") };
 }
 
+// Cancelled reuses --destructive (red) to stay consistent with
+// OrderStatusBadge's existing color convention for that status; the rest
+// draw from the qualitative palette (see globals.css) rather than the
+// installed grayscale --chart-scale-* ramp.
 const ORDER_STATUS_COLORS: Record<string, string> = {
-  pending: "var(--chart-scale-01)",
-  processing: "var(--chart-scale-02)",
-  shipped: "var(--chart-scale-03)",
-  delivered: "var(--chart-scale-04)",
-  cancelled: "var(--chart-scale-05)",
+  pending: "var(--chart-qual-3)",
+  processing: "var(--chart-qual-1)",
+  shipped: "var(--chart-qual-5)",
+  delivered: "var(--chart-qual-2)",
+  cancelled: "var(--destructive)",
 };
 
 export default async function AdminAnalyticsPage() {
@@ -69,7 +73,7 @@ export default async function AdminAnalyticsPage() {
   const zonePieData = zoneRevenue.map((row, index) => ({
     label: row.zoneName,
     value: row.revenueCents,
-    color: `var(--chart-scale-0${(index % 5) + 1})`,
+    color: `var(--chart-qual-${(index % 5) + 1})`,
   }));
 
   const topProductsBarData = topProducts.map((p) => ({ name: p.title, revenue: p.revenueCents / 100 }));
