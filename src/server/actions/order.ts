@@ -203,6 +203,7 @@ export async function placeOrder(
           color: item.variant.color,
           priceCents,
           compareAtPriceCentsSnapshot: compareAtCents,
+          costCentsSnapshot: item.variant.costCents,
           quantity: item.quantity,
         });
       }

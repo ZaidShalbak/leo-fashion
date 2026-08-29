@@ -135,7 +135,13 @@ beforeAll(async () => {
       status: "active",
       variants: {
         create: [
-          { sku: `TEST-ORD-HAPPY-${Date.now()}`, size: "M", color: "Black", inventoryQuantity: 5 },
+          {
+            sku: `TEST-ORD-HAPPY-${Date.now()}`,
+            size: "M",
+            color: "Black",
+            inventoryQuantity: 5,
+            costCents: 500,
+          },
           { sku: `TEST-ORD-SAVED-${Date.now()}`, size: "M", color: "Blue", inventoryQuantity: 5 },
           { sku: `TEST-ORD-INSUFF-${Date.now()}`, size: "L", color: "Black", inventoryQuantity: 2 },
           { sku: `TEST-ORD-CONC-${Date.now()}`, size: "S", color: "Black", inventoryQuantity: 1 },
@@ -389,6 +395,11 @@ describe("placeOrder", () => {
     expect(order!.subtotalCents).toBe(2000 * 2);
     expect(order!.items).toHaveLength(1);
     expect(order!.items[0]!.quantity).toBe(2);
+    // variantHappyId was created with costCents: 500 — confirms
+    // placeOrder snapshots it onto the OrderItem rather than leaving it
+    // to be read live from the variant later (see costCentsSnapshot's
+    // comment in schema.prisma).
+    expect(order!.items[0]!.costCentsSnapshot).toBe(500);
     expect(order!.shippingName).toBe(validNewAddress.fullName);
     expect(order!.notes).toBe("Please ring the doorbell twice.");
 

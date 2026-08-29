@@ -248,6 +248,12 @@ model ProductVariant {
   color              String
   // Overrides Product.basePriceCents when set (e.g. a size upcharge).
   priceOverrideCents Int?
+  // Cost of goods for this variant, admin-entered — optional, same
+  // reasoning as priceOverrideCents: cost can genuinely vary by size/
+  // color the same way price already can. Powers /admin/analytics'
+  // profit/margin figures via OrderItem.costCentsSnapshot (see that
+  // model's comment) — never read live from here for a past order.
+  costCents          Int?
   inventoryQuantity  Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -587,6 +593,13 @@ model OrderItem {
   // or was charged. Rendered via PriceDisplay's compareAtCents, same as
   // every live sale-price display on the storefront.
   compareAtPriceCentsSnapshot Int?
+  // Cost of goods per unit, snapshotted from ProductVariant.costCents at
+  // order time — same "snapshot, never re-derive" philosophy as every
+  // other money field on this model. Null means no cost was recorded on
+  // the variant when this order was placed; /admin/analytics treats null
+  // as "unknown," never as 0, so editing a variant's cost later can never
+  // silently rewrite a past order's profit figures.
+  costCentsSnapshot Int?
   quantity      Int
 
   @@index([orderId])

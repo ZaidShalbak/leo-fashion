@@ -25,6 +25,7 @@ type VariantRow = {
   size: string;
   color: string;
   priceOverrideCents: string;
+  costCents: string;
   inventoryQuantity: string;
 };
 
@@ -35,6 +36,7 @@ function emptyVariant(): VariantRow {
     size: "",
     color: "",
     priceOverrideCents: "",
+    costCents: "",
     inventoryQuantity: "0",
   };
 }
@@ -82,6 +84,7 @@ export function NewProductForm({
       priceOverrideCents: v.priceOverrideCents.trim()
         ? Math.round(parseFloat(v.priceOverrideCents) * 100)
         : undefined,
+      costCents: v.costCents.trim() ? Math.round(parseFloat(v.costCents) * 100) : undefined,
       inventoryQuantity: parseInt(v.inventoryQuantity || "0", 10),
     }));
 
@@ -214,7 +217,7 @@ export function NewProductForm({
           {variants.map((v) => (
             <div
               key={v.key}
-              className="border-border grid grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] items-end gap-2 rounded-md border p-3"
+              className="border-border grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_auto] items-end gap-2 rounded-md border p-3"
             >
               <div className="space-y-1">
                 <Label className="text-xs">{t("skuLabel")}</Label>
@@ -249,6 +252,17 @@ export function NewProductForm({
                   placeholder="—"
                   value={v.priceOverrideCents}
                   onChange={(e) => updateVariant(v.key, { priceOverrideCents: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t("costLabel")}</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="—"
+                  value={v.costCents}
+                  onChange={(e) => updateVariant(v.key, { costCents: e.target.value })}
                 />
               </div>
               <div className="space-y-1">

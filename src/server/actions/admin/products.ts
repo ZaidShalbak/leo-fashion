@@ -219,6 +219,7 @@ export async function duplicateProduct(
             size: v.size,
             color: v.color,
             priceOverrideCents: v.priceOverrideCents,
+            costCents: v.costCents,
             inventoryQuantity: 0,
           })),
         },
